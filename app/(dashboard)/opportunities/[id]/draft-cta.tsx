@@ -40,11 +40,11 @@ export function DraftCta({
       <Button onClick={draft} disabled={busy}>
         {busy ? "Drafting…" : "Draft this action (nothing sends)"}
       </Button>
-      <p className="text-xs text-stone-500">
+      <p className="text-xs leading-5 text-ink-soft">
         Creates a reviewable draft only. Sends, syncs, and suppression changes
         require explicit approval (PRD 26A.4).
       </p>
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
     </div>
   );
 }

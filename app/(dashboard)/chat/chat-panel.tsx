@@ -53,35 +53,35 @@ const ESTIMATE_LABEL_COPY: Record<OpportunityCardView["estimateLabel"], string> 
 
 function OpportunityMiniCard({ card }: { card: OpportunityCardView }) {
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-4">
+    <div className="rounded-card border border-border bg-surface p-4 shadow-card">
       <div className="flex flex-wrap items-center gap-2">
-        <h4 className="mr-auto text-sm font-semibold text-stone-900">{card.title}</h4>
+        <h4 className="mr-auto text-sm font-semibold text-ink">{card.title}</h4>
         <ConfBadge level={card.confidence} />
         <ModeBadge mode={card.measurementMode} />
       </div>
-      <p className="mt-1.5 text-sm text-stone-700">
+      <p className="mt-1.5 text-sm text-ink-secondary">
         {card.estimate ? (
           <>
             Estimated value {fmtMoney(card.estimate.low)}–{fmtMoney(card.estimate.high)}{" "}
-            <span className="text-stone-500">({ESTIMATE_LABEL_COPY[card.estimateLabel]})</span>
+            <span className="text-ink-muted">({ESTIMATE_LABEL_COPY[card.estimateLabel]})</span>
           </>
         ) : (
-          <span className="text-stone-500">
+          <span className="text-ink-muted">
             Directional opportunity — no dollar estimate attached ({ESTIMATE_LABEL_COPY[card.estimateLabel]}).
           </span>
         )}
       </p>
       {card.recommendedAction ? (
-        <p className="mt-1 text-sm text-stone-700">
+        <p className="mt-1 text-sm text-ink-secondary">
           Recommended action: {card.recommendedAction}
         </p>
       ) : null}
-      <p className="mt-1 text-xs text-stone-500">
+      <p className="mt-1 text-xs text-ink-soft">
         Data as of {fmtDate(card.dataAsOf)} · recipe {card.recipeId} v{card.recipeVersion}
       </p>
       {/* PRD 4.4 / 17.3 — every recommendation carries its full contract. */}
       <details className="mt-2">
-        <summary className="cursor-pointer text-xs font-medium text-stone-600">
+        <summary className="cursor-pointer text-xs font-medium text-ink-muted transition-colors duration-150 hover:text-ink">
           Why this recommendation (full explanation contract)
         </summary>
         <ExplanationPanel explanation={card.explanation} className="mt-2" />
@@ -93,26 +93,26 @@ function OpportunityMiniCard({ card }: { card: OpportunityCardView }) {
 function OperatorTurn({ turn }: { turn: Turn }) {
   if (turn.error) {
     return (
-      <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+      <div className="rounded-card border border-red-200 bg-danger-soft/60 p-4 text-sm text-red-800">
         Something went wrong: {turn.error}
       </div>
     );
   }
   if (!turn.response) {
     return (
-      <div className="rounded-lg border border-stone-200 bg-white p-4 text-sm text-stone-500">
+      <div className="rounded-card border border-border bg-surface p-4 text-sm text-ink-muted shadow-card">
         Thinking…
       </div>
     );
   }
   const response = turn.response;
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-4">
-      <p className="text-sm whitespace-pre-wrap text-stone-800">{response.message}</p>
+    <div className="rounded-card border border-border bg-surface p-4 shadow-card">
+      <p className="text-sm whitespace-pre-wrap text-ink">{response.message}</p>
 
       {response.explanation ? (
         <div className="mt-3">
-          <h4 className="text-xs font-semibold tracking-wide text-stone-500 uppercase">
+          <h4 className="text-xs font-semibold tracking-wide text-ink-soft uppercase">
             Explanation contract (PRD 17.3)
           </h4>
           <ExplanationPanel explanation={response.explanation} className="mt-2" />
@@ -134,7 +134,7 @@ function OperatorTurn({ turn }: { turn: Turn }) {
       ) : null}
 
       {response.draftedAction ? (
-        <p className="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+        <p className="mt-3 rounded-md border border-blue-200 bg-info-soft/60 px-3 py-2 text-sm text-blue-900">
           <strong>Draft created — nothing was launched.</strong> Drafting is
           not activation; this action needs your explicit approval before any
           customer-facing send (26A.4). Action{" "}
@@ -143,7 +143,7 @@ function OperatorTurn({ turn }: { turn: Turn }) {
         </p>
       ) : null}
 
-      <p className="mt-3 text-xs text-stone-400">
+      <p className="mt-3 text-xs text-ink-soft">
         intent: {response.intent} · logged to Context Ledger{" "}
         <span className="font-mono">{response.ledgerId.slice(0, 10)}…</span>
       </p>
@@ -184,7 +184,7 @@ export function ChatPanel({ accountId }: { accountId: string }) {
   return (
     <div className="space-y-4">
       <section>
-        <h2 className="text-xs font-semibold tracking-wide text-stone-500 uppercase">
+        <h2 className="text-xs font-semibold tracking-wide text-ink-soft uppercase">
           Supported questions (v0)
         </h2>
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -194,13 +194,13 @@ export function ChatPanel({ accountId }: { accountId: string }) {
               type="button"
               disabled={isPending}
               onClick={() => send(question)}
-              className="rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50 disabled:pointer-events-none disabled:opacity-50"
+              className="rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-secondary transition-colors duration-150 hover:bg-surface-soft hover:text-ink disabled:pointer-events-none disabled:opacity-50"
             >
               {question}
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-stone-500">
+        <p className="mt-2 text-xs text-ink-muted">
           Anything outside these capabilities is labeled as not available in v0.
           Chat can draft, but it cannot approve or activate — those stay behind
           the approval gate and governance runtime.
@@ -209,11 +209,11 @@ export function ChatPanel({ accountId }: { accountId: string }) {
 
       <section className="space-y-4">
         {turns.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-stone-300 bg-stone-50 px-6 py-10 text-center">
-            <h3 className="text-base font-semibold text-stone-900">
+          <div className="rounded-lg border border-dashed border-border-strong bg-surface-soft/60 px-6 py-10 text-center">
+            <h3 className="text-base font-semibold text-ink">
               Ask the Operator
             </h3>
-            <p className="mx-auto mt-1 max-w-md text-sm text-stone-500">
+            <p className="mx-auto mt-1 max-w-md text-sm text-ink-muted">
               Pick a suggested question above or type your own. Responses are
               deterministic — the same system that powers the feed, with every
               turn logged to the Context Ledger.
@@ -223,7 +223,7 @@ export function ChatPanel({ accountId }: { accountId: string }) {
           turns.map((turn) => (
             <div key={turn.id} className="space-y-2">
               <div className="flex justify-end">
-                <p className="max-w-[85%] rounded-lg bg-stone-900 px-4 py-2 text-sm text-stone-50">
+                <p className="max-w-[85%] rounded-lg bg-primary px-4 py-2 text-sm text-white">
                   {turn.question}
                 </p>
               </div>
@@ -246,12 +246,12 @@ export function ChatPanel({ accountId }: { accountId: string }) {
           onChange={(event) => setInput(event.target.value)}
           placeholder='Try "What should I do this week to grow revenue?"'
           aria-label="Ask the Operator"
-          className="flex-1 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:ring-2 focus:ring-stone-900 focus:outline-none"
+          className="flex-1 rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-ink transition-colors duration-150 placeholder:text-ink-soft focus:border-accent focus:ring-2 focus:ring-accent-soft focus:outline-none"
         />
         <button
           type="submit"
           disabled={isPending || input.trim().length === 0}
-          className="inline-flex items-center rounded-md border border-transparent bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700 disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:shadow-none disabled:pointer-events-none disabled:opacity-50"
         >
           {isPending ? "Sending…" : "Send"}
         </button>

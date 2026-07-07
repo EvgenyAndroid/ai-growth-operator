@@ -40,30 +40,41 @@ function FoundMoneyHeader({
   return (
     <section
       aria-label="Found money"
-      className="rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4"
+      className="relative overflow-hidden rounded-card border border-border bg-surface px-6 py-5 shadow-card"
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+      {/* Refined accent treatment: thin success keyline, no loud fills. */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 w-1 bg-success"
+      />
+      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700">
+        <span
+          aria-hidden="true"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-success"
+        />
         {label}
       </p>
-      <p className="mt-1 text-3xl font-semibold tracking-tight text-emerald-900">
+      <p className="mt-2 text-[2rem] font-bold leading-none tracking-tight text-ink tabular-nums">
         {fmtRange(header.totalLow, header.totalHigh)}
       </p>
       {header.headline ? (
-        <p className="mt-1 text-sm text-emerald-800">{header.headline}</p>
+        <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
+          {header.headline}
+        </p>
       ) : null}
       {coverage ? (
         // LOCAL trust rule #9 — POS coverage disclosure on the header.
-        <p className="mt-1 text-sm font-medium text-emerald-800">
+        <p className="mt-1 text-sm font-medium text-ink-secondary">
           Estimates cover identified loyalty customers —{" "}
           {Math.round(coverage.identifiedShare * 100)}% of transactions.
         </p>
       ) : null}
       {header.excluded.length > 0 ? (
-        <details className="mt-2">
-          <summary className="cursor-pointer text-xs text-emerald-700">
+        <details className="mt-3 border-t border-border pt-2.5">
+          <summary className="cursor-pointer text-xs font-medium text-ink-muted transition-colors duration-150 hover:text-ink">
             Not counted in this total ({header.excluded.length})
           </summary>
-          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-emerald-800">
+          <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-xs leading-5 text-ink-muted">
             {header.excluded.map((x) => (
               <li key={`${x.recipeId}:${x.reason}`}>
                 {RECIPE_SHORT_NAMES[x.recipeId]}: {x.reason}
@@ -98,27 +109,27 @@ function NoOpportunityCards({
             title={RECIPE_SHORT_NAMES[item.recipeId]}
             className="text-left [&>h3]:text-left"
           >
-            <div className="space-y-2 text-left text-sm text-stone-600">
+            <div className="space-y-2 text-left text-sm leading-relaxed text-ink-secondary">
               <div>
-                <span className="font-medium text-stone-800">Checked: </span>
+                <span className="font-medium text-ink">Checked: </span>
                 {item.checked
                   .map((c) => `${c.count.toLocaleString()} ${c.what}`)
                   .join(" · ")}
               </div>
               <div>
-                <span className="font-medium text-stone-800">
+                <span className="font-medium text-ink">
                   Why nothing qualified:{" "}
                 </span>
                 {item.whyNotQualified}
               </div>
               <div>
-                <span className="font-medium text-stone-800">
+                <span className="font-medium text-ink">
                   Next best manual action:{" "}
                 </span>
                 {item.nearestNextAction}
               </div>
               <div>
-                <span className="font-medium text-stone-800">
+                <span className="font-medium text-ink">
                   What would unlock more:{" "}
                 </span>
                 {item.unlocks}
@@ -142,10 +153,10 @@ export default async function FeedPage() {
     <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
             {copy.feedTitle}
           </h1>
-          <p className="mt-0.5 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-ink-muted">
             Generated {fmtDateTime(feed.generatedAt)}
             {feed.demoMode ? " · demo dataset" : null}
           </p>
@@ -154,13 +165,13 @@ export default async function FeedPage() {
           {feed.demoMode ? <Badge tone="info">Demo mode</Badge> : null}
           <Link
             href="/opportunities/audiences"
-            className="text-sm font-medium text-stone-700 underline underline-offset-2 hover:text-stone-900"
+            className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
           >
             Audience Builder
           </Link>
           <Link
             href="/approvals"
-            className="text-sm font-medium text-stone-700 underline underline-offset-2 hover:text-stone-900"
+            className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
           >
             Approval Center
           </Link>
@@ -175,8 +186,13 @@ export default async function FeedPage() {
 
       {active.length > 0 ? (
         <section className="space-y-4" aria-label="Active opportunities">
-          {active.map((card) => (
-            <OpportunityCard key={card.id} accountId={accountId} card={card} />
+          {active.map((card, i) => (
+            <OpportunityCard
+              key={card.id}
+              accountId={accountId}
+              card={card}
+              priority={i === 0}
+            />
           ))}
         </section>
       ) : feed.noOpportunity.length === 0 ? (
@@ -202,13 +218,13 @@ export default async function FeedPage() {
             {feed.dismissed.map((card) => (
               <li
                 key={card.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm text-stone-600"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface-soft/60 px-4 py-2.5 text-sm text-ink-muted"
               >
                 <span>
-                  <span className="font-medium text-stone-800">{card.title}</span>
+                  <span className="font-medium text-ink-secondary">{card.title}</span>
                   {card.dismissedReason ? ` — “${card.dismissedReason}”` : null}
                 </span>
-                <span className="text-xs text-stone-500">
+                <span className="text-xs text-ink-soft tabular-nums">
                   cooldown until{" "}
                   {card.cooldownUntil ? fmtDateTime(card.cooldownUntil) : "—"}
                 </span>

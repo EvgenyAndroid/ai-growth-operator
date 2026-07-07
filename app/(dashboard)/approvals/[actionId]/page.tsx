@@ -99,10 +99,10 @@ function Section({
 }) {
   return (
     <Card as="section">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
         {title}
       </h2>
-      <div className="mt-2">{children}</div>
+      <div className="mt-2.5">{children}</div>
     </Card>
   );
 }
@@ -136,28 +136,31 @@ export default async function DraftReviewPage({
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-4 px-4 py-8">
-      <nav className="flex gap-3 text-sm text-stone-500">
-        <Link href="/approvals" className="underline underline-offset-2 hover:text-stone-800">
+      <nav className="flex gap-3 text-sm text-ink-muted">
+        <Link
+          href="/approvals"
+          className="underline-offset-2 transition-colors duration-150 hover:text-ink hover:underline"
+        >
           ← Approval Center
         </Link>
         <Link
           href={`/opportunities/${card.id}`}
-          className="underline underline-offset-2 hover:text-stone-800"
+          className="underline-offset-2 transition-colors duration-150 hover:text-ink hover:underline"
         >
           Opportunity detail
         </Link>
       </nav>
 
       <header className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
             Campaign Draft Review
           </h1>
           <Badge tone={action.status === "launched" ? "positive" : "caution"}>
             {action.status === "launched" ? "activated" : `status: ${action.status}`}
           </Badge>
         </div>
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-ink-muted">
           {RECIPE_SHORT_NAMES[card.recipeId]} · draft v{draft.currentVersion} ·
           created {fmtDateTime(draft.createdAt)}
         </p>
@@ -173,7 +176,7 @@ export default async function DraftReviewPage({
       {action.status !== "launched" ? <DraftNotActivationBanner /> : null}
 
       <Section title="Objective">
-        <p className="text-sm text-stone-700">
+        <p className="text-sm leading-relaxed text-ink-secondary">
           {card.title} — {card.explanation.whyItMatters}
         </p>
       </Section>
@@ -207,20 +210,20 @@ export default async function DraftReviewPage({
 
         <Section title="Suppression rules">
           {detail.suppressionAudience ? (
-            <p className="mb-2 text-sm text-stone-700">
-              <span className="font-medium">{detail.suppressionAudience.name}: </span>
+            <p className="mb-2 text-sm leading-relaxed text-ink-secondary">
+              <span className="font-medium text-ink">{detail.suppressionAudience.name}: </span>
               {detail.suppressionAudience.size.toLocaleString()} customers
               suppressed.
             </p>
           ) : null}
           {detail.exclusionsApplied.length > 0 ? (
-            <ul className="list-disc space-y-0.5 pl-5 text-sm text-stone-700">
+            <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink-secondary marker:text-ink-soft">
               {detail.exclusionsApplied.map((x) => (
                 <li key={x}>{x}</li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-stone-600">No exclusions recorded.</p>
+            <p className="text-sm text-ink-muted">No exclusions recorded.</p>
           )}
         </Section>
       </div>
@@ -230,9 +233,9 @@ export default async function DraftReviewPage({
           {draft.copy.map((step) => (
             <li
               key={step.step}
-              className="rounded-md border border-stone-200 bg-stone-50 p-4"
+              className="rounded-md border border-border bg-surface-soft/60 p-4"
             >
-              <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-ink-soft">
                 <Badge tone="neutral">step {step.step}</Badge>
                 <span>{step.channel === "email" ? "Email" : "Meta audience"}</span>
                 {typeof step.sendDelayHours === "number" ? (
@@ -247,20 +250,20 @@ export default async function DraftReviewPage({
                 )}
               </div>
               {step.subject ? (
-                <p className="mt-2 text-sm font-semibold text-stone-900">
+                <p className="mt-2.5 text-sm font-semibold tracking-tight text-ink">
                   {step.subject}
                 </p>
               ) : null}
               {step.previewText ? (
-                <p className="text-xs text-stone-500">{step.previewText}</p>
+                <p className="mt-0.5 text-xs text-ink-soft">{step.previewText}</p>
               ) : null}
-              <p className="mt-2 whitespace-pre-wrap text-sm text-stone-700">
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">
                 {step.body}
               </p>
             </li>
           ))}
         </ol>
-        <p className="mt-2 text-xs text-stone-500">
+        <p className="mt-2.5 text-xs leading-5 text-ink-soft">
           Template-generated copy (no LLM in alpha). Offers never exceed the
           Operating Rules discount ceiling of {rules.maxDiscountPercent}%.
         </p>
@@ -272,23 +275,26 @@ export default async function DraftReviewPage({
 
       <Section title="Claim warnings">
         {claimHits.length > 0 ? (
-          <ul className="space-y-1">
+          <ul className="space-y-1.5">
             {claimHits.map((h) => (
-              <li key={`${h.step}:${h.claim}`} className="text-sm text-rose-700">
+              <li
+                key={`${h.step}:${h.claim}`}
+                className="rounded-md border border-red-200 bg-danger-soft/50 px-3 py-2 text-sm leading-relaxed text-red-800"
+              >
                 Step {h.step} contains banned claim “{h.claim}” — edit the copy
                 or it will be blocked at approval (PRD 12.6).
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-stone-600">
+          <p className="text-sm leading-relaxed text-ink-muted">
             No banned claims detected in this draft (checked against Operating
             Rules v{rules.version}). Governance re-checks all copy at approval
             — non-overrideable claims block activation outright.
           </p>
         )}
         {isMeta ? (
-          <p className="mt-2 text-sm text-amber-800">
+          <p className="mt-2 text-sm leading-relaxed text-amber-800">
             Meta drafts never use lift, incrementality, recovered-revenue,
             causal ROAS, or holdout language — reporting stays directional
             (PRD 15.4).

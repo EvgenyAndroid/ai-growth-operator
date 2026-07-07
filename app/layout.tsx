@@ -1,17 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppShell from "./app-shell";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// No font CDN / next/font network fetch: the app must stay offline-capable.
+// Inter is picked up from the system font stack defined in globals.css.
 
 export const metadata: Metadata = {
   title: {
@@ -28,11 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col font-sans text-stone-900">
+    <html lang="en" className="h-full antialiased">
+      <body className="flex min-h-full flex-col font-sans text-ink">
         <AppShell>{children}</AppShell>
       </body>
     </html>

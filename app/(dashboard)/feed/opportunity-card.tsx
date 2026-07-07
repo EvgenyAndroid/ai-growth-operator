@@ -6,6 +6,10 @@
  * recommended action, measurement mode, approval needed, CTA, dismiss.
  * A card without a full ExplanationContract never reaches this component
  * (PRD 4.4 — enforced by the server layer).
+ *
+ * This is the HERO component of the product (design brief §Components):
+ * subtle hover lift, strong-not-loud border, and the top-priority card
+ * carries a restrained accent bar.
  */
 
 import Link from "next/link";
@@ -39,7 +43,7 @@ function CoverageDisclosure({
   // The note is rendered verbatim (lib/contracts IdentifiedCoverage) and
   // already states the identified-transaction share.
   return (
-    <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+    <p className="rounded-md border border-amber-200 bg-warning-soft px-3 py-2 text-xs leading-5 text-amber-900">
       {coverage.note}
     </p>
   );
@@ -56,9 +60,12 @@ const STATUS_TONE: Record<string, "neutral" | "info" | "positive"> = {
 export function OpportunityCard({
   accountId,
   card,
+  priority = false,
 }: {
   accountId: string;
   card: OpportunityCardView;
+  /** Top card in the feed gets a subtle accent bar (design brief). */
+  priority?: boolean;
 }) {
   const recommended =
     card.recommendedAction !== null
@@ -66,10 +73,26 @@ export function OpportunityCard({
       : "—";
 
   return (
-    <Card as="article" className="flex flex-col gap-3">
+    <Card
+      as="article"
+      className={
+        "relative flex flex-col gap-3 overflow-hidden " +
+        "transition-[box-shadow,transform] duration-150 motion-safe:hover:-translate-y-0.5 hover:shadow-card-hover" +
+        (priority ? " border-border-strong" : "")
+      }
+    >
+      {priority ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-0.5 bg-accent"
+        />
+      ) : null}
+
       {/* Title row + badges */}
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <h3 className="text-base font-semibold text-stone-900">{card.title}</h3>
+        <h3 className="text-base font-semibold leading-snug tracking-tight text-ink">
+          {card.title}
+        </h3>
         <div className="flex flex-wrap gap-1.5">
           <ConfidenceBadge level={card.confidence} />
           <MeasurementBadge mode={card.measurementMode} />
@@ -92,43 +115,43 @@ export function OpportunityCard({
       <CoverageDisclosure coverage={card.coverage} />
 
       {/* What was found / why it matters */}
-      <div className="grid gap-2 text-sm text-stone-700 sm:grid-cols-2">
+      <div className="grid gap-3 text-sm leading-relaxed text-ink-secondary sm:grid-cols-2">
         <div>
-          <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500">
+          <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
             What was found
           </span>
-          <p className="mt-0.5">{card.explanation.found}</p>
+          <p className="mt-1">{card.explanation.found}</p>
         </div>
         <div>
-          <span className="block text-xs font-semibold uppercase tracking-wide text-stone-500">
+          <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
             Why it matters
           </span>
-          <p className="mt-0.5">{card.explanation.whyItMatters}</p>
+          <p className="mt-1">{card.explanation.whyItMatters}</p>
         </div>
       </div>
 
       {/* Recommended action + approval needed */}
-      <div className="rounded-md bg-stone-50 px-3 py-2 text-sm">
+      <div className="rounded-md border border-border bg-surface-soft/70 px-3.5 py-2.5 text-sm">
         <p>
-          <span className="font-medium text-stone-800">Recommended action: </span>
-          <span className="text-stone-700">{recommended}</span>
+          <span className="font-medium text-ink">Recommended action: </span>
+          <span className="text-ink-secondary">{recommended}</span>
         </p>
-        <p className="mt-1 text-stone-600">
-          <span className="font-medium text-stone-800">Approval needed: </span>
+        <p className="mt-1 text-ink-muted">
+          <span className="font-medium text-ink">Approval needed: </span>
           {card.explanation.approvalNeeded}
         </p>
       </div>
 
       {/* Footer: data-as-of + CTA + dismiss */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-stone-100 pt-3">
-        <span className="text-xs text-stone-500">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+        <span className="text-xs text-ink-soft">
           Data as of {fmtDateTime(card.dataAsOf)} · {card.measurementLabelCopy}
         </span>
         <div className="flex items-center gap-2">
           <DismissButton accountId={accountId} opportunityId={card.id} />
           <Link
             href={`/opportunities/${card.id}`}
-            className="inline-flex items-center rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700"
+            className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:shadow-none"
           >
             Review &amp; draft
           </Link>

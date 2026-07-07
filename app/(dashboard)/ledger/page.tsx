@@ -101,8 +101,8 @@ export default async function LedgerPage({
             href={buildHref({ action: actionId, opportunity: opportunityId })}
             className={
               !eventType
-                ? "rounded-full border border-stone-900 bg-stone-900 px-3 py-1 text-xs font-medium text-stone-50"
-                : "rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50"
+                ? "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-white"
+                : "rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-muted transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
             }
           >
             all
@@ -113,8 +113,8 @@ export default async function LedgerPage({
               href={buildHref({ type, action: actionId, opportunity: opportunityId })}
               className={
                 eventType === type
-                  ? "rounded-full border border-stone-900 bg-stone-900 px-3 py-1 text-xs font-medium text-stone-50"
-                  : "rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50"
+                  ? "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-white"
+                  : "rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-muted transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
               }
             >
               {type}
@@ -122,7 +122,7 @@ export default async function LedgerPage({
           ))}
         </div>
         {hasEntityFilter ? (
-          <p className="mt-3 text-sm text-stone-600">
+          <p className="mt-3 text-sm text-ink-muted">
             Filtered to{" "}
             {actionId ? (
               <>
@@ -136,7 +136,10 @@ export default async function LedgerPage({
               </>
             ) : null}
             {" · "}
-            <Link className="underline" href={buildHref({ type: eventType })}>
+            <Link
+              className="font-medium text-accent underline underline-offset-2 transition-colors duration-150 hover:text-accent-hover"
+              href={buildHref({ type: eventType })}
+            >
               clear entity filter
             </Link>
           </p>
@@ -146,7 +149,7 @@ export default async function LedgerPage({
       <LedgerTable entries={page.entries} />
 
       <div className="flex items-center justify-between">
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-ink-soft">
           Showing {page.entries.length} entries
           {eventType ? ` of type "${eventType}"` : ""}
           {cursor ? " (paged)" : ""}. Every entry written through the Operator
@@ -160,7 +163,7 @@ export default async function LedgerPage({
               opportunity: opportunityId,
               cursor: page.nextCursor,
             })}
-            className="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
+            className="rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
           >
             Older entries →
           </Link>

@@ -33,13 +33,13 @@ function AudienceCard({ detail }: { detail: OpportunityDetailView }) {
   return (
     <Card as="article" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-stone-900">
+        <h2 className="text-base font-semibold tracking-tight text-ink">
           {RECIPE_SHORT_NAMES[card.recipeId]}
         </h2>
         <Badge tone="neutral">read-only in alpha</Badge>
       </div>
 
-      <StatList>
+      <StatList className="rounded-md border border-border bg-surface-soft/60 px-3">
         <StatRow label="Audience" value={detail.audience?.name ?? "—"} />
         <StatRow
           label="Size (after consent, suppression, exclusions)"
@@ -58,36 +58,38 @@ function AudienceCard({ detail }: { detail: OpportunityDetailView }) {
         <StatRow label="Data as of" value={fmtDateTime(card.dataAsOf)} />
       </StatList>
 
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-          Inclusion rules
-        </h3>
-        <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-stone-700">
-          {RECIPE_INCLUSION_RULES[card.recipeId].map((r) => (
-            <li key={r}>{r}</li>
-          ))}
-        </ul>
-      </div>
-
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-          Exclusions applied
-        </h3>
-        {detail.exclusionsApplied.length > 0 ? (
-          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-stone-700">
-            {detail.exclusionsApplied.map((x) => (
-              <li key={x}>{x}</li>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+            Inclusion rules
+          </h3>
+          <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink-secondary marker:text-ink-soft">
+            {RECIPE_INCLUSION_RULES[card.recipeId].map((r) => (
+              <li key={r}>{r}</li>
             ))}
           </ul>
-        ) : (
-          <p className="mt-1 text-sm text-stone-600">None.</p>
-        )}
+        </div>
+
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+            Exclusions applied
+          </h3>
+          {detail.exclusionsApplied.length > 0 ? (
+            <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink-secondary marker:text-ink-soft">
+              {detail.exclusionsApplied.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1.5 text-sm text-ink-muted">None.</p>
+          )}
+        </div>
       </div>
 
-      <div className="border-t border-stone-100 pt-2">
+      <div className="border-t border-border pt-2.5">
         <Link
           href={`/opportunities/${card.id}`}
-          className="text-sm font-medium text-stone-700 underline underline-offset-2 hover:text-stone-900"
+          className="text-sm font-medium text-accent underline-offset-2 transition-colors duration-150 hover:text-accent-hover hover:underline"
         >
           View opportunity detail →
         </Link>
@@ -108,8 +110,11 @@ export default async function AudienceBuilderPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8">
-      <nav className="text-sm text-stone-500">
-        <Link href="/feed" className="underline underline-offset-2 hover:text-stone-800">
+      <nav className="text-sm text-ink-muted">
+        <Link
+          href="/feed"
+          className="underline-offset-2 transition-colors duration-150 hover:text-ink hover:underline"
+        >
           ← Back to feed
         </Link>
       </nav>

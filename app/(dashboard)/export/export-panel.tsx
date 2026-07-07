@@ -113,19 +113,19 @@ export function ExportPanel({ accountId }: { accountId: string }) {
         return (
           <li
             key={objectType}
-            className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm"
+            className="rounded-card border border-border bg-surface p-5 shadow-card transition-shadow duration-150 hover:shadow-card-hover"
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <h3 className="text-base font-semibold text-stone-900">{label}</h3>
-                <p className="mt-0.5 text-sm text-stone-500">{description}</p>
+                <h3 className="text-base font-semibold tracking-tight text-ink">{label}</h3>
+                <p className="mt-0.5 text-sm text-ink-muted">{description}</p>
               </div>
               <div className="flex shrink-0 gap-2">
                 <button
                   type="button"
                   disabled={state.status === "running"}
                   onClick={() => runExport(objectType, "csv")}
-                  className="inline-flex items-center rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-900 transition-colors hover:bg-stone-50 disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex items-center rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-ink shadow-sm transition-colors duration-150 hover:bg-surface-soft disabled:pointer-events-none disabled:opacity-50"
                 >
                   {state.status === "running" && state.format === "csv"
                     ? "Exporting…"
@@ -135,7 +135,7 @@ export function ExportPanel({ accountId }: { accountId: string }) {
                   type="button"
                   disabled={state.status === "running"}
                   onClick={() => runExport(objectType, "json")}
-                  className="inline-flex items-center rounded-md border border-transparent bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700 disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-50"
                 >
                   {state.status === "running" && state.format === "json"
                     ? "Exporting…"
@@ -160,18 +160,18 @@ function ExportStatus({
 }) {
   if (state.status === "idle") return null;
   if (state.status === "running") {
-    return <p className="mt-3 text-sm text-stone-500">Export job running…</p>;
+    return <p className="mt-3 text-sm text-ink-muted">Export job running…</p>;
   }
   if (state.status === "error") {
     return (
-      <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+      <p className="mt-3 rounded-md border border-red-200 bg-danger-soft/60 px-3 py-2 text-sm text-red-800">
         Export failed: {state.message}
       </p>
     );
   }
   const { job } = state;
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-emerald-200 bg-success-soft/60 px-3 py-2 text-sm text-emerald-900">
       <span>
         <strong>Completed</strong> — {job.fileName} ({job.format.toUpperCase()},{" "}
         {job.rowCount.toLocaleString("en-US")} rows)
@@ -183,7 +183,7 @@ function ExportStatus({
       <button
         type="button"
         onClick={() => onRedownload(job)}
-        className="text-xs font-medium underline"
+        className="rounded-sm text-xs font-medium underline underline-offset-2 transition-colors duration-150 hover:text-emerald-950"
       >
         Download again
       </button>

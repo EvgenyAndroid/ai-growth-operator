@@ -55,9 +55,9 @@ function launchedActions(entries: LedgerEntryView[]): LedgerEntryView[] {
 
 function QA({ question, children }: { question: string; children: React.ReactNode }) {
   return (
-    <div className="border-b border-dotted border-stone-200 py-3 last:border-b-0">
-      <h3 className="text-sm font-semibold text-stone-900">{question}</h3>
-      <div className="mt-1 text-sm text-stone-700">{children}</div>
+    <div className="border-b border-dotted border-border py-3 last:border-b-0">
+      <h3 className="text-sm font-semibold text-ink">{question}</h3>
+      <div className="mt-1 text-sm text-ink-secondary">{children}</div>
     </div>
   );
 }
@@ -198,8 +198,8 @@ export default async function PerformancePage({
                   href={`/performance?action=${entry.actionId}`}
                   className={
                     entry.actionId === selectedActionId
-                      ? "inline-flex items-center gap-2 rounded-md border border-stone-900 bg-stone-900 px-3 py-1.5 text-sm font-medium text-stone-50"
-                      : "inline-flex items-center gap-2 rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                      ? "inline-flex items-center gap-2 rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-sm"
+                      : "inline-flex items-center gap-2 rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
                   }
                 >
                   <span className="font-mono text-xs">{shortId(entry.actionId)}</span>
@@ -212,7 +212,7 @@ export default async function PerformancePage({
       ) : (
         <Card>
           <SectionHeading title="No launched actions yet" />
-          <p className="mt-2 text-sm text-stone-600">
+          <p className="mt-2 text-sm text-ink-muted">
             Performance reads become available after an action is approved and
             activated (drafting alone is not activation — 26A.4). Until then,
             the simulated example readouts below show how each of the three
@@ -223,7 +223,7 @@ export default async function PerformancePage({
 
       {loadError ? (
         <Card>
-          <p className="text-sm text-rose-700">{loadError}</p>
+          <p className="text-sm text-danger">{loadError}</p>
         </Card>
       ) : null}
 
@@ -235,7 +235,7 @@ export default async function PerformancePage({
             <ConfBadge level={view.readout.confidence} />
             <SimulatedBadge />
           </div>
-          <p className="mt-2 text-xs text-stone-500">
+          <p className="mt-2 text-xs text-ink-soft">
             Action <span className="font-mono">{view.actionId}</span> ·{" "}
             {view.actionType} · recipe {view.recipeId} · launched{" "}
             {fmtDate(view.launchedAt)}
@@ -243,7 +243,7 @@ export default async function PerformancePage({
 
           {/* 26A.2 — the window is always stated */}
           <div className="mt-4">
-            <p className="text-sm font-medium text-stone-900">
+            <p className="text-sm font-medium text-ink">
               Read window: {view.readout.window.readType},{" "}
               {fmtDate(view.readout.window.start)} →{" "}
               {fmtDate(view.readout.window.end)}
@@ -256,8 +256,8 @@ export default async function PerformancePage({
                     href={`/performance?action=${view.actionId}&read=${window.readType}`}
                     className={
                       window.used
-                        ? "inline-flex items-center gap-1 rounded-full border border-stone-900 bg-stone-900 px-3 py-1 text-xs font-medium text-stone-50"
-                        : "inline-flex items-center gap-1 rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50"
+                        ? "inline-flex items-center gap-1 rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-white"
+                        : "inline-flex items-center gap-1 rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-muted transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
                     }
                   >
                     {window.readType} · {fmtDate(window.start)} → {fmtDate(window.end)}
@@ -292,13 +292,19 @@ export default async function PerformancePage({
           <MetricsTable metrics={view.readout.metrics} className="mt-2" />
           <SectionHeading title="Caveats" className="mt-6" />
           <CaveatList caveats={view.readout.caveats} className="mt-2" />
-          <p className="mt-4 text-xs text-stone-500">
+          <p className="mt-4 text-xs text-ink-soft">
             Full audit trail:{" "}
-            <Link className="underline" href={`/activation?action=${view.actionId}`}>
+            <Link
+              className="font-medium text-accent underline underline-offset-2 transition-colors duration-150 hover:text-accent-hover"
+              href={`/activation?action=${view.actionId}`}
+            >
               activation status
             </Link>{" "}
             ·{" "}
-            <Link className="underline" href={`/ledger?action=${view.actionId}`}>
+            <Link
+              className="font-medium text-accent underline underline-offset-2 transition-colors duration-150 hover:text-accent-hover"
+              href={`/ledger?action=${view.actionId}`}
+            >
               context ledger
             </Link>
           </p>
@@ -312,7 +318,7 @@ export default async function PerformancePage({
         />
         {view ? (
           <details className="mt-3">
-            <summary className="cursor-pointer text-sm font-medium text-stone-700">
+            <summary className="cursor-pointer text-sm font-medium text-ink-secondary transition-colors duration-150 hover:text-ink">
               Show the three example readouts
             </summary>
             <div className="mt-3 grid gap-4 lg:grid-cols-3">

@@ -1,12 +1,14 @@
 /**
  * components/ui/primitives.tsx — shared UI primitives for all slices.
  *
- * Clean, paper-ish neutral style. No external UI libraries. These components
- * take no function props by default, so they render in both Server and Client
- * Components; interactive Button usage belongs inside client components.
+ * Token-driven premium-neutral style (see docs/design-brief.md). No external
+ * UI libraries. These components take no function props by default, so they
+ * render in both Server and Client Components; interactive Button usage
+ * belongs inside client components.
  *
  * Badge variants encode the trust rules: the three measurement labels
- * (PRD 4.6) and the three confidence levels (PRD 11) render distinctly.
+ * (PRD 4.6) and the three confidence levels (PRD 11) render distinctly, and
+ * "directional" must never look as strong as "holdout-verified".
  */
 
 import * as React from "react";
@@ -40,7 +42,7 @@ export function Card({
   return (
     <Tag
       className={cx(
-        "rounded-lg border border-stone-200 bg-white shadow-sm",
+        "rounded-card border border-border bg-surface shadow-card",
         "p-5",
         className
       )}
@@ -51,17 +53,25 @@ export function Card({
 }
 
 // ---------------------------------------------------------------------------
-// Badge — confidence + measurement-label variants
+// Badge — confidence + measurement-label + status pill variants
 // ---------------------------------------------------------------------------
 
-type BadgeTone = "neutral" | "positive" | "caution" | "info" | "danger";
+type BadgeTone =
+  | "neutral"
+  | "positive"
+  | "caution"
+  | "info"
+  | "danger"
+  | "directional";
 
 const TONE_CLASSES: Record<BadgeTone, string> = {
-  neutral: "bg-stone-100 text-stone-700 border-stone-200",
-  positive: "bg-emerald-50 text-emerald-800 border-emerald-200",
-  caution: "bg-amber-50 text-amber-800 border-amber-200",
-  info: "bg-sky-50 text-sky-800 border-sky-200",
-  danger: "bg-rose-50 text-rose-800 border-rose-200",
+  neutral: "border-slate-200 bg-neutral-soft text-slate-600",
+  positive: "border-emerald-200 bg-success-soft text-emerald-800",
+  caution: "border-amber-200 bg-warning-soft text-amber-800",
+  info: "border-blue-200 bg-info-soft text-blue-800",
+  danger: "border-red-200 bg-danger-soft text-red-800",
+  // Deliberately quieter than "positive": violet/slate, no strong border.
+  directional: "border-violet-200/70 bg-directional-soft text-violet-700",
 };
 
 export function Badge({
@@ -79,7 +89,7 @@ export function Badge({
     <span
       title={title}
       className={cx(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5",
         "text-xs font-medium leading-5 whitespace-nowrap",
         TONE_CLASSES[tone],
         className
@@ -87,6 +97,16 @@ export function Badge({
     >
       {children}
     </span>
+  );
+}
+
+/** Small status dot rendered inside pills; decorative only. */
+function PillDot({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cx("h-1.5 w-1.5 shrink-0 rounded-full", className)}
+    />
   );
 }
 
@@ -120,12 +140,22 @@ export function ConfidenceBadge({
 const MEASUREMENT_TONE: Record<MeasurementMode, BadgeTone> = {
   holdout: "positive",
   before_after_no_control: "caution",
-  directional: "neutral",
+  directional: "directional",
+};
+
+/** Dot color per measurement mode; directional gets none so it reads softer. */
+const MEASUREMENT_DOT: Record<MeasurementMode, string | null> = {
+  holdout: "bg-success",
+  before_after_no_control: "bg-warning",
+  directional: null,
 };
 
 /**
  * PRD 4.6 — exactly three measurement labels. This badge is the ONLY approved
  * way to render one; free-text measurement labels are a trust-rule violation.
+ * Visual hierarchy: holdout-verified (green, dotted) > before/after (amber,
+ * dotted) > directional (muted violet, no dot) — directional must never look
+ * as strong as holdout-verified.
  */
 export function MeasurementBadge({
   mode,
@@ -134,8 +164,10 @@ export function MeasurementBadge({
   mode: MeasurementMode;
   className?: string;
 }) {
+  const dot = MEASUREMENT_DOT[mode];
   return (
     <Badge tone={MEASUREMENT_TONE[mode]} className={className}>
+      {dot ? <PillDot className={dot} /> : null}
       {MEASUREMENT_LABEL_COPY[mode]}
     </Badge>
   );
@@ -164,13 +196,17 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const BUTTON_CLASSES: Record<ButtonVariant, string> = {
   primary:
-    "bg-stone-900 text-stone-50 hover:bg-stone-700 border border-transparent",
+    "border border-transparent bg-primary text-white shadow-sm " +
+    "hover:bg-primary-hover active:bg-primary-hover active:shadow-none",
   secondary:
-    "bg-white text-stone-900 hover:bg-stone-50 border border-stone-300",
+    "border border-border-strong bg-surface text-ink shadow-sm " +
+    "hover:bg-surface-soft active:bg-primary-soft active:shadow-none",
   ghost:
-    "bg-transparent text-stone-700 hover:bg-stone-100 border border-transparent",
+    "border border-transparent bg-transparent text-ink-secondary " +
+    "hover:bg-neutral-soft hover:text-ink active:bg-primary-soft",
   danger:
-    "bg-white text-rose-700 hover:bg-rose-50 border border-rose-300",
+    "border border-red-200 bg-surface text-red-700 shadow-sm " +
+    "hover:bg-red-50 hover:border-red-300 active:bg-danger-soft active:shadow-none",
 };
 
 export function Button({
@@ -185,9 +221,10 @@ export function Button({
   return (
     <button
       className={cx(
-        "inline-flex items-center justify-center gap-2 rounded-md font-medium",
-        "transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900",
-        "disabled:opacity-50 disabled:pointer-events-none",
+        "inline-flex items-center justify-center gap-2 rounded-md font-medium select-none",
+        "transition-colors duration-150",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        "disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm",
         BUTTON_CLASSES[variant],
         className
@@ -214,12 +251,14 @@ export function SectionHeading({
 }) {
   return (
     <div className={cx("flex items-end justify-between gap-4", className)}>
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight text-stone-900">
+      <div className="min-w-0">
+        <h2 className="text-lg font-semibold tracking-tight text-ink">
           {title}
         </h2>
         {subtitle ? (
-          <p className="mt-0.5 text-sm text-stone-500">{subtitle}</p>
+          <p className="mt-0.5 text-sm leading-snug text-ink-muted">
+            {subtitle}
+          </p>
         ) : null}
       </div>
       {actions ? <div className="flex shrink-0 gap-2">{actions}</div> : null}
@@ -246,14 +285,14 @@ export function StatRow({
     <div
       className={cx(
         "flex items-baseline justify-between gap-4 py-1.5",
-        "border-b border-dotted border-stone-200 last:border-b-0",
+        "border-b border-dotted border-border last:border-b-0",
         className
       )}
     >
-      <dt className="text-sm text-stone-500" title={hint}>
+      <dt className="text-sm text-ink-muted" title={hint}>
         {label}
       </dt>
-      <dd className="text-sm font-medium text-stone-900 text-right">
+      <dd className="text-right text-sm font-medium text-ink tabular-nums">
         {value}
       </dd>
     </div>
@@ -289,18 +328,34 @@ export function EmptyState({
   return (
     <div
       className={cx(
-        "rounded-lg border border-dashed border-stone-300 bg-stone-50",
+        "rounded-lg border border-dashed border-border-strong bg-surface-soft/60",
         "px-6 py-10 text-center",
         className
       )}
     >
-      <h3 className="text-base font-semibold text-stone-900">{title}</h3>
+      <h3 className="text-base font-semibold text-ink">{title}</h3>
       {description ? (
-        <p className="mx-auto mt-1 max-w-md text-sm text-stone-500">
+        <p className="mx-auto mt-1 max-w-md text-sm text-ink-muted">
           {description}
         </p>
       ) : null}
       {children ? <div className="mt-4">{children}</div> : null}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton — loading placeholder (pulse is guarded by motion-safe)
+// ---------------------------------------------------------------------------
+
+export function Skeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cx(
+        "rounded-md bg-slate-200/80 motion-safe:animate-pulse",
+        className
+      )}
+    />
   );
 }

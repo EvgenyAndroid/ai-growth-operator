@@ -36,17 +36,24 @@ interface QueueItem {
 function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
   const { action, card } = item;
   return (
-    <Card as="li" className="flex flex-wrap items-center justify-between gap-3">
+    <Card
+      as="li"
+      className={
+        "flex flex-wrap items-center justify-between gap-3 " +
+        "transition-[box-shadow] duration-150 hover:shadow-card-hover" +
+        (pending ? "" : " bg-surface-soft/40")
+      }
+    >
       <div className="min-w-0">
-        <p className="font-medium text-stone-900">{card.title}</p>
-        <p className="mt-0.5 text-sm text-stone-500">
+        <p className="font-semibold tracking-tight text-ink">{card.title}</p>
+        <p className="mt-0.5 text-sm text-ink-muted">
           {RECIPE_SHORT_NAMES[card.recipeId]} · {action.type} ·{" "}
           {action.audienceSize !== null
             ? `${action.audienceSize.toLocaleString()} recipients`
             : "audience —"}{" "}
           · Operating Rules v{action.constitutionVersion}
         </p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <ConfidenceBadge level={card.confidence} />
           <MeasurementBadge mode={action.measurementMode} />
           {action.activationLevel ? (
@@ -61,7 +68,7 @@ function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
             </Badge>
           ) : null}
           {action.launchedAt ? (
-            <span className="text-xs text-stone-500">
+            <span className="text-xs text-ink-soft">
               launched {fmtDateTime(action.launchedAt)}
             </span>
           ) : null}
@@ -71,8 +78,8 @@ function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
         href={`/approvals/${action.actionId}?opp=${card.id}`}
         className={
           pending
-            ? "inline-flex items-center rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700"
-            : "text-sm font-medium text-stone-700 underline underline-offset-2 hover:text-stone-900"
+            ? "inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:shadow-none"
+            : "inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
         }
       >
         {pending ? "Review draft" : "View"}
@@ -103,8 +110,11 @@ export default async function ApprovalCenterPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8">
-      <nav className="text-sm text-stone-500">
-        <Link href="/feed" className="underline underline-offset-2 hover:text-stone-800">
+      <nav className="text-sm text-ink-muted">
+        <Link
+          href="/feed"
+          className="underline-offset-2 transition-colors duration-150 hover:text-ink hover:underline"
+        >
           ← Back to feed
         </Link>
       </nav>
@@ -115,8 +125,14 @@ export default async function ApprovalCenterPage() {
       <DraftNotActivationBanner />
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
           Pending your review ({pending.length})
+          {pending.length > 0 ? (
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"
+            />
+          ) : null}
         </h2>
         {pending.length > 0 ? (
           <ul className="space-y-3">
@@ -131,7 +147,7 @@ export default async function ApprovalCenterPage() {
           >
             <Link
               href="/feed"
-              className="inline-flex items-center rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700"
+              className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:shadow-none"
             >
               Go to feed
             </Link>
@@ -141,7 +157,7 @@ export default async function ApprovalCenterPage() {
 
       {decided.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
             Decided ({decided.length})
           </h2>
           <ul className="space-y-3">

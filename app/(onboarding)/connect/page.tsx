@@ -20,14 +20,35 @@ import type { ConnectionStatusView } from "@/lib/server";
 const TIER_TONE = {
   required: "info",
   connectable: "neutral",
-  recommended: "positive",
+  recommended: "info",
   optional: "neutral",
 } as const;
 
+/** Small status dot rendered inside connection pills; decorative only. */
+function StatusDot({ className }: { className: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`h-1.5 w-1.5 shrink-0 rounded-full ${className}`}
+    />
+  );
+}
+
 function StatusBadge({ status }: { status: ConnectionStatusView | null }) {
   if (!status) return <Badge tone="neutral">Not connected</Badge>;
-  if (status.isStale) return <Badge tone="caution">Connected — stale</Badge>;
-  return <Badge tone="positive">Connected</Badge>;
+  if (status.isStale)
+    return (
+      <Badge tone="caution">
+        <StatusDot className="bg-warning" />
+        Connected — stale
+      </Badge>
+    );
+  return (
+    <Badge tone="positive">
+      <StatusDot className="bg-success" />
+      Connected
+    </Badge>
+  );
 }
 
 function ConnectorCard({
@@ -40,27 +61,30 @@ function ConnectorCard({
   accountId: string;
 }) {
   return (
-    <Card as="section" className="flex flex-col">
+    <Card
+      as="section"
+      className="flex flex-col transition-shadow duration-150 hover:shadow-card-hover"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-stone-900">{copy.name}</h2>
+        <h2 className="text-base font-semibold text-ink">{copy.name}</h2>
         <div className="flex flex-wrap gap-1.5">
           <Badge tone={TIER_TONE[copy.tier]}>{copy.tierLabel}</Badge>
           <StatusBadge status={status} />
         </div>
       </div>
-      <p className="mt-1 text-sm leading-6 text-stone-600">{copy.description}</p>
+      <p className="mt-1 text-sm leading-6 text-ink-secondary">{copy.description}</p>
 
       {status ? (
-        <div className="mt-3 space-y-1 text-xs text-stone-500">
+        <div className="mt-3 space-y-1 rounded-md border border-border bg-surface-soft/50 px-3 py-2 text-xs text-ink-muted">
           <p>
             Mode:{" "}
-            <span className="font-medium text-stone-700">
+            <span className="font-medium text-ink-secondary">
               {status.mode === "mock" ? "mocked connector (alpha)" : status.mode}
             </span>
           </p>
           <p>
             Last sync:{" "}
-            <span className="font-medium text-stone-700">
+            <span className="font-medium text-ink-secondary tabular-nums">
               {status.hoursSinceSync !== null
                 ? `${status.hoursSinceSync}h ago (demo clock)`
                 : "never"}
@@ -70,7 +94,7 @@ function ConnectorCard({
           {status.lastSyncRecordsRead !== null ? (
             <p>
               Last run:{" "}
-              <span className="font-medium text-stone-700">
+              <span className="font-medium text-ink-secondary tabular-nums">
                 {status.lastSyncStatus ?? "unknown"} &middot;{" "}
                 {status.lastSyncRecordsRead.toLocaleString("en-US")} records
               </span>
@@ -80,7 +104,7 @@ function ConnectorCard({
       ) : null}
 
       {copy.note ? (
-        <p className="mt-3 text-xs leading-5 text-stone-400">{copy.note}</p>
+        <p className="mt-3 text-xs leading-5 text-ink-soft">{copy.note}</p>
       ) : null}
 
       <div className="mt-auto pt-4">
@@ -95,7 +119,7 @@ function ConnectorCard({
           <button
             type="button"
             disabled
-            className="inline-flex items-center justify-center rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-400"
+            className="inline-flex items-center justify-center rounded-md border border-border bg-surface-soft px-3 py-1.5 text-sm font-medium text-ink-soft"
           >
             Connect (unavailable in demo)
           </button>
@@ -117,10 +141,10 @@ export default async function ConnectDataSourcesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+        <h1 className="text-3xl font-bold tracking-tight text-ink">
           Connect your data sources
         </h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-ink-muted">
           {isLocal
             ? "Square POS + Mailchimp are enough for your first opportunity. In the alpha, connectors are mocked and pre-connected to the demo dataset — no OAuth actually runs."
             : "Shopify + Klaviyo are enough for your first opportunity. In the alpha, connectors are mocked and pre-connected to the demo dataset — no OAuth actually runs."}
@@ -139,7 +163,7 @@ export default async function ConnectDataSourcesPage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs leading-5 text-stone-400">
+        <p className="max-w-md text-xs leading-5 text-ink-soft">
           {isLocal
             ? "First value requires only Square POS + Mailchimp; Google Business Profile is recommended for local discovery but never blocks it. Local estimates cover identified (loyalty-matched) customers only."
             : "First value requires only Shopify + Klaviyo; GA4 is recommended but never blocks it (PRD 6.1, 8.2)."}
@@ -147,7 +171,7 @@ export default async function ConnectDataSourcesPage() {
         <Link
           href="/readiness"
           aria-disabled={!requiredReady}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Check data readiness
         </Link>

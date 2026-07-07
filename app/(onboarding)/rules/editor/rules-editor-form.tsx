@@ -4,6 +4,10 @@
  * app/(onboarding)/rules/editor/rules-editor-form.tsx — THE THREE NUMBERS
  * form (PRD 12.3). Client component so validation errors from the server
  * action render inline via useActionState.
+ *
+ * Visual: a single segmented control panel (design brief "Operating Rules —
+ * control panel, not settings dump") — three number tiles in one bordered
+ * surface, large tabular numerals, accent focus treatment.
  */
 
 import * as React from "react";
@@ -35,12 +39,12 @@ function NumberField({
   step?: number;
 }) {
   return (
-    <label className="block rounded-lg border border-stone-200 bg-white p-4">
-      <span className="block text-sm font-semibold text-stone-900">{label}</span>
-      <span className="mt-0.5 block text-xs leading-5 text-stone-500">{hint}</span>
-      <span className="mt-3 flex items-baseline gap-2">
+    <label className="block bg-surface p-5">
+      <span className="block text-sm font-semibold text-ink">{label}</span>
+      <span className="mt-0.5 block text-xs leading-5 text-ink-muted">{hint}</span>
+      <span className="mt-4 flex items-baseline gap-2">
         {prefix ? (
-          <span className="text-lg font-semibold text-stone-400">{prefix}</span>
+          <span className="text-xl font-semibold text-ink-soft">{prefix}</span>
         ) : null}
         <input
           type="number"
@@ -51,10 +55,12 @@ function NumberField({
           max={max}
           step={step ?? 1}
           inputMode="numeric"
-          className="w-full rounded-md border border-stone-300 px-3 py-2 text-xl font-semibold tracking-tight text-stone-900 focus:border-stone-900 focus:outline-none"
+          className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-2xl font-semibold tracking-tight text-ink tabular-nums transition-colors duration-150 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
         />
         {suffix ? (
-          <span className="text-sm font-medium text-stone-400">{suffix}</span>
+          <span className="text-xs font-medium whitespace-nowrap text-ink-soft">
+            {suffix}
+          </span>
         ) : null}
       </span>
     </label>
@@ -77,7 +83,7 @@ export function RulesEditorForm({
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="accountId" value={accountId} />
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-card border border-border bg-border shadow-card sm:grid-cols-3">
         <NumberField
           name="monthlyBudgetCap"
           label="Monthly budget cap"
@@ -110,7 +116,7 @@ export function RulesEditorForm({
       {state.error ? (
         <p
           role="alert"
-          className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-800"
+          className="rounded-md border border-red-200 bg-danger-soft/60 px-3 py-2 text-sm font-medium text-red-800"
         >
           {state.error}
         </p>

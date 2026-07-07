@@ -39,13 +39,13 @@ function GovernancePanel({ result }: { result: ApproveActionResult }) {
       className={
         "rounded-md border px-4 py-3 " +
         (g.verdict === "pass"
-          ? "border-emerald-200 bg-emerald-50"
-          : "border-rose-200 bg-rose-50")
+          ? "border-emerald-200 bg-success-soft/50"
+          : "border-red-200 bg-danger-soft/50")
       }
     >
-      <p className="text-sm font-semibold text-stone-900">
+      <p className="text-sm font-semibold text-ink">
         Governance {g.verdict === "pass" ? "passed" : "blocked this activation"}
-        <span className="ml-2 text-xs font-normal text-stone-500">
+        <span className="ml-2 text-xs font-normal text-ink-muted">
           checked {fmtDateTime(g.checkedAt)} · Operating Rules v{g.constitutionVersion}
         </span>
       </p>
@@ -68,19 +68,19 @@ function GovernancePanel({ result }: { result: ApproveActionResult }) {
         ))}
       </ul>
       {g.reasons.length > 0 ? (
-        <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm text-rose-800">
+        <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm leading-relaxed text-red-800">
           {g.reasons.map((r) => (
             <li key={r}>{r}</li>
           ))}
         </ul>
       ) : null}
       {g.remediations.length > 0 ? (
-        <div className="mt-2 text-sm text-stone-700">
-          <span className="font-medium">How to fix: </span>
+        <div className="mt-2 text-sm leading-relaxed text-ink-secondary">
+          <span className="font-medium text-ink">How to fix: </span>
           {g.remediations.join(" · ")}
         </div>
       ) : null}
-      <p className="mt-1 text-xs text-stone-500">{g.destinationCompatibilitySummary}</p>
+      <p className="mt-1 text-xs text-ink-soft">{g.destinationCompatibilitySummary}</p>
     </div>
   );
 }
@@ -89,7 +89,7 @@ function ActivationPanel({ result }: { result: ApproveActionResult }) {
   if (!result.activated || !result.activation) return null;
   const m = result.measurement;
   return (
-    <div className="space-y-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3">
+    <div className="space-y-3 rounded-md border border-emerald-200 bg-success-soft/50 px-4 py-3">
       <p className="text-sm font-semibold text-emerald-900">
         Activated (simulated — alpha): {result.activation.levelCopy}
       </p>
@@ -107,13 +107,13 @@ function ActivationPanel({ result }: { result: ApproveActionResult }) {
             >
               {step.levelCopy}: {step.outcome.replace(/_/g, " ")}
             </Badge>
-            <span className="text-stone-600">{step.detail}</span>
+            <span className="text-ink-muted">{step.detail}</span>
           </li>
         ))}
       </ol>
       {m ? (
-        <div className="rounded-md border border-emerald-200 bg-white px-3 py-2">
-          <p className="text-sm font-medium text-stone-900">
+        <div className="rounded-md border border-emerald-200 bg-surface px-3.5 py-2.5">
+          <p className="text-sm font-medium text-ink">
             Measurement: {m.labelCopy}
             {m.downgradedByActivationLevel ? (
               <span className="ml-2 text-xs font-normal text-amber-800">
@@ -122,7 +122,7 @@ function ActivationPanel({ result }: { result: ApproveActionResult }) {
             ) : null}
           </p>
           {m.reasons.length > 0 ? (
-            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-stone-600">
+            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs leading-5 text-ink-muted">
               {m.reasons.map((r) => (
                 <li key={r}>{r}</li>
               ))}
@@ -135,10 +135,10 @@ function ActivationPanel({ result }: { result: ApproveActionResult }) {
             </StatList>
           ) : null}
           {m.contamination?.disclosure ? (
-            <p className="mt-1 text-xs text-amber-800">{m.contamination.disclosure}</p>
+            <p className="mt-1 text-xs leading-5 text-amber-800">{m.contamination.disclosure}</p>
           ) : null}
           {m.windows.length > 0 ? (
-            <p className="mt-1 text-xs text-stone-500">
+            <p className="mt-1 text-xs leading-5 text-ink-soft">
               Reads:{" "}
               {m.windows
                 .map(
@@ -258,8 +258,8 @@ export function ReviewActions({
   const blockedByGovernance = result !== null && !result.activated;
 
   return (
-    <Card as="section" className="space-y-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+    <Card as="section" className="space-y-4 border-border-strong">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
         Decision
       </h2>
 
@@ -267,19 +267,20 @@ export function ReviewActions({
       {result ? <ActivationPanel result={result} /> : null}
 
       {result?.governance.claimFindings.length ? (
-        <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+        <div className="space-y-2 rounded-md border border-amber-200 bg-warning-soft/60 px-4 py-3">
           <p className="text-sm font-semibold text-amber-900">Claim findings</p>
           <ul className="space-y-2">
             {result.governance.claimFindings.map((f) => (
-              <li key={f.claim} className="text-sm text-stone-700">
-                <span className="font-medium">“{f.claim}”</span> — {f.why}
-                <span className="block text-stone-600">
+              <li key={f.claim} className="text-sm leading-relaxed text-ink-secondary">
+                <span className="font-medium text-ink">“{f.claim}”</span> — {f.why}
+                <span className="block text-ink-muted">
                   Safer alternative: {f.saferAlternative}
                 </span>
                 {f.overrideable ? (
-                  <label className="mt-1 flex items-center gap-2 text-xs text-stone-700">
+                  <label className="mt-1 flex items-center gap-2 text-xs text-ink-secondary">
                     <input
                       type="checkbox"
+                      className="accent-accent"
                       checked={overrides.includes(f.claim)}
                       onChange={(e) =>
                         setOverrides((prev) =>
@@ -314,7 +315,7 @@ export function ReviewActions({
       ) : null}
 
       {rejected ? (
-        <p className="rounded-md border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">
+        <p className="rounded-md border border-border-strong bg-surface-soft/70 px-4 py-3 text-sm leading-relaxed text-ink-secondary">
           Draft rejected. The reason was logged and feeds the Operator&rsquo;s
           learned preferences (26B.18).
         </p>
@@ -323,8 +324,8 @@ export function ReviewActions({
       {mode === "edit" ? (
         <div className="space-y-3">
           {steps.map((step, i) => (
-            <div key={step.step} className="rounded-md border border-stone-300 p-3">
-              <p className="text-xs font-medium text-stone-500">
+            <div key={step.step} className="rounded-md border border-border-strong bg-surface p-3.5">
+              <p className="text-xs font-medium text-ink-muted">
                 Step {step.step}
                 {typeof step.offerPercent === "number"
                   ? ` · offer ${step.offerPercent}% (ceiling ${maxDiscountPercent}% — offers are edited via Operating Rules, not here)`
@@ -339,7 +340,7 @@ export function ReviewActions({
                     )
                   }
                   placeholder="Subject"
-                  className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1.5 text-sm"
+                  className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-sm text-ink placeholder:text-ink-soft"
                 />
               ) : null}
               <textarea
@@ -350,7 +351,7 @@ export function ReviewActions({
                   )
                 }
                 rows={4}
-                className="mt-2 w-full rounded-md border border-stone-300 px-2 py-1.5 text-sm"
+                className="mt-2 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-sm leading-relaxed text-ink"
               />
             </div>
           ))}
@@ -358,7 +359,7 @@ export function ReviewActions({
             value={editSummary}
             onChange={(e) => setEditSummary(e.target.value)}
             placeholder="Edit summary (required) — e.g. “softened tone, removed urgency”"
-            className="w-full rounded-md border border-stone-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-sm text-ink placeholder:text-ink-soft"
           />
           <div className="flex gap-2">
             <Button size="sm" onClick={saveEdit} disabled={busy}>
@@ -372,19 +373,21 @@ export function ReviewActions({
       ) : null}
 
       {mode === "reject" ? (
-        <div className="space-y-2 rounded-md border border-stone-300 bg-stone-50 p-3">
-          <p className="text-sm font-medium text-stone-800">Why reject this draft?</p>
+        <div className="space-y-2.5 rounded-md border border-border-strong bg-surface-soft/70 p-3.5">
+          <p className="text-sm font-medium text-ink">Why reject this draft?</p>
           <div className="flex flex-wrap gap-1.5">
             {REJECTION_REASONS.map((r) => (
               <button
                 key={r}
                 type="button"
                 onClick={() => setReason(r)}
+                aria-pressed={reason === r}
                 className={
-                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors " +
+                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-150 " +
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
                   (reason === r
-                    ? "border-stone-900 bg-stone-900 text-white"
-                    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-100")
+                    ? "border-primary bg-primary text-white"
+                    : "border-border-strong bg-surface text-ink-secondary hover:bg-surface-soft hover:text-ink")
                 }
               >
                 {r}
@@ -396,7 +399,7 @@ export function ReviewActions({
             onChange={(e) => setFreeText(e.target.value)}
             placeholder="Optional detail"
             rows={2}
-            className="w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-sm text-ink placeholder:text-ink-soft"
           />
           <div className="flex gap-2">
             <Button size="sm" variant="danger" onClick={reject} disabled={busy}>
@@ -409,17 +412,17 @@ export function ReviewActions({
         </div>
       ) : null}
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
 
       {decidable && !result?.activated && !rejected && mode === "idle" ? (
         <div className="space-y-3">
           {isMeta ? (
-            <label className="flex items-start gap-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-stone-700">
+            <label className="flex items-start gap-2 rounded-md border border-blue-200 bg-info-soft/60 px-3.5 py-2.5 text-sm leading-relaxed text-ink-secondary">
               <input
                 type="checkbox"
                 checked={metaRights}
                 onChange={(e) => setMetaRights(e.target.checked)}
-                className="mt-0.5"
+                className="mt-0.5 accent-accent"
               />
               <span>
                 I confirm this business has the right to use these customer
@@ -443,7 +446,7 @@ export function ReviewActions({
               Reject
             </Button>
           </div>
-          <p className="text-xs text-stone-500">
+          <p className="text-xs leading-5 text-ink-soft">
             Approval runs the governance chokepoint (consent, suppression,
             budget, discount ceiling, claim checks, freshness) before anything
             activates. Activation is simulated in alpha (PRD 25.1).
@@ -452,7 +455,7 @@ export function ReviewActions({
       ) : null}
 
       {!decidable && !result ? (
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-ink-muted">
           This action is {rejected ? "rejected" : "already decided"} — see the
           Approval Center for its current state.
         </p>

@@ -41,10 +41,10 @@ export default async function DataReadinessPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+        <h1 className="text-3xl font-bold tracking-tight text-ink">
           Data readiness
         </h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-ink-muted">
           Every opportunity shows a data-as-of timestamp, and launches are
           blocked when required source data is stale (PRD 8.5). Here is where
           each source stands.
@@ -55,8 +55,8 @@ export default async function DataReadinessPage() {
         as="section"
         className={
           ready
-            ? "border-emerald-200 bg-emerald-50"
-            : "border-amber-200 bg-amber-50"
+            ? "border-emerald-200 bg-success-soft/40!"
+            : "border-amber-200 bg-warning-soft/40!"
         }
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -87,7 +87,7 @@ export default async function DataReadinessPage() {
           {ready ? (
             <Link
               href="/feed"
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               Go to your Opportunity Feed
             </Link>
@@ -97,22 +97,38 @@ export default async function DataReadinessPage() {
 
       <div className="space-y-3">
         {cards.map(({ copy, status }) => (
-          <Card as="section" key={copy.id}>
+          <Card
+            as="section"
+            key={copy.id}
+            className="transition-shadow duration-150 hover:shadow-card-hover"
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-base font-semibold text-stone-900">
+                  <h2 className="text-base font-semibold text-ink">
                     {copy.name}
                   </h2>
                   {!status ? (
                     <Badge tone="neutral">Not connected</Badge>
                   ) : status.isStale ? (
-                    <Badge tone="caution">Stale — re-sync recommended</Badge>
+                    <Badge tone="caution">
+                      <span
+                        aria-hidden="true"
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"
+                      />
+                      Stale — re-sync recommended
+                    </Badge>
                   ) : (
-                    <Badge tone="positive">Fresh</Badge>
+                    <Badge tone="positive">
+                      <span
+                        aria-hidden="true"
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-success"
+                      />
+                      Fresh
+                    </Badge>
                   )}
                   {copy.tier === "recommended" ? (
-                    <Badge tone="positive">Recommended — not required</Badge>
+                    <Badge tone="info">Recommended — not required</Badge>
                   ) : null}
                   {copy.tier === "optional" ? (
                     <Badge tone="neutral">Optional</Badge>
@@ -132,17 +148,17 @@ export default async function DataReadinessPage() {
                     />
                   </StatList>
                 ) : (
-                  <p className="mt-2 text-sm text-stone-500">{copy.note}</p>
+                  <p className="mt-2 text-sm text-ink-muted">{copy.note}</p>
                 )}
               </div>
-              <div className="w-full sm:w-64">
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+              <div className="w-full rounded-lg border border-border bg-surface-soft/50 p-3 sm:w-64">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
                   What it unlocks
                 </p>
-                <ul className="mt-1.5 space-y-1 text-sm leading-6 text-stone-600">
+                <ul className="mt-1.5 space-y-1 text-sm leading-6 text-ink-secondary">
                   {copy.unlocks.map((item) => (
                     <li key={item} className="flex gap-2">
-                      <span aria-hidden className="text-stone-300">
+                      <span aria-hidden className="text-ink-soft">
                         &bull;
                       </span>
                       {item}
@@ -166,11 +182,11 @@ export default async function DataReadinessPage() {
       </div>
 
       {isLocal ? (
-        <Card as="section" className="border-stone-200 bg-stone-50">
-          <h2 className="text-sm font-semibold text-stone-900">
+        <Card as="section" className="bg-surface-soft/60 shadow-none">
+          <h2 className="text-sm font-semibold text-ink">
             How local numbers are counted
           </h2>
-          <p className="mt-1 text-sm leading-6 text-stone-600">
+          <p className="mt-1 text-sm leading-6 text-ink-secondary">
             Local estimates cover identified (loyalty-matched) customers only —
             every opportunity card and readout states the share of POS
             transactions that are identified. Unidentified walk-in sales are
@@ -179,11 +195,11 @@ export default async function DataReadinessPage() {
         </Card>
       ) : null}
 
-      <Card as="section" className="bg-stone-50">
-        <h2 className="text-sm font-semibold text-stone-900">
+      <Card as="section" className="bg-surface-soft/60 shadow-none">
+        <h2 className="text-sm font-semibold text-ink">
           How the first sync works
         </h2>
-        <p className="mt-1 text-sm leading-6 text-stone-600">
+        <p className="mt-1 text-sm leading-6 text-ink-secondary">
           {isLocal
             ? "The last 90 days of POS tickets, loyalty matches, and email profiles sync first and power your first opportunity; deeper history backfills in the background, and estimates re-verify when the backfill completes."
             : "The last 90 days of orders, checkouts, and profiles sync first and power your first opportunity; deeper history backfills in the background, and estimates re-verify when the backfill completes."}{" "}
@@ -200,7 +216,7 @@ export default async function DataReadinessPage() {
       <div className="flex justify-end">
         <Link
           href="/feed"
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Go to your Opportunity Feed
         </Link>

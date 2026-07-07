@@ -136,17 +136,17 @@ export default function BusinessSetupPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+        <h1 className="text-3xl font-bold tracking-tight text-ink">
           Tell the Operator about your business
         </h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1.5 text-sm text-ink-muted">
           This sets which opportunity recipes run and how they are framed.
         </p>
       </div>
 
       <Card as="section">
-        <h2 className="text-base font-semibold text-stone-900">Business type</h2>
-        <p className="mt-0.5 text-sm text-stone-500">
+        <h2 className="text-base font-semibold text-ink">Business type</h2>
+        <p className="mt-0.5 text-sm text-ink-muted">
           The alpha ships two demo launch profiles.
         </p>
         <div
@@ -165,27 +165,27 @@ export default function BusinessSetupPage() {
                 onClick={() => selectBusinessType(type.id)}
                 className={
                   selected
-                    ? "rounded-lg border-2 border-stone-900 bg-stone-50 p-4 text-left"
-                    : "rounded-lg border border-stone-200 p-4 text-left hover:border-stone-400"
+                    ? "cursor-pointer rounded-card border border-accent bg-accent-soft/30 p-4 text-left shadow-card ring-1 ring-accent transition-colors duration-150"
+                    : "cursor-pointer rounded-card border border-border bg-surface p-4 text-left shadow-card transition-colors duration-150 hover:border-border-strong hover:bg-surface-soft/40"
                 }
               >
                 <div className="flex items-center justify-between gap-2">
                   <span
                     className={
                       selected
-                        ? "text-sm font-semibold text-stone-900"
-                        : "text-sm font-semibold text-stone-700"
+                        ? "text-sm font-semibold text-ink"
+                        : "text-sm font-semibold text-ink-secondary"
                     }
                   >
                     {type.label}
                   </span>
-                  {selected ? <Badge tone="positive">Selected</Badge> : null}
+                  {selected ? <Badge tone="info">Selected</Badge> : null}
                 </div>
                 <p
                   className={
                     selected
-                      ? "mt-1 text-sm leading-6 text-stone-600"
-                      : "mt-1 text-sm leading-6 text-stone-500"
+                      ? "mt-1 text-sm leading-6 text-ink-secondary"
+                      : "mt-1 text-sm leading-6 text-ink-muted"
                   }
                 >
                   {type.description}
@@ -197,22 +197,22 @@ export default function BusinessSetupPage() {
             role="radio"
             aria-checked="false"
             aria-disabled="true"
-            className="rounded-lg border border-dashed border-stone-300 p-4 opacity-60"
+            className="rounded-card border border-dashed border-border-strong bg-surface-soft/50 p-4 opacity-70"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-stone-700">
+              <span className="text-sm font-semibold text-ink-secondary">
                 Marketplace / B2B / other
               </span>
               <Badge tone="neutral">Not in v0</Badge>
             </div>
-            <p className="mt-1 text-sm leading-6 text-stone-500">
+            <p className="mt-1 text-sm leading-6 text-ink-muted">
               Other business types come after these launch profiles prove out.
             </p>
           </div>
         </div>
         {businessType === "local_service" ? (
-          <p className="mt-3 rounded-md bg-stone-50 px-3 py-2 text-xs leading-5 text-stone-600">
-            <span className="font-semibold text-stone-800">
+          <p className="mt-3 rounded-md border border-border bg-neutral-soft px-3 py-2 text-xs leading-5 text-ink-secondary">
+            <span className="font-semibold text-ink">
               How local numbers work:{" "}
             </span>
             estimates cover identified (loyalty-matched) customers only — every
@@ -223,8 +223,8 @@ export default function BusinessSetupPage() {
       </Card>
 
       <Card as="section">
-        <h2 className="text-base font-semibold text-stone-900">Primary goals</h2>
-        <p className="mt-0.5 text-sm text-stone-500">
+        <h2 className="text-base font-semibold text-ink">Primary goals</h2>
+        <p className="mt-0.5 text-sm text-ink-muted">
           Pick at least one. Each maps to one of the three recipes in this
           profile.
         </p>
@@ -236,21 +236,21 @@ export default function BusinessSetupPage() {
                 key={goal.id}
                 className={
                   checked
-                    ? "flex cursor-pointer items-start gap-3 rounded-lg border-2 border-stone-900 bg-stone-50 p-4"
-                    : "flex cursor-pointer items-start gap-3 rounded-lg border border-stone-200 p-4 hover:border-stone-400"
+                    ? "flex cursor-pointer items-start gap-3 rounded-card border border-accent bg-accent-soft/30 p-4 shadow-card ring-1 ring-accent transition-colors duration-150"
+                    : "flex cursor-pointer items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors duration-150 hover:border-border-strong hover:bg-surface-soft/40"
                 }
               >
                 <input
                   type="checkbox"
                   checked={checked}
                   onChange={() => toggleGoal(goal.id)}
-                  className="mt-1 h-4 w-4 accent-stone-900"
+                  className="mt-1 h-4 w-4 accent-accent"
                 />
                 <span>
-                  <span className="block text-sm font-semibold text-stone-900">
+                  <span className="block text-sm font-semibold text-ink">
                     {goal.label}
                   </span>
-                  <span className="mt-0.5 block text-sm leading-6 text-stone-500">
+                  <span className="mt-0.5 block text-sm leading-6 text-ink-muted">
                     {goal.hint}
                   </span>
                 </span>
@@ -259,7 +259,7 @@ export default function BusinessSetupPage() {
           })}
         </div>
         {goalError ? (
-          <p className="mt-3 text-sm font-medium text-rose-700">
+          <p className="mt-3 text-sm font-medium text-red-700">
             Select at least one goal to continue.
           </p>
         ) : null}

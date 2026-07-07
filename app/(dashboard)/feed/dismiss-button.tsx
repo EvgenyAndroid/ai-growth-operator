@@ -56,8 +56,8 @@ export function DismissButton({
   }
 
   return (
-    <div className="w-full rounded-md border border-stone-300 bg-stone-50 p-3">
-      <p className="text-sm font-medium text-stone-800">
+    <div className="w-full rounded-md border border-border-strong bg-surface-soft/70 p-3.5">
+      <p className="text-sm font-medium text-ink">
         Why dismiss this opportunity?
       </p>
       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -66,11 +66,13 @@ export function DismissButton({
             key={r}
             type="button"
             onClick={() => setReason(r)}
+            aria-pressed={reason === r}
             className={
-              "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors " +
+              "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-150 " +
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
               (reason === r
-                ? "border-stone-900 bg-stone-900 text-white"
-                : "border-stone-300 bg-white text-stone-700 hover:bg-stone-100")
+                ? "border-primary bg-primary text-white"
+                : "border-border-strong bg-surface text-ink-secondary hover:bg-surface-soft hover:text-ink")
             }
           >
             {r}
@@ -82,9 +84,9 @@ export function DismissButton({
         onChange={(e) => setFreeText(e.target.value)}
         placeholder="Optional detail (helps the Operator learn)"
         rows={2}
-        className="mt-2 w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-800 placeholder:text-stone-400"
+        className="mt-2 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-sm text-ink placeholder:text-ink-soft"
       />
-      {error ? <p className="mt-1 text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="mt-1 text-sm text-danger">{error}</p> : null}
       <div className="mt-2 flex gap-2">
         <Button size="sm" onClick={submit} disabled={busy}>
           {busy ? "Dismissing…" : "Dismiss opportunity"}
@@ -98,7 +100,7 @@ export function DismissButton({
           Cancel
         </Button>
       </div>
-      <p className="mt-1.5 text-xs text-stone-500">
+      <p className="mt-1.5 text-xs leading-5 text-ink-soft">
         Dismissed cards pause re-detection for a 14-day cooldown and teach the
         Operator your preferences.
       </p>

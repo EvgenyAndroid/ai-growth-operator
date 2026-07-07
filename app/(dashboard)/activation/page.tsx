@@ -197,19 +197,19 @@ export default async function ActivationPage({
                     <MeasurementBadge mode={activation.latest.measurementMode} />
                   ) : null}
                 </div>
-                <p className="mt-2 text-sm text-stone-700">
+                <p className="mt-2 text-sm text-ink-secondary">
                   {activation.latest.reasoningSummary ??
                     activation.latest.actionTaken ??
                     "No summary recorded."}
                 </p>
                 {activation.holdout ? (
-                  <p className="mt-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+                  <p className="mt-2 rounded-md border border-blue-200 bg-info-soft/60 px-3 py-2 text-sm text-blue-900">
                     <strong>Holdout assigned:</strong>{" "}
                     {activation.holdout.reasoningSummary ??
                       "Randomized customer-level holdout assigned at launch."}
                   </p>
                 ) : null}
-                <p className="mt-2 text-xs text-stone-500">
+                <p className="mt-2 text-xs text-ink-soft">
                   Action <span className="font-mono">{activation.actionId}</span>
                   {activation.latest.destination
                     ? ` · destination: ${activation.latest.destination}`
@@ -221,7 +221,7 @@ export default async function ActivationPage({
                 </p>
                 <p className="mt-2 text-xs">
                   <Link
-                    className="underline"
+                    className="font-medium text-accent underline underline-offset-2 transition-colors duration-150 hover:text-accent-hover"
                     href={`/activation?action=${activation.actionId}`}
                   >
                     Audit trail
@@ -230,7 +230,7 @@ export default async function ActivationPage({
                     <>
                       {" · "}
                       <Link
-                        className="underline"
+                        className="font-medium text-accent underline underline-offset-2 transition-colors duration-150 hover:text-accent-hover"
                         href={`/performance?action=${activation.actionId}`}
                       >
                         Performance summary
@@ -266,10 +266,10 @@ export default async function ActivationPage({
           title="The activation ladder"
           subtitle="Klaviyo fallback levels plus Meta sync (PRD 13). The level actually used is recorded on every activation ledger entry."
         />
-        <div className="mt-3 overflow-x-auto rounded-lg border border-stone-200 bg-white shadow-sm">
+        <div className="mt-3 overflow-x-auto rounded-card border border-border bg-surface shadow-card">
           <table className="w-full min-w-[48rem] text-left text-sm">
             <thead>
-              <tr className="border-b border-stone-200 bg-stone-50 text-xs tracking-wide text-stone-500 uppercase">
+              <tr className="border-b border-border bg-surface-soft/70 text-xs tracking-wide text-ink-soft uppercase">
                 <th className="px-3 py-2 font-semibold">Level</th>
                 <th className="px-3 py-2 font-semibold">Activation</th>
                 <th className="px-3 py-2 font-semibold">Alpha status</th>
@@ -278,19 +278,19 @@ export default async function ActivationPage({
             </thead>
             <tbody>
               {LADDER_ROWS.map((row) => (
-                <tr key={row.level} className="border-b border-stone-100 align-top last:border-b-0">
-                  <td className="px-3 py-2 font-medium whitespace-nowrap text-stone-900">
+                <tr key={row.level} className="border-b border-border align-top last:border-b-0">
+                  <td className="px-3 py-2 font-medium whitespace-nowrap text-ink">
                     {row.level}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-stone-700">{row.name}</td>
-                  <td className="px-3 py-2 whitespace-nowrap text-stone-700">{row.status}</td>
-                  <td className="px-3 py-2 text-stone-600">{row.note}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-ink-secondary">{row.name}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-ink-secondary">{row.status}</td>
+                  <td className="px-3 py-2 text-ink-muted">{row.note}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-stone-500">
+        <p className="mt-2 text-xs text-ink-soft">
           Measurement rule: holdout-verified claims are only available when the
           activation path can enforce holdout exclusion. Exportable brief and
           manual setup instructions cannot, so those launches downgrade to

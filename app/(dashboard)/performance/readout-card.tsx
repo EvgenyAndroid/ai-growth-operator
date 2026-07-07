@@ -86,10 +86,21 @@ const MODE_COPY: Record<MeasurementMode, string> = {
   directional: "Directional",
 };
 
+/**
+ * Measurement pill hierarchy (design brief): holdout-verified (green, dotted)
+ * > before/after (amber, dotted) > directional (muted violet, NO dot) —
+ * directional must never look as strong as holdout-verified.
+ */
 const MODE_CLASSES: Record<MeasurementMode, string> = {
-  holdout: "bg-emerald-50 text-emerald-800 border-emerald-200",
-  before_after_no_control: "bg-amber-50 text-amber-800 border-amber-200",
-  directional: "bg-stone-100 text-stone-700 border-stone-200",
+  holdout: "bg-success-soft text-emerald-800 border-emerald-200",
+  before_after_no_control: "bg-warning-soft text-amber-800 border-amber-200",
+  directional: "bg-directional-soft text-violet-700 border-violet-200/70",
+};
+
+const MODE_DOT: Record<MeasurementMode, string | null> = {
+  holdout: "bg-success",
+  before_after_no_control: "bg-warning",
+  directional: null,
 };
 
 export function ModeBadge({
@@ -101,24 +112,31 @@ export function ModeBadge({
   large?: boolean;
   className?: string;
 }) {
+  const dot = MODE_DOT[mode];
   return (
     <span
       className={cx(
-        "inline-flex items-center rounded-full border font-medium whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-full border font-medium whitespace-nowrap",
         large ? "px-3 py-1 text-sm" : "px-2 py-0.5 text-xs leading-5",
         MODE_CLASSES[mode],
         className
       )}
     >
+      {dot ? (
+        <span
+          aria-hidden="true"
+          className={cx("h-1.5 w-1.5 shrink-0 rounded-full", dot)}
+        />
+      ) : null}
       {MODE_COPY[mode]}
     </span>
   );
 }
 
 const CONFIDENCE_CLASSES: Record<Confidence, string> = {
-  high: "bg-emerald-50 text-emerald-800 border-emerald-200",
-  medium: "bg-sky-50 text-sky-800 border-sky-200",
-  low: "bg-amber-50 text-amber-800 border-amber-200",
+  high: "bg-success-soft text-emerald-800 border-emerald-200",
+  medium: "bg-info-soft text-blue-800 border-blue-200",
+  low: "bg-warning-soft text-amber-800 border-amber-200",
 };
 
 const CONFIDENCE_COPY: Record<Confidence, string> = {
@@ -151,7 +169,7 @@ export function SimulatedBadge({ className }: { className?: string }) {
   return (
     <span
       className={cx(
-        "inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-medium leading-5 text-violet-800 whitespace-nowrap",
+        "inline-flex items-center rounded-full border border-border bg-neutral-soft px-2 py-0.5 text-xs font-medium leading-5 text-ink-muted whitespace-nowrap",
         className
       )}
       title="Alpha runs against mocked connectors — no external send or sync occurs (PRD 25.1)."
@@ -173,7 +191,7 @@ export function MetaDirectionalDisclaimer({ className }: { className?: string })
   return (
     <p
       className={cx(
-        "rounded-md border border-stone-300 bg-stone-100 px-3 py-2 text-sm font-semibold text-stone-800",
+        "rounded-md border border-violet-200/70 bg-directional-soft/70 px-3 py-2 text-sm font-semibold text-violet-900",
         className
       )}
     >
@@ -193,7 +211,7 @@ export function ContaminationNotice({
   return (
     <p
       className={cx(
-        "rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800",
+        "rounded-md border border-red-200 bg-danger-soft/60 px-3 py-2 text-sm text-red-800",
         className
       )}
     >
@@ -222,10 +240,10 @@ export function MetricsTable({
       {entries.map(([key, value]) => (
         <div
           key={key}
-          className="flex items-baseline justify-between gap-4 border-b border-dotted border-stone-200 py-1.5 last:border-b-0"
+          className="flex items-baseline justify-between gap-4 border-b border-dotted border-border py-1.5 last:border-b-0"
         >
-          <dt className="text-sm text-stone-500 capitalize">{fmtMetricLabel(key)}</dt>
-          <dd className="text-right text-sm font-medium text-stone-900">
+          <dt className="text-sm text-ink-muted capitalize">{fmtMetricLabel(key)}</dt>
+          <dd className="text-right text-sm font-medium text-ink tabular-nums">
             {fmtMetricValue(key, value)}
           </dd>
         </div>
@@ -247,7 +265,7 @@ export function CaveatList({
       {caveats.map((caveat, index) => (
         <li
           key={index}
-          className="rounded border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900"
+          className="rounded-md border border-amber-200/80 bg-warning-soft/70 px-2.5 py-1.5 text-xs leading-5 text-amber-900"
         >
           {caveat}
         </li>
@@ -265,6 +283,16 @@ export function CaveatList({
 //   * contamination disclosure when flagged (PRD 14.4)
 // ---------------------------------------------------------------------------
 
+/**
+ * Per-mode top accent keeps the three measurement modes visually distinct at
+ * card level; directional stays the most muted of the three.
+ */
+const READOUT_ACCENT: Record<MeasurementMode, string> = {
+  holdout: "border-t-2 border-t-success",
+  before_after_no_control: "border-t-2 border-t-warning",
+  directional: "border-t-2 border-t-violet-200",
+};
+
 export function ReadoutCard({
   readout,
   title,
@@ -277,7 +305,9 @@ export function ReadoutCard({
   return (
     <section
       className={cx(
-        "rounded-lg border border-stone-200 bg-white p-5 shadow-sm",
+        "rounded-card border border-border bg-surface p-5 shadow-card",
+        "transition-shadow duration-150 hover:shadow-card-hover",
+        READOUT_ACCENT[readout.mode],
         className
       )}
     >
@@ -287,9 +317,9 @@ export function ReadoutCard({
         <SimulatedBadge />
       </div>
       {title ? (
-        <h3 className="mt-3 text-base font-semibold text-stone-900">{title}</h3>
+        <h3 className="mt-3 text-base font-semibold tracking-tight text-ink">{title}</h3>
       ) : null}
-      <p className="mt-1 text-xs text-stone-500">
+      <p className="mt-1 text-xs text-ink-soft">
         Measurement window: {readout.window.readType} read,{" "}
         {fmtDate(readout.window.start)} → {fmtDate(readout.window.end)}
       </p>
@@ -299,17 +329,17 @@ export function ReadoutCard({
       ) : null}
       <ContaminationNotice risk={readout.contaminationRisk} className="mt-3" />
 
-      <p className="mt-3 text-sm text-stone-700">{readout.summary}</p>
+      <p className="mt-3 text-sm text-ink-secondary">{readout.summary}</p>
 
       {readout.mode === "holdout" && readout.lift ? (
-        <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+        <p className="mt-3 rounded-md border border-emerald-200 bg-success-soft/70 px-3 py-2 text-sm text-emerald-900">
           Measured lift range: <strong>{fmtLiftPoints(readout.lift.low)}</strong>{" "}
           to <strong>{fmtLiftPoints(readout.lift.high)}</strong> in purchase
           rate versus the held-out group (range, not a point estimate — PRD 16.4).
         </p>
       ) : null}
       {readout.mode === "holdout" && !readout.lift ? (
-        <p className="mt-3 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-700">
+        <p className="mt-3 rounded-md border border-border bg-surface-soft px-3 py-2 text-sm text-ink-secondary">
           Lift not proven on this read — the confidence band includes zero or a
           measurement arm was empty. We say so rather than claiming impact.
         </p>
@@ -328,15 +358,15 @@ export function ReadoutCard({
 
 function FreshnessLine({ freshness }: { freshness: DataFreshness }) {
   return (
-    <li className="text-sm text-stone-700">
+    <li className="text-sm text-ink-secondary">
       <span className="font-medium">{freshness.source}</span> — last synced{" "}
       {fmtDateTime(freshness.lastSyncAt)} (threshold {freshness.thresholdHours}h)
       {freshness.isStale ? (
-        <span className="ml-1 rounded border border-rose-200 bg-rose-50 px-1.5 text-xs font-medium text-rose-700">
+        <span className="ml-1 rounded border border-red-200 bg-danger-soft/70 px-1.5 text-xs font-medium text-red-700">
           stale
         </span>
       ) : (
-        <span className="ml-1 rounded border border-emerald-200 bg-emerald-50 px-1.5 text-xs font-medium text-emerald-700">
+        <span className="ml-1 rounded border border-emerald-200 bg-success-soft/70 px-1.5 text-xs font-medium text-emerald-700">
           fresh
         </span>
       )}
@@ -353,7 +383,7 @@ function ContractSection({
 }) {
   return (
     <div>
-      <h4 className="text-xs font-semibold tracking-wide text-stone-500 uppercase">
+      <h4 className="text-xs font-semibold tracking-wide text-ink-soft uppercase">
         {label}
       </h4>
       <div className="mt-1">{children}</div>
@@ -372,18 +402,18 @@ export function ExplanationPanel({
   return (
     <div
       className={cx(
-        "space-y-4 rounded-lg border border-stone-200 bg-stone-50 p-4",
+        "space-y-4 rounded-lg border border-border bg-surface-soft/60 p-4",
         className
       )}
     >
       <ContractSection label="What was found">
-        <p className="text-sm text-stone-800">{explanation.found}</p>
+        <p className="text-sm text-ink-secondary">{explanation.found}</p>
       </ContractSection>
       <ContractSection label="Why it matters">
-        <p className="text-sm text-stone-800">{explanation.whyItMatters}</p>
+        <p className="text-sm text-ink-secondary">{explanation.whyItMatters}</p>
       </ContractSection>
       <ContractSection label="Data used">
-        <ul className="list-disc pl-5 text-sm text-stone-700">
+        <ul className="list-disc pl-5 text-sm text-ink-secondary">
           {explanation.dataUsed.map((item, index) => (
             <li key={index}>{item}</li>
           ))}
@@ -398,27 +428,27 @@ export function ExplanationPanel({
       </ContractSection>
       <ContractSection label="Assumptions">
         {explanation.assumptions.length > 0 ? (
-          <ul className="list-disc pl-5 text-sm text-stone-700">
+          <ul className="list-disc pl-5 text-sm text-ink-secondary">
             {explanation.assumptions.map((assumption, index) => (
               <li key={index}>{assumption}</li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-stone-500">None recorded.</p>
+          <p className="text-sm text-ink-muted">None recorded.</p>
         )}
       </ContractSection>
       <ContractSection label="Risk">
-        <p className="text-sm text-stone-800">{explanation.risk}</p>
+        <p className="text-sm text-ink-secondary">{explanation.risk}</p>
       </ContractSection>
       <ContractSection label="Approval needed">
-        <p className="text-sm text-stone-800">{explanation.approvalNeeded}</p>
+        <p className="text-sm text-ink-secondary">{explanation.approvalNeeded}</p>
       </ContractSection>
       <ContractSection label="Measurement plan">
         <div className="flex flex-wrap items-center gap-2">
           <ModeBadge mode={plan.mode} />
         </div>
-        <p className="mt-1.5 text-sm text-stone-800">{plan.summary}</p>
-        <p className="mt-1 text-xs text-stone-500">
+        <p className="mt-1.5 text-sm text-ink-secondary">{plan.summary}</p>
+        <p className="mt-1 text-xs text-ink-soft">
           Windows:{" "}
           {plan.windows
             .map((window) => `${window.readType} read at ${window.days} days`)

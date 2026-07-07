@@ -24,12 +24,17 @@ export type ClientButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const BUTTON_CLASSES: Record<ClientButtonVariant, string> = {
   primary:
-    "bg-stone-900 text-stone-50 hover:bg-stone-700 border border-transparent",
+    "border border-transparent bg-primary text-white shadow-sm " +
+    "hover:bg-primary-hover active:bg-primary-hover active:shadow-none",
   secondary:
-    "bg-white text-stone-900 hover:bg-stone-50 border border-stone-300",
+    "border border-border-strong bg-surface text-ink shadow-sm " +
+    "hover:bg-surface-soft active:bg-primary-soft active:shadow-none",
   ghost:
-    "bg-transparent text-stone-700 hover:bg-stone-100 border border-transparent",
-  danger: "bg-white text-rose-700 hover:bg-rose-50 border border-rose-300",
+    "border border-transparent bg-transparent text-ink-secondary " +
+    "hover:bg-neutral-soft hover:text-ink active:bg-primary-soft",
+  danger:
+    "border border-red-200 bg-surface text-red-700 shadow-sm " +
+    "hover:bg-red-50 hover:border-red-300 active:bg-danger-soft active:shadow-none",
 };
 
 export function ClientButton({
@@ -44,9 +49,10 @@ export function ClientButton({
   return (
     <button
       className={cx(
-        "inline-flex items-center justify-center gap-2 rounded-md font-medium",
-        "transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900",
-        "disabled:opacity-50 disabled:pointer-events-none",
+        "inline-flex items-center justify-center gap-2 rounded-md font-medium select-none",
+        "transition-colors duration-150",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        "disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm",
         BUTTON_CLASSES[variant],
         className,
@@ -63,14 +69,17 @@ export type ClientBadgeTone =
   | "positive"
   | "caution"
   | "info"
-  | "danger";
+  | "danger"
+  | "directional";
 
 const TONE_CLASSES: Record<ClientBadgeTone, string> = {
-  neutral: "bg-stone-100 text-stone-700 border-stone-200",
-  positive: "bg-emerald-50 text-emerald-800 border-emerald-200",
-  caution: "bg-amber-50 text-amber-800 border-amber-200",
-  info: "bg-sky-50 text-sky-800 border-sky-200",
-  danger: "bg-rose-50 text-rose-800 border-rose-200",
+  neutral: "border-slate-200 bg-neutral-soft text-slate-600",
+  positive: "border-emerald-200 bg-success-soft text-emerald-800",
+  caution: "border-amber-200 bg-warning-soft text-amber-800",
+  info: "border-blue-200 bg-info-soft text-blue-800",
+  danger: "border-red-200 bg-danger-soft text-red-800",
+  // Deliberately quieter than "positive": violet/slate, no strong border.
+  directional: "border-violet-200/70 bg-directional-soft text-violet-700",
 };
 
 export function ClientBadge({
@@ -85,7 +94,7 @@ export function ClientBadge({
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5",
         "text-xs font-medium leading-5 whitespace-nowrap",
         TONE_CLASSES[tone],
         className,
@@ -110,7 +119,7 @@ export function ClientCard({
   return (
     <Tag
       className={cx(
-        "rounded-lg border border-stone-200 bg-white shadow-sm",
+        "rounded-card border border-border bg-surface shadow-card",
         "p-5",
         className,
       )}

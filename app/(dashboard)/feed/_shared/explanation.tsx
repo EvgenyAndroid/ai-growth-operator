@@ -36,9 +36,15 @@ export function EstimateValue({
 }) {
   if (estimate) {
     return (
-      <span className={large ? "text-2xl font-semibold tracking-tight text-stone-900" : "font-semibold text-stone-900"}>
+      <span
+        className={
+          large
+            ? "text-2xl font-semibold tracking-tight text-ink tabular-nums"
+            : "font-semibold text-ink tabular-nums"
+        }
+      >
         {fmtRange(estimate.low, estimate.high)}
-        <span className="ml-2 align-middle text-xs font-normal text-stone-500">
+        <span className="ml-2 align-middle text-xs font-normal tracking-normal text-ink-soft">
           {estimate.label === "merchant_historical"
             ? "based on your history"
             : "modeled estimate"}
@@ -48,7 +54,13 @@ export function EstimateValue({
   }
   // No defensible dollar value — directional label instead (PRD 16.3 step 4).
   return (
-    <span className={large ? "text-xl font-semibold text-stone-700" : "font-medium text-stone-700"}>
+    <span
+      className={
+        large
+          ? "text-xl font-semibold tracking-tight text-ink-secondary"
+          : "font-medium text-ink-secondary"
+      }
+    >
       {measurementMode === "directional"
         ? "Directional — no dollar estimate"
         : "No dollar estimate (no baseline)"}
@@ -67,11 +79,13 @@ export function FreshnessList({
 }) {
   return (
     <ul className="space-y-1">
-      {freshness.map((f) => (
-        <li key={f.source} className="flex items-center gap-2 text-sm text-stone-600">
-          <span className="font-medium capitalize text-stone-800">{f.source}</span>
+      {/* Key includes the index: in demo mode several integrations all report
+          source "demo", so source alone is not unique. */}
+      {freshness.map((f, i) => (
+        <li key={`${f.source}:${i}`} className="flex items-center gap-2 text-sm text-ink-muted">
+          <span className="font-medium capitalize text-ink">{f.source}</span>
           <span>synced {fmtDateTime(f.lastSyncAt)}</span>
-          <span className="text-stone-400">(threshold {f.thresholdHours}h)</span>
+          <span className="text-ink-soft">(threshold {f.thresholdHours}h)</span>
           {f.isStale ? (
             <Badge tone="danger">stale</Badge>
           ) : (
@@ -92,11 +106,11 @@ export function MeasurementPlanBlock({ plan }: { plan: MeasurementPlan }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <MeasurementBadge mode={plan.mode} />
-        <span className="text-sm text-stone-600">{plan.summary}</span>
+        <span className="text-sm text-ink-muted">{plan.summary}</span>
       </div>
 
       {plan.holdout ? (
-        <StatList className="rounded-md border border-stone-200 bg-stone-50 px-3">
+        <StatList className="rounded-md border border-border bg-surface-soft/70 px-3">
           <StatRow label="Eligible audience" value={plan.holdout.eligibleAudienceSize.toLocaleString()} />
           <StatRow label="Holdout" value={`${plan.holdout.holdoutPercent}% (${plan.holdout.holdoutSize.toLocaleString()} customers)`} />
           <StatRow label="Assignment" value="Randomized, customer-level" />
@@ -108,8 +122,8 @@ export function MeasurementPlanBlock({ plan }: { plan: MeasurementPlan }) {
         </StatList>
       ) : null}
 
-      <div className="text-sm text-stone-600">
-        <span className="font-medium text-stone-800">Measurement windows: </span>
+      <div className="text-sm text-ink-muted">
+        <span className="font-medium text-ink">Measurement windows: </span>
         {plan.windows
           .map((w) => `${READ_TYPE_LABELS[w.readType] ?? w.readType} at ${w.days} days`)
           .join(" · ")}
@@ -118,8 +132,8 @@ export function MeasurementPlanBlock({ plan }: { plan: MeasurementPlan }) {
       {plan.caveats.length > 0 ? (
         <ul className="space-y-1">
           {plan.caveats.map((c) => (
-            <li key={c} className="flex gap-2 text-sm text-amber-800">
-              <span aria-hidden className="select-none">!</span>
+            <li key={c} className="flex gap-2 text-sm leading-relaxed text-amber-800">
+              <span aria-hidden className="select-none font-semibold">!</span>
               <span>{c}</span>
             </li>
           ))}
@@ -142,10 +156,10 @@ function LabeledBlock({
 }) {
   return (
     <div>
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+      <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
         {label}
       </h4>
-      <div className="mt-1 text-sm text-stone-700">{children}</div>
+      <div className="mt-1 text-sm leading-relaxed text-ink-secondary">{children}</div>
     </div>
   );
 }
@@ -209,12 +223,12 @@ export function DraftNotActivationBanner({
   return (
     <div
       role="note"
-      className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3"
+      className="rounded-md border border-amber-200 bg-warning-soft/60 px-4 py-3"
     >
       <p className="text-sm font-semibold text-amber-900">
         Draft is not activation.
       </p>
-      <p className="mt-0.5 text-sm text-amber-800">
+      <p className="mt-0.5 text-sm leading-relaxed text-amber-800">
         Nothing is sent, synced, suppressed, or spent until you explicitly
         approve. Approval routes through governance (consent, suppression,
         Operating Rules, claim checks, freshness) before any activation.

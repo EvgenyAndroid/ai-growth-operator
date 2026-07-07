@@ -26,7 +26,7 @@ export default async function ExportPage() {
       demoMode={account.demoMode}
     >
       <ExportPanel accountId={account.accountId} />
-      <p className="text-xs text-stone-500">
+      <p className="text-xs text-ink-soft">
         Every export carries a timestamp, the account identifier, and the
         Operating Rules (constitution) version, and is logged to the Context
         Ledger as an <span className="font-mono">export</span> event. Hashed
