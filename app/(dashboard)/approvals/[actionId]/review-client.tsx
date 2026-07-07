@@ -1,0 +1,462 @@
+"use client";
+
+/**
+ * app/(dashboard)/approvals/[actionId]/review-client.tsx — the interactive
+ * approve / edit / reject panel of Campaign Draft Review (PRD 7.4).
+ *
+ * - Approve routes through approveAction (the ONLY activation path; the
+ *   governance chokepoint runs server-side). Meta actions require the 26A.8
+ *   identifier-rights confirmation before the button enables.
+ * - A governance block renders the full decision (gates, reasons,
+ *   remediations, claim findings); overrideable claims can be explicitly
+ *   overridden and re-submitted — non-overrideable ones cannot.
+ * - Edit records a new draft version + edit summary (26B.18 learning loop).
+ * - Reject requires a reason from the PRD 7.4 list plus optional free text.
+ */
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import {
+  approveAction,
+  recordDraftEdit,
+  rejectAction,
+  type ApproveActionResult,
+  type DraftCopyStep,
+} from "@/lib/server";
+import { Badge, Button, Card, StatList, StatRow } from "@/components/ui/primitives";
+import { fmtDateTime, READ_TYPE_LABELS, REJECTION_REASONS } from "../../feed/_shared/format";
+
+type Mode = "idle" | "edit" | "reject";
+
+// ---------------------------------------------------------------------------
+// Result panels
+// ---------------------------------------------------------------------------
+
+function GovernancePanel({ result }: { result: ApproveActionResult }) {
+  const g = result.governance;
+  return (
+    <div
+      className={
+        "rounded-md border px-4 py-3 " +
+        (g.verdict === "pass"
+          ? "border-emerald-200 bg-emerald-50"
+          : "border-rose-200 bg-rose-50")
+      }
+    >
+      <p className="text-sm font-semibold text-stone-900">
+        Governance {g.verdict === "pass" ? "passed" : "blocked this activation"}
+        <span className="ml-2 text-xs font-normal text-stone-500">
+          checked {fmtDateTime(g.checkedAt)} · Operating Rules v{g.constitutionVersion}
+        </span>
+      </p>
+      <ul className="mt-2 flex flex-wrap gap-1.5">
+        {g.gates.map((gate) => (
+          <li key={gate.gate}>
+            <Badge
+              tone={
+                gate.outcome === "pass"
+                  ? "positive"
+                  : gate.outcome === "block"
+                    ? "danger"
+                    : "neutral"
+              }
+              title={gate.reason}
+            >
+              {gate.gate}: {gate.outcome}
+            </Badge>
+          </li>
+        ))}
+      </ul>
+      {g.reasons.length > 0 ? (
+        <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm text-rose-800">
+          {g.reasons.map((r) => (
+            <li key={r}>{r}</li>
+          ))}
+        </ul>
+      ) : null}
+      {g.remediations.length > 0 ? (
+        <div className="mt-2 text-sm text-stone-700">
+          <span className="font-medium">How to fix: </span>
+          {g.remediations.join(" · ")}
+        </div>
+      ) : null}
+      <p className="mt-1 text-xs text-stone-500">{g.destinationCompatibilitySummary}</p>
+    </div>
+  );
+}
+
+function ActivationPanel({ result }: { result: ApproveActionResult }) {
+  if (!result.activated || !result.activation) return null;
+  const m = result.measurement;
+  return (
+    <div className="space-y-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3">
+      <p className="text-sm font-semibold text-emerald-900">
+        Activated (simulated — alpha): {result.activation.levelCopy}
+      </p>
+      <ol className="space-y-1">
+        {result.activation.ladder.map((step) => (
+          <li key={step.level} className="flex flex-wrap items-center gap-2 text-sm">
+            <Badge
+              tone={
+                step.outcome === "succeeded_simulated"
+                  ? "positive"
+                  : step.outcome === "unavailable"
+                    ? "caution"
+                    : "neutral"
+              }
+            >
+              {step.levelCopy}: {step.outcome.replace(/_/g, " ")}
+            </Badge>
+            <span className="text-stone-600">{step.detail}</span>
+          </li>
+        ))}
+      </ol>
+      {m ? (
+        <div className="rounded-md border border-emerald-200 bg-white px-3 py-2">
+          <p className="text-sm font-medium text-stone-900">
+            Measurement: {m.labelCopy}
+            {m.downgradedByActivationLevel ? (
+              <span className="ml-2 text-xs font-normal text-amber-800">
+                downgraded — holdout not enforceable at this activation level (26A.1)
+              </span>
+            ) : null}
+          </p>
+          {m.reasons.length > 0 ? (
+            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-stone-600">
+              {m.reasons.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          ) : null}
+          {m.holdout ? (
+            <StatList className="mt-1">
+              <StatRow label="Holdout" value={`${m.holdout.holdoutPercent}% (${m.holdout.holdoutSize.toLocaleString()} of ${m.holdout.eligibleAudienceSize.toLocaleString()})`} />
+              <StatRow label="Exclusion window" value={m.holdout.exclusionWindow} />
+            </StatList>
+          ) : null}
+          {m.contamination?.disclosure ? (
+            <p className="mt-1 text-xs text-amber-800">{m.contamination.disclosure}</p>
+          ) : null}
+          {m.windows.length > 0 ? (
+            <p className="mt-1 text-xs text-stone-500">
+              Reads:{" "}
+              {m.windows
+                .map(
+                  (w) =>
+                    `${READ_TYPE_LABELS[w.readType] ?? w.readType} at ${w.days}d (${fmtDateTime(w.end)})`,
+                )
+                .join(" · ")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main panel
+// ---------------------------------------------------------------------------
+
+export function ReviewActions({
+  accountId,
+  actionId,
+  draftId,
+  copy,
+  isMeta,
+  decidable,
+  maxDiscountPercent,
+}: {
+  accountId: string;
+  actionId: string;
+  draftId: string;
+  copy: DraftCopyStep[];
+  isMeta: boolean;
+  decidable: boolean;
+  maxDiscountPercent: number;
+}) {
+  const router = useRouter();
+  const [mode, setMode] = React.useState<Mode>("idle");
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [result, setResult] = React.useState<ApproveActionResult | null>(null);
+  const [rejected, setRejected] = React.useState(false);
+
+  // Approve state
+  const [metaRights, setMetaRights] = React.useState(false);
+  const [overrides, setOverrides] = React.useState<string[]>([]);
+
+  // Edit state
+  const [steps, setSteps] = React.useState<DraftCopyStep[]>(copy);
+  const [editSummary, setEditSummary] = React.useState("");
+
+  // Reject state
+  const [reason, setReason] = React.useState("");
+  const [freeText, setFreeText] = React.useState("");
+
+  async function approve(claimOverrides?: string[]) {
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await approveAction({
+        accountId,
+        actionId,
+        metaIdentifierRightsConfirmed: isMeta ? metaRights : undefined,
+        claimOverrides:
+          claimOverrides && claimOverrides.length > 0 ? claimOverrides : undefined,
+      });
+      setResult(r);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Approval failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveEdit() {
+    if (!editSummary.trim()) {
+      setError("An edit summary is required — it feeds the Operator's learning loop.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await recordDraftEdit({ accountId, draftId, editSummary, copy: steps });
+      setMode("idle");
+      setEditSummary("");
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Edit failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function reject() {
+    if (!reason) {
+      setError("Pick a rejection reason from the list (PRD 7.4).");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const fullReason = freeText.trim() ? `${reason}: ${freeText.trim()}` : reason;
+      await rejectAction({ accountId, actionId, reason: fullReason });
+      setRejected(true);
+      setMode("idle");
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Rejection failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const overrideableFindings =
+    result?.governance.claimFindings.filter((f) => f.overrideable) ?? [];
+  const blockedByGovernance = result !== null && !result.activated;
+
+  return (
+    <Card as="section" className="space-y-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+        Decision
+      </h2>
+
+      {result ? <GovernancePanel result={result} /> : null}
+      {result ? <ActivationPanel result={result} /> : null}
+
+      {result?.governance.claimFindings.length ? (
+        <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm font-semibold text-amber-900">Claim findings</p>
+          <ul className="space-y-2">
+            {result.governance.claimFindings.map((f) => (
+              <li key={f.claim} className="text-sm text-stone-700">
+                <span className="font-medium">“{f.claim}”</span> — {f.why}
+                <span className="block text-stone-600">
+                  Safer alternative: {f.saferAlternative}
+                </span>
+                {f.overrideable ? (
+                  <label className="mt-1 flex items-center gap-2 text-xs text-stone-700">
+                    <input
+                      type="checkbox"
+                      checked={overrides.includes(f.claim)}
+                      onChange={(e) =>
+                        setOverrides((prev) =>
+                          e.target.checked
+                            ? [...prev, f.claim]
+                            : prev.filter((c) => c !== f.claim),
+                        )
+                      }
+                    />
+                    I take responsibility for this claim (override)
+                  </label>
+                ) : (
+                  <Badge tone="danger" className="mt-1">
+                    non-overrideable — must edit copy
+                  </Badge>
+                )}
+              </li>
+            ))}
+          </ul>
+          {overrideableFindings.length > 0 && blockedByGovernance ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={busy || overrides.length === 0}
+              onClick={() => approve(overrides)}
+            >
+              Re-approve with {overrides.length} override
+              {overrides.length === 1 ? "" : "s"}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {rejected ? (
+        <p className="rounded-md border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">
+          Draft rejected. The reason was logged and feeds the Operator&rsquo;s
+          learned preferences (26B.18).
+        </p>
+      ) : null}
+
+      {mode === "edit" ? (
+        <div className="space-y-3">
+          {steps.map((step, i) => (
+            <div key={step.step} className="rounded-md border border-stone-300 p-3">
+              <p className="text-xs font-medium text-stone-500">
+                Step {step.step}
+                {typeof step.offerPercent === "number"
+                  ? ` · offer ${step.offerPercent}% (ceiling ${maxDiscountPercent}% — offers are edited via Operating Rules, not here)`
+                  : ""}
+              </p>
+              {step.subject !== undefined ? (
+                <input
+                  value={step.subject}
+                  onChange={(e) =>
+                    setSteps((prev) =>
+                      prev.map((s, j) => (j === i ? { ...s, subject: e.target.value } : s)),
+                    )
+                  }
+                  placeholder="Subject"
+                  className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1.5 text-sm"
+                />
+              ) : null}
+              <textarea
+                value={step.body}
+                onChange={(e) =>
+                  setSteps((prev) =>
+                    prev.map((s, j) => (j === i ? { ...s, body: e.target.value } : s)),
+                  )
+                }
+                rows={4}
+                className="mt-2 w-full rounded-md border border-stone-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+          ))}
+          <input
+            value={editSummary}
+            onChange={(e) => setEditSummary(e.target.value)}
+            placeholder="Edit summary (required) — e.g. “softened tone, removed urgency”"
+            className="w-full rounded-md border border-stone-300 px-2 py-1.5 text-sm"
+          />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={saveEdit} disabled={busy}>
+              {busy ? "Saving…" : "Save edit (new draft version)"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setMode("idle")} disabled={busy}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {mode === "reject" ? (
+        <div className="space-y-2 rounded-md border border-stone-300 bg-stone-50 p-3">
+          <p className="text-sm font-medium text-stone-800">Why reject this draft?</p>
+          <div className="flex flex-wrap gap-1.5">
+            {REJECTION_REASONS.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setReason(r)}
+                className={
+                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors " +
+                  (reason === r
+                    ? "border-stone-900 bg-stone-900 text-white"
+                    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-100")
+                }
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={freeText}
+            onChange={(e) => setFreeText(e.target.value)}
+            placeholder="Optional detail"
+            rows={2}
+            className="w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm"
+          />
+          <div className="flex gap-2">
+            <Button size="sm" variant="danger" onClick={reject} disabled={busy}>
+              {busy ? "Rejecting…" : "Reject draft"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setMode("idle")} disabled={busy}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+
+      {decidable && !result?.activated && !rejected && mode === "idle" ? (
+        <div className="space-y-3">
+          {isMeta ? (
+            <label className="flex items-start gap-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-stone-700">
+              <input
+                type="checkbox"
+                checked={metaRights}
+                onChange={(e) => setMetaRights(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                I confirm this business has the right to use these customer
+                identifiers for ad-platform audience creation. Identifiers are
+                hashed before sync and the destination-compatibility check is
+                logged (PRD 26A.8).
+              </span>
+            </label>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => approve(overrides)}
+              disabled={busy || (isMeta && !metaRights)}
+            >
+              {busy ? "Running governance…" : "Approve & activate"}
+            </Button>
+            <Button variant="secondary" onClick={() => setMode("edit")} disabled={busy}>
+              Edit
+            </Button>
+            <Button variant="danger" onClick={() => setMode("reject")} disabled={busy}>
+              Reject
+            </Button>
+          </div>
+          <p className="text-xs text-stone-500">
+            Approval runs the governance chokepoint (consent, suppression,
+            budget, discount ceiling, claim checks, freshness) before anything
+            activates. Activation is simulated in alpha (PRD 25.1).
+          </p>
+        </div>
+      ) : null}
+
+      {!decidable && !result ? (
+        <p className="text-sm text-stone-600">
+          This action is {rejected ? "rejected" : "already decided"} — see the
+          Approval Center for its current state.
+        </p>
+      ) : null}
+    </Card>
+  );
+}

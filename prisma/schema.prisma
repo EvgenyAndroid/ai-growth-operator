@@ -1,0 +1,493 @@
+// AI Growth Operator — MVP v0 ALPHA schema
+// PRD v1.1: section 9 entities + 26A.9 technical entities + 26B.18 Preferences + 26B.13 consentAds.
+//
+// NOTE ON ENUMS: Prisma does not support native enums on the SQLite provider.
+// All enum-like fields (opportunity status, measurement mode, activation level,
+// confidence, etc.) are String columns whose legal values are defined as literal
+// union types + const objects in lib/contracts.ts. Column comments name the
+// contract type. On Postgres these can be tightened to native enums without any
+// application-code change. No other SQLite-only tricks are used: Json, DateTime,
+// Float, and relation shapes below are all Postgres-compatible.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Multi-tenant root
+// ---------------------------------------------------------------------------
+
+model Account {
+  id        String   @id @default(cuid())
+  name      String
+  vertical  String   @default("shopify_dtc")
+  demoMode  Boolean  @default(true) // Alpha: mocked connectors + demo dataset
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customers          Customer[]
+  products           Product[]
+  events             Event[]
+  audiences          Audience[]
+  actions            Action[]
+  opportunities      Opportunity[]
+  constitutions      Constitution[]
+  holdouts           Holdout[]
+  ledgerEntries      LedgerEntry[]
+  integrations       Integration[]
+  syncRuns           SyncRun[]
+  recipeConfigs      RecipeConfig[]
+  drafts             Draft[]
+  approvals          Approval[]
+  measurementWindows MeasurementWindow[]
+  exportJobs         ExportJob[]
+  preferences        Preference[]
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.1 Customer (+ 26B.13 consentAds with provenance)
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  sourceCustomerIds Json // { shopify?: string, klaviyo?: string, ... }
+  emailHash         String
+  emailLower        String? // 26B.12 v0 identity join key: lowercase-email exact match
+
+  consentEmail         Boolean @default(false)
+  consentProvenance    String? // where/when email consent was captured
+  consentAds           Boolean @default(false) // 26B.13 (inverse of opt_out_of_sharing)
+  consentAdsProvenance String?
+
+  lifecycleStage        String? // ContractLifecycleStage
+  firstPurchaseDate     DateTime?
+  lastPurchaseDate      DateTime?
+  totalOrders           Int       @default(0)
+  totalRevenue          Float     @default(0)
+  purchaseIntervalStats Json? // { medianDays, meanDays, intervals: number[] }
+  refundRate            Float?
+  suppressionStatus     String    @default("none") // ContractSuppressionStatus
+  sourceReferences      Json?
+
+  events             Event[]
+  holdoutMemberships HoldoutMembership[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@unique([accountId, emailHash])
+  @@index([accountId, emailLower])
+  @@index([accountId, lastPurchaseDate])
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.2 Product (+ 26A.7 merchant-editable repeatability)
+// ---------------------------------------------------------------------------
+
+model Product {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  sourceProductId         String
+  name                    String
+  category                String?
+  price                   Float
+  availability            String  @default("available")
+  productUrl              String?
+  structuredAttributes    Json?
+  repeatPurchaseFlag      Boolean @default(false)
+  replenishmentWindowDays Int?
+  seasonalFlag            Boolean @default(false)
+  // 26A.7: system-inferred repeatability + merchant override (override wins)
+  repeatability           String  @default("unknown") // ContractRepeatability
+  repeatabilityOverride   String?
+
+  events    Event[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([accountId, sourceProductId])
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.3 Event
+// ---------------------------------------------------------------------------
+
+model Event {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  productId  String?
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  eventType      String // ContractEventType: checkout_started | purchase | repeat_purchase | refund | email_open | email_click | unsubscribe | audience_synced
+  eventTimestamp DateTime
+  source         String // shopify | klaviyo | meta | demo
+  campaignId     String?
+  value          Float?
+  metadata       Json?
+
+  @@index([accountId, eventType, eventTimestamp])
+  @@index([customerId, eventType])
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.4 Audience
+// ---------------------------------------------------------------------------
+
+model Audience {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  name                String
+  creationMethod      String // recipe | manual | chat
+  inclusionRules      Json
+  exclusionRules      Json
+  size                Int       @default(0)
+  eligibleChannels    Json // string[] e.g. ["klaviyo_email", "meta_audience"]
+  consentRequirements Json?
+  lastSyncedAt        DateTime?
+  destinationStatus   String? // ContractDestinationStatus
+
+  actions   Action[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.5 Action
+// ---------------------------------------------------------------------------
+
+model Action {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  type      String // ContractActionType: klaviyo_recovery_flow | klaviyo_winback_flow | meta_audience_sync
+  objective String?
+  channel   String // klaviyo | meta
+
+  audienceId String?
+  audience   Audience? @relation(fields: [audienceId], references: [id], onDelete: SetNull)
+
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  status              String    @default("draft") // ContractActionStatus
+  createdBy           String?
+  approvedBy          String?
+  launchedAt          DateTime?
+  constitutionVersion Int
+
+  holdoutId String?  @unique
+  holdout   Holdout? @relation(fields: [holdoutId], references: [id], onDelete: SetNull)
+
+  measurementMode  String // MeasurementMode: holdout | before_after_no_control | directional
+  expectedOutcome  Json?
+  measuredOutcome  Json?
+  liftLow          Float?
+  liftHigh         Float?
+  confidenceLevel  String? // Confidence
+  sourceReferences Json?
+  activationLevel  String? // ActivationLevel
+
+  drafts             Draft[]
+  approvals          Approval[]
+  measurementWindows MeasurementWindow[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([accountId, status])
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.6 Opportunity (+ 26B.16 dedup_key = account_id + recipe_id)
+// ---------------------------------------------------------------------------
+
+model Opportunity {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  dedupKey      String @unique // `${accountId}:${recipeId}` — one active card per recipe per account in v0
+  recipeId      String // abandoned_checkout_recovery | lapsed_winback | meta_seed_suppression
+  recipeVersion String
+  title         String
+  category      String // recovery | winback | paid_audience
+
+  estimatedValueLow  Float?
+  estimatedValueHigh Float?
+  estimateLabel      String // EstimateLabel: merchant_historical | modeled | directional | unavailable
+  confidence         String // Confidence: high | medium | low
+  dataAsOf           DateTime
+  estimateVerifiedAt DateTime? // 26B.15 re-verified after deep backfill
+
+  recommendedAction String?
+  explanation       Json // ExplanationContract — required before render (PRD 4.4)
+  status            String    @default("found") // OpportunityStatus
+  dismissedReason   String?
+  cooldownUntil     DateTime?
+  outcome           Json?
+
+  actions   Action[]
+  drafts    Draft[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId, status])
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.7 Constitution / Operating Rules
+// ---------------------------------------------------------------------------
+
+model Constitution {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  templateVertical     String   @default("shopify_dtc")
+  version              Int
+  monthlyBudgetCap     Float
+  maxDiscountPercent   Float
+  marginFloorPercent   Float?
+  dailySendCap         Int
+  frequencyCaps        Json?
+  blackoutDates        Json?
+  toneGuide            String?
+  bannedClaims         Json? // string[] of banned claim phrases
+  suppressionDefaults  Json?
+  approvalRequirements Json?
+  effectiveFrom        DateTime @default(now())
+  supersededById       String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, version])
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.8 Holdout (+ membership join; 26B.14 independent per flow)
+// ---------------------------------------------------------------------------
+
+model Holdout {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  eligibleAudienceSize Int
+  holdoutPercent       Float     @default(10)
+  holdoutSize          Int
+  assignmentMethod     String    @default("randomized_customer_level")
+  startedAt            DateTime?
+  exclusionWindow      String? // ISO-8601 duration, e.g. "P14D"
+  status               String    @default("planned") // ContractHoldoutStatus
+  measuredLiftLow      Float?
+  measuredLiftHigh     Float?
+  confidence           String? // Confidence
+  contaminationRisk    String? // ContractContaminationRisk: none | low | flagged
+
+  action      Action?
+  memberships HoldoutMembership[]
+  createdAt   DateTime            @default(now())
+}
+
+model HoldoutMembership {
+  id         String   @id @default(cuid())
+  holdoutId  String
+  holdout    Holdout  @relation(fields: [holdoutId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  arm        String // held_out | treated
+  assignedAt DateTime @default(now())
+
+  @@unique([holdoutId, customerId])
+  @@index([customerId])
+}
+
+// ---------------------------------------------------------------------------
+// PRD 9.9 Context Ledger Entry
+// ---------------------------------------------------------------------------
+
+model LedgerEntry {
+  id        String   @id @default(cuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  timestamp DateTime @default(now())
+
+  userId              String?
+  actionId            String?
+  opportunityId       String?
+  eventType           String // ContractLedgerEventType: data_sync | opportunity_found | ... | rules_edit
+  skillInvoked        String?
+  constitutionVersion Int?
+  sourceDataUsed      Json?
+  sourceFreshness     Json?
+  reasoningSummary    String?
+  confidence          String? // Confidence
+  approvalStatus      String?
+  destination         String?
+  activationLevel     String? // ActivationLevel
+  actionTaken         String?
+  rollbackPath        String?
+  measuredOutcome     Json?
+  measurementMode     String? // MeasurementMode
+
+  @@index([accountId, timestamp])
+  @@index([accountId, eventType])
+}
+
+// ---------------------------------------------------------------------------
+// 26A.9 Technical entities
+// ---------------------------------------------------------------------------
+
+model Integration {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  source                  String // shopify | klaviyo | meta | ga4 | stripe
+  mode                    String    @default("mock") // Alpha: mock | live
+  oauthStatus             String    @default("disconnected") // ContractOAuthStatus
+  scopes                  Json?
+  lastSyncAt              DateTime?
+  freshnessThresholdHours Int       @default(24)
+  errorState              String?
+
+  syncRuns  SyncRun[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([accountId, source])
+}
+
+model SyncRun {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  integrationId String?
+  integration   Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+
+  source      String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  status      String    @default("running") // ContractSyncStatus
+  recordsRead Int       @default(0)
+  errors      Json?
+
+  @@index([accountId, source, startedAt])
+}
+
+model RecipeConfig {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  recipeId  String // abandoned_checkout_recovery | lapsed_winback | meta_seed_suppression
+  params    Json // RecipeConfigShape params (defaults merged with overrides at read time)
+  overrides Json?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, recipeId])
+}
+
+model Draft {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  actionId      String?
+  action        Action?      @relation(fields: [actionId], references: [id], onDelete: SetNull)
+
+  copy             Json // parameterized template output: [{ step, subject, preview, body, offer }]
+  sequence         Json? // timing/branching metadata
+  activationTarget String // ActivationLevel the draft is aimed at
+  currentVersion   Int    @default(1)
+  edits            Json? // edit history [{ version, editedBy, at, diffSummary }]
+  status           String @default("draft") // ContractDraftStatus
+
+  approvals Approval[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Approval {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  actionId String?
+  action   Action? @relation(fields: [actionId], references: [id], onDelete: SetNull)
+  draftId  String?
+  draft    Draft?  @relation(fields: [draftId], references: [id], onDelete: SetNull)
+
+  approver         String?
+  status           String   @default("pending") // ContractApprovalStatus
+  timestamp        DateTime @default(now())
+  changesRequested String?
+}
+
+model MeasurementWindow {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  actionId String?
+  action   Action? @relation(fields: [actionId], references: [id], onDelete: SetNull)
+
+  start       DateTime
+  end         DateTime
+  mode        String // MeasurementMode
+  readType    String // ContractReadType: early | primary | long (26A.2 default windows)
+  assumptions Json? // attribution / lookback assumptions
+
+  @@index([accountId, actionId])
+}
+
+model ExportJob {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  objectType  String // customers | audiences | operating_rules | preferences | summaries
+  requestedBy String?
+  format      String    @default("csv") // csv | json
+  status      String    @default("queued") // ContractExportStatus
+  resultPath  String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+}
+
+// ---------------------------------------------------------------------------
+// 26B.18 Preferences — learned merchant preferences
+// ---------------------------------------------------------------------------
+
+model Preference {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  key       String // e.g. offer_stance | tone_correction | rejection_pattern
+  value     Json
+  source    String? // rejection_reason | edit | explicit
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, key])
+}

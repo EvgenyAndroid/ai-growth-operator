@@ -1,0 +1,186 @@
+/**
+ * app/(onboarding)/readiness/page.tsx — Screen 6: Data Readiness (PRD 7.1,
+ * 8.4-8.5, 26B.15). Per-source sync status and freshness against thresholds,
+ * what each source unlocks, and the handoff into the Opportunity Feed.
+ */
+
+import Link from "next/link";
+import { Badge, Card, StatList, StatRow } from "@/components/ui/primitives";
+import { createDemoAccount, getConnectionStatus } from "@/lib/server";
+
+// Freshness must reflect the live DB — never prerender at build time.
+export const dynamic = "force-dynamic";
+import { ResyncButton } from "../resync-button";
+import { orderConnections } from "../source-copy";
+import type { ConnectionStatusView } from "@/lib/server";
+
+function freshnessValue(status: ConnectionStatusView): string {
+  if (status.hoursSinceSync === null) return "never synced";
+  return `${status.hoursSinceSync}h ago (threshold ${status.freshnessThresholdHours}h)`;
+}
+
+export default async function DataReadinessPage() {
+  const account = await createDemoAccount();
+  const connections = await getConnectionStatus(account.accountId);
+  const cards = orderConnections(connections);
+
+  const shopify = connections.find((c) => c.source === "shopify");
+  const klaviyo = connections.find((c) => c.source === "klaviyo");
+  const ready = Boolean(shopify && !shopify.isStale && klaviyo && !klaviyo.isStale);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+          Data readiness
+        </h1>
+        <p className="mt-1 text-sm text-stone-500">
+          Every opportunity shows a data-as-of timestamp, and launches are
+          blocked when required source data is stale (PRD 8.5). Here is where
+          each source stands.
+        </p>
+      </div>
+
+      <Card
+        as="section"
+        className={
+          ready
+            ? "border-emerald-200 bg-emerald-50"
+            : "border-amber-200 bg-amber-50"
+        }
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2
+              className={
+                ready
+                  ? "text-base font-semibold text-emerald-900"
+                  : "text-base font-semibold text-amber-900"
+              }
+            >
+              {ready
+                ? "Ready for your first opportunity"
+                : "Almost there — a required source needs a sync"}
+            </h2>
+            <p
+              className={
+                ready
+                  ? "mt-0.5 text-sm text-emerald-800"
+                  : "mt-0.5 text-sm text-amber-800"
+              }
+            >
+              {ready
+                ? "Shopify and Klaviyo are synced and within freshness thresholds. The Operator can rank opportunities now."
+                : "Shopify and Klaviyo must be synced and fresh before the Operator ranks opportunities. Re-sync below."}
+            </p>
+          </div>
+          {ready ? (
+            <Link
+              href="/feed"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700"
+            >
+              Go to your Opportunity Feed
+            </Link>
+          ) : null}
+        </div>
+      </Card>
+
+      <div className="space-y-3">
+        {cards.map(({ copy, status }) => (
+          <Card as="section" key={copy.id}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-semibold text-stone-900">
+                    {copy.name}
+                  </h2>
+                  {!status ? (
+                    <Badge tone="neutral">Not connected</Badge>
+                  ) : status.isStale ? (
+                    <Badge tone="caution">Stale — re-sync recommended</Badge>
+                  ) : (
+                    <Badge tone="positive">Fresh</Badge>
+                  )}
+                  {copy.tier === "recommended" ? (
+                    <Badge tone="positive">Recommended — not required</Badge>
+                  ) : null}
+                  {copy.tier === "optional" ? (
+                    <Badge tone="neutral">Optional</Badge>
+                  ) : null}
+                </div>
+                {status ? (
+                  <StatList className="mt-2 max-w-md">
+                    <StatRow label="Sync status" value={status.lastSyncStatus ?? "unknown"} />
+                    <StatRow label="Freshness" value={freshnessValue(status)} />
+                    <StatRow
+                      label="Records read (last run)"
+                      value={
+                        status.lastSyncRecordsRead !== null
+                          ? status.lastSyncRecordsRead.toLocaleString("en-US")
+                          : "—"
+                      }
+                    />
+                  </StatList>
+                ) : (
+                  <p className="mt-2 text-sm text-stone-500">{copy.note}</p>
+                )}
+              </div>
+              <div className="w-full sm:w-64">
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                  What it unlocks
+                </p>
+                <ul className="mt-1.5 space-y-1 text-sm leading-6 text-stone-600">
+                  {copy.unlocks.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span aria-hidden className="text-stone-300">
+                        &bull;
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                {status ? (
+                  <div className="mt-3">
+                    <ResyncButton
+                      accountId={account.accountId}
+                      source={status.source}
+                      path="/readiness"
+                      label={status.isStale ? "Re-sync now" : "Sync now"}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Card as="section" className="bg-stone-50">
+        <h2 className="text-sm font-semibold text-stone-900">
+          How the first sync works
+        </h2>
+        <p className="mt-1 text-sm leading-6 text-stone-600">
+          The last 90 days of orders, checkouts, and profiles sync first and
+          power your first opportunity; deeper history backfills in the
+          background, and estimates re-verify when the backfill completes. The
+          demo workspace runs on a fixed reference date of{" "}
+          {new Date(account.referenceDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          , so freshness is measured on the demo clock.
+        </p>
+      </Card>
+
+      <div className="flex justify-end">
+        <Link
+          href="/feed"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-stone-900 px-4 py-2 text-sm font-medium text-stone-50 transition-colors hover:bg-stone-700"
+        >
+          Go to your Opportunity Feed
+        </Link>
+      </div>
+    </div>
+  );
+}

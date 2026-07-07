@@ -1,0 +1,171 @@
+/**
+ * Screen 15 — Context Ledger / Audit Log (PRD 18).
+ *
+ * Filterable, paginated table over lib/server getLedger. Every Operator
+ * decision — recommendation, draft, approval, rejection, activation,
+ * measurement, export, rules edit, chat turn — is reconstructable here.
+ */
+
+import Link from "next/link";
+import { createDemoAccount, getLedger } from "@/lib/server";
+import type { ContractLedgerEventType } from "@/lib/contracts";
+import { SectionHeading } from "@/components/ui/primitives";
+import { LedgerTable, PageShell } from "../performance/shared-ui";
+
+export const dynamic = "force-dynamic";
+
+export const metadata = { title: "Context Ledger — AI Growth Operator" };
+
+/** The full PRD 18.2 event list (mirrors ContractLedgerEventType). */
+const EVENT_TYPES: ContractLedgerEventType[] = [
+  "data_sync",
+  "opportunity_found",
+  "opportunity_sized",
+  "opportunity_drafted",
+  "user_edit",
+  "approval",
+  "rejection",
+  "dismissal",
+  "activation_attempt",
+  "activation_success",
+  "activation_failure",
+  "holdout_assignment",
+  "measurement_readback",
+  "performance_summary",
+  "rules_edit",
+  "export",
+  "chat_interaction",
+];
+
+function isEventType(value: string | undefined): value is ContractLedgerEventType {
+  return value !== undefined && (EVENT_TYPES as string[]).includes(value);
+}
+
+function buildHref(params: {
+  type?: string;
+  action?: string;
+  opportunity?: string;
+  cursor?: string;
+}): string {
+  const query = new URLSearchParams();
+  if (params.type) query.set("type", params.type);
+  if (params.action) query.set("action", params.action);
+  if (params.opportunity) query.set("opportunity", params.opportunity);
+  if (params.cursor) query.set("cursor", params.cursor);
+  const queryString = query.toString();
+  return queryString ? `/ledger?${queryString}` : "/ledger";
+}
+
+const PAGE_SIZE = 50;
+
+export default async function LedgerPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const account = await createDemoAccount();
+
+  const typeParam = typeof sp.type === "string" ? sp.type : undefined;
+  const eventType = isEventType(typeParam) ? typeParam : undefined;
+  const actionId = typeof sp.action === "string" ? sp.action : undefined;
+  const opportunityId = typeof sp.opportunity === "string" ? sp.opportunity : undefined;
+  const cursor = typeof sp.cursor === "string" ? sp.cursor : undefined;
+
+  const page = await getLedger({
+    accountId: account.accountId,
+    eventTypes: eventType ? [eventType] : undefined,
+    actionId,
+    opportunityId,
+    cursor,
+    limit: PAGE_SIZE,
+  });
+
+  const hasEntityFilter = Boolean(actionId ?? opportunityId);
+
+  return (
+    <PageShell
+      active="ledger"
+      title="Context Ledger"
+      subtitle={`Every Operator decision, reconstructable (PRD 18). ${page.totalMatching.toLocaleString("en-US")} entries logged for this account.`}
+      accountName={account.accountName}
+      demoMode={account.demoMode}
+    >
+      <section>
+        <SectionHeading
+          title="Filter by event type"
+          subtitle="One filter chip per PRD 18.2 event."
+        />
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <Link
+            href={buildHref({ action: actionId, opportunity: opportunityId })}
+            className={
+              !eventType
+                ? "rounded-full border border-stone-900 bg-stone-900 px-3 py-1 text-xs font-medium text-stone-50"
+                : "rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50"
+            }
+          >
+            all
+          </Link>
+          {EVENT_TYPES.map((type) => (
+            <Link
+              key={type}
+              href={buildHref({ type, action: actionId, opportunity: opportunityId })}
+              className={
+                eventType === type
+                  ? "rounded-full border border-stone-900 bg-stone-900 px-3 py-1 text-xs font-medium text-stone-50"
+                  : "rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50"
+              }
+            >
+              {type}
+            </Link>
+          ))}
+        </div>
+        {hasEntityFilter ? (
+          <p className="mt-3 text-sm text-stone-600">
+            Filtered to{" "}
+            {actionId ? (
+              <>
+                action <span className="font-mono text-xs">{actionId}</span>
+              </>
+            ) : null}
+            {actionId && opportunityId ? " and " : null}
+            {opportunityId ? (
+              <>
+                opportunity <span className="font-mono text-xs">{opportunityId}</span>
+              </>
+            ) : null}
+            {" · "}
+            <Link className="underline" href={buildHref({ type: eventType })}>
+              clear entity filter
+            </Link>
+          </p>
+        ) : null}
+      </section>
+
+      <LedgerTable entries={page.entries} />
+
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-stone-500">
+          Showing {page.entries.length} entries
+          {eventType ? ` of type "${eventType}"` : ""}
+          {cursor ? " (paged)" : ""}. Every entry written through the Operator
+          carries its Operating Rules (constitution) version — PRD 18.3.
+        </p>
+        {page.nextCursor ? (
+          <Link
+            href={buildHref({
+              type: eventType,
+              action: actionId,
+              opportunity: opportunityId,
+              cursor: page.nextCursor,
+            })}
+            className="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
+          >
+            Older entries →
+          </Link>
+        ) : null}
+      </div>
+    </PageShell>
+  );
+}
