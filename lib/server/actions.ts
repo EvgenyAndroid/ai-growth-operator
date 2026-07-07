@@ -34,12 +34,13 @@ import {
   writeLedger,
 } from "../ledger";
 import {
+  MIN_HOLDOUT_AUDIENCE,
   assignHoldout,
   buildMeasurementWindows,
   checkContamination,
   persistMeasurementWindows,
 } from "../measurement";
-import { runRecipeForAccount } from "../recipes";
+import { resolveRecipeConfig, runRecipeForAccount } from "../recipes";
 import {
   buildDraftCopy,
   buildDraftSequence,
@@ -451,11 +452,26 @@ export async function approveAction(params: {
   }
 
   // --- 3. Holdout assignment when eligible (PRD 14.2/14.3, 26A.1, 26B.14) --
+  // Honor a merchant-raised minHoldoutAudience (26A.9 RecipeConfig). The 500
+  // default (PRD 14.2) is a hard FLOOR: configs may raise it, never lower it.
+  const storedRecipeConfig = await db.recipeConfig.findUnique({
+    where: { accountId_recipeId: { accountId: params.accountId, recipeId } },
+  });
+  const { minHoldoutAudience: configuredMinHoldoutAudience } =
+    resolveRecipeConfig(
+      recipeId,
+      storedRecipeConfig?.params,
+      storedRecipeConfig?.overrides,
+    ) as { minHoldoutAudience?: number }; // absent for meta_seed_suppression
   const holdoutResult = await assignHoldout({
     accountId: params.accountId,
     customerIds,
     actionType,
     activationLevel,
+    minHoldoutAudience: Math.max(
+      MIN_HOLDOUT_AUDIENCE,
+      configuredMinHoldoutAudience ?? MIN_HOLDOUT_AUDIENCE,
+    ),
     // Unique per launch so concurrent holdouts stay independent (26B.14).
     seed: `${params.accountId}:${actionType}:${action.id}`,
     startedAt: now,

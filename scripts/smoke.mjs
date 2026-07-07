@@ -169,6 +169,10 @@ async function main() {
       "LOCAL GET /feed: POS coverage disclosure renders (trust rule #9)",
       localHtml.includes("of POS transactions are identified"),
     );
+    check(
+      "GET /feed: DTC feed does NOT show the POS coverage disclosure",
+      !feedHtml.includes("of POS transactions are identified"),
+    );
     const localCards = [
       ["lapsed-regular win-back", "Win back lapsed regulars"],
       ["catering upsell", "Pitch catering to repeat large-order customers"],
