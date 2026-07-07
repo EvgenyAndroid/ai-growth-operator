@@ -11,7 +11,7 @@
  * dismissOpportunity  — reason + cooldown (PRD 9.6) + 26B.18 preference hook.
  */
 
-import type { RecipeResult } from "../contracts";
+import type { IdentifiedCoverage, RecipeResult } from "../contracts";
 import db from "../db";
 import {
   getOpportunityAuditTrail,
@@ -28,6 +28,7 @@ import {
   dismissalPatch,
 } from "../recipes";
 import { MEASUREMENT_LABEL_COPY } from "../contracts";
+import { getVerticalDefinition } from "../verticals";
 import { parseDraftCopy } from "./draft-templates";
 import {
   accountClock,
@@ -58,7 +59,12 @@ export async function listOpportunities(accountId: string): Promise<FeedView> {
   // Demo accounts run on the demo dataset's fixed reference clock (PRD 25.1).
   const asOf = accountClock(account);
 
-  const results = await runAllRecipesForAccount(accountId, asOf);
+  // Vertical routing (trust rule #10): the registry decides which recipes run
+  // — runAllRecipesForAccount resolves the account's vertical and routes
+  // through lib/verticals. DTC accounts run the identical three v0 recipes in
+  // the identical order as before.
+  const vertical = getVerticalDefinition(account.vertical).vertical;
+  const results: RecipeResult[] = await runAllRecipesForAccount(accountId, asOf);
   const noOpportunity: NoOpportunityView[] = [];
 
   for (const result of results) {
@@ -88,8 +94,18 @@ export async function listOpportunities(accountId: string): Promise<FeedView> {
   const activeRows = feedRows.filter((row) => row.status !== "dismissed");
   const dismissedRows = feedRows.filter((row) => row.status === "dismissed");
 
+  // LOCAL trust rule #9 — attach each fresh result's POS coverage disclosure
+  // to its card (coverage is not persisted on the Opportunity row). DTC
+  // results never carry coverage, so DTC cards keep coverage: null.
+  const coverageByDedupKey = new Map<string, IdentifiedCoverage>();
+  for (const result of results) {
+    if (result.coverage) coverageByDedupKey.set(result.dedupKey, result.coverage);
+  }
+  const toCard = (row: (typeof feedRows)[number]) =>
+    opportunityToCard(row, coverageByDedupKey.get(row.dedupKey) ?? null);
+
   const demoted = await loadRejectionDemotions(accountId);
-  const cards = rankOpportunityCards(activeRows.map(opportunityToCard), demoted);
+  const cards = rankOpportunityCards(activeRows.map(toCard), demoted);
 
   // PRD 16.2 — the header sums ONLY Medium/High recovery + win-back estimates.
   const foundMoney = computeFoundMoneyHeader(
@@ -98,11 +114,14 @@ export async function listOpportunities(accountId: string): Promise<FeedView> {
 
   return {
     accountId,
+    vertical,
     demoMode: account.demoMode,
     generatedAt: asOf.toISOString(),
     foundMoney,
+    // Account-level disclosure under the found-money header (trust rule #9).
+    coverage: results.find((r) => r.coverage)?.coverage ?? null,
     opportunities: cards,
-    dismissed: dismissedRows.map(opportunityToCard),
+    dismissed: dismissedRows.map(toCard),
     noOpportunity,
   };
 }
@@ -250,7 +269,9 @@ export async function getOpportunityDetail(params: {
   const audit = await getOpportunityAuditTrail(params.accountId, row.id);
 
   return {
-    card: opportunityToCard(row),
+    // Coverage disclosure re-attached from the fresh deterministic re-run
+    // (LOCAL trust rule #9; null for DTC recipes).
+    card: opportunityToCard(row, fresh.coverage ?? null),
     audience: fresh.noOpportunity
       ? null
       : {

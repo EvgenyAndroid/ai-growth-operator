@@ -1,8 +1,10 @@
 /**
  * app/(onboarding)/connect/page.tsx — Screen 5: Connect Data Sources
- * (PRD 7.1, 8.1-8.3). Demo connector cards: Shopify + Klaviyo connected,
- * Meta connectable, GA4 recommended-not-required, Stripe optional. All
- * connectors are mocked in the alpha (PRD 25.1).
+ * (PRD 7.1, 8.1-8.3). Demo connector cards, routed by the account's vertical
+ * (trust rule #10): Shopify DTC shows Shopify + Klaviyo + Meta + GA4 + Stripe
+ * exactly as before; LOCAL shows Square POS + Mailchimp + Google Business
+ * Profile ("Recommended — local discovery") + Meta. All connectors are mocked
+ * in the alpha (PRD 25.1).
  */
 
 import Link from "next/link";
@@ -12,7 +14,7 @@ import { createDemoAccount, getConnectionStatus } from "@/lib/server";
 // Freshness must reflect the live DB — never prerender at build time.
 export const dynamic = "force-dynamic";
 import { ResyncButton } from "../resync-button";
-import { orderConnections, type SourceCopy } from "../source-copy";
+import { orderConnectionsForVertical, type SourceCopy } from "../source-copy";
 import type { ConnectionStatusView } from "@/lib/server";
 
 const TIER_TONE = {
@@ -106,10 +108,11 @@ function ConnectorCard({
 export default async function ConnectDataSourcesPage() {
   const account = await createDemoAccount();
   const connections = await getConnectionStatus(account.accountId);
-  const cards = orderConnections(connections);
+  const cards = orderConnectionsForVertical(account.vertical, connections);
   const requiredReady = cards
     .filter((card) => card.copy.tier === "required")
     .every((card) => card.status !== null);
+  const isLocal = account.vertical === "local_service";
 
   return (
     <div className="space-y-6">
@@ -118,9 +121,9 @@ export default async function ConnectDataSourcesPage() {
           Connect your data sources
         </h1>
         <p className="mt-1 text-sm text-stone-500">
-          Shopify + Klaviyo are enough for your first opportunity. In the
-          alpha, connectors are mocked and pre-connected to the demo dataset —
-          no OAuth actually runs.
+          {isLocal
+            ? "Square POS + Mailchimp are enough for your first opportunity. In the alpha, connectors are mocked and pre-connected to the demo dataset — no OAuth actually runs."
+            : "Shopify + Klaviyo are enough for your first opportunity. In the alpha, connectors are mocked and pre-connected to the demo dataset — no OAuth actually runs."}
         </p>
       </div>
 
@@ -137,8 +140,9 @@ export default async function ConnectDataSourcesPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs leading-5 text-stone-400">
-          First value requires only Shopify + Klaviyo; GA4 is recommended but
-          never blocks it (PRD 6.1, 8.2).
+          {isLocal
+            ? "First value requires only Square POS + Mailchimp; Google Business Profile is recommended for local discovery but never blocks it. Local estimates cover identified (loyalty-matched) customers only."
+            : "First value requires only Shopify + Klaviyo; GA4 is recommended but never blocks it (PRD 6.1, 8.2)."}
         </p>
         <Link
           href="/readiness"

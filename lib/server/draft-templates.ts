@@ -15,6 +15,11 @@
  */
 
 import type { Constitution, RecipeId, RecipeResult } from "../contracts";
+import {
+  buildCateringUpsellBrief,
+  buildLocalLapsedRegularSteps,
+  type LocalDraftParams,
+} from "../recipes/local";
 import type { DraftCopyStep } from "./types";
 
 const DEFAULT_OFFER_PERCENT = 10;
@@ -133,6 +138,15 @@ function metaSyncPlan(
   ];
 }
 
+/** Adapt the DTC template params to the LOCAL pack's param shape. */
+function localDraftParams(params: DraftTemplateParams): LocalDraftParams {
+  return {
+    brandName: params.brandName,
+    maxDiscountPercent: params.constitution.maxDiscountPercent,
+    avoidDiscounts: params.avoidDiscounts,
+  };
+}
+
 /** Build the deterministic template copy for a recipe's drafted action. */
 export function buildDraftCopy(
   recipeId: RecipeId,
@@ -146,6 +160,11 @@ export function buildDraftCopy(
       return winbackSteps(params);
     case "meta_seed_suppression":
       return metaSyncPlan(params, result);
+    // LOCAL vertical pack — Mailchimp-style templates live in lib/recipes/local.
+    case "local_lapsed_regular":
+      return buildLocalLapsedRegularSteps(localDraftParams(params));
+    case "catering_upsell":
+      return buildCateringUpsellBrief(localDraftParams(params));
   }
 }
 

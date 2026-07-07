@@ -20,8 +20,10 @@ export default async function OperatingRulesEditorPage({
   const { template } = await searchParams;
   const account = await createDemoAccount();
   const rules = await getOperatingRules(account.accountId);
-  const templateName =
-    template === "beauty_wellness"
+  const isLocal = account.vertical === "local_service";
+  const templateName = isLocal
+    ? "Local café / bakery"
+    : template === "beauty_wellness"
       ? "Shopify DTC — beauty / wellness variant"
       : "Shopify DTC";
 
@@ -55,10 +57,9 @@ export default async function OperatingRulesEditorPage({
           Worth knowing for the demo
         </h2>
         <p className="mt-1 text-sm leading-6 text-stone-600">
-          The demo store&rsquo;s abandoned-checkout recovery audience is about
-          600 eligible customers. If your daily send cap is below the launch
-          audience, governance will block the launch and tell you why — set it
-          lower on purpose if you want to watch the guardrail work.
+          {isLocal
+            ? "Local demo audiences are deliberately smaller than 500 identified customers, so holdouts never apply — results are measured before/after with no control group, clearly labeled. If your daily send cap is below a launch audience, governance will block the launch and tell you why."
+            : "The demo store’s abandoned-checkout recovery audience is about 600 eligible customers. If your daily send cap is below the launch audience, governance will block the launch and tell you why — set it lower on purpose if you want to watch the guardrail work."}
         </p>
       </Card>
 

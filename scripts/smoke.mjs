@@ -14,6 +14,14 @@
  *      constitutionVersion -> holdout-verified readout with a range;
  *      recipe3 directional readout with no PRD 15.4 lift language; and one
  *      before/after-no-control case.
+ *   5. LOCAL vertical pack section: onboard-as-local exists on /setup; the
+ *      local feed (vertical cookie) renders the POS coverage disclosure +
+ *      lapsed-regular + catering + Meta cards; then the LOCAL approve cycle
+ *      (node --import tsx scripts/smoke-cycle-local.mts): lapsed-regular
+ *      approve yields before_after_no_control with NO holdout (audience
+ *      engineered < 500), catering + Meta never counted as found money, and
+ *      Meta stays directional. DTC checks above run first — unchanged — as
+ *      the regression gate.
  *
  * Prints PASS/FAIL per check and exits nonzero on any failure.
  * Run with: node scripts/smoke.mjs
@@ -133,7 +141,67 @@ async function main() {
     // --- 4. approve cycle via direct module invocation -------------------------
     console.log("[smoke] running approve cycle (node --import tsx scripts/smoke-cycle.mts)...");
     const cycleOk = runSync(["--import", "tsx", "scripts/smoke-cycle.mts"], "cycle");
-    check("approve cycle: all module checks passed", cycleOk);
+    check("approve cycle: all module checks passed (DTC regression)", cycleOk);
+
+    // --- 5. LOCAL vertical pack (trust rules #9/#10) ----------------------------
+    // Onboard-as-local path exists: the Business Setup screen offers the LOCAL
+    // launch profile (selection sets the vertical cookie server-side).
+    const setup = await fetch(`${base}/setup`);
+    const setupHtml = await setup.text();
+    check(
+      "LOCAL GET /setup: onboard-as-local path exists (Business Setup profile)",
+      setup.status === 200 &&
+        setupHtml.includes("Local service (café / bakery / studio)"),
+      `status=${setup.status}`,
+    );
+
+    // The feed routes by the vertical cookie (trust rule #10).
+    const localFeed = await fetch(`${base}/feed`, {
+      headers: { cookie: "ago_vertical=local_service" },
+    });
+    const localHtml = await localFeed.text();
+    check(
+      "LOCAL GET /feed: responds for the local_service vertical",
+      localFeed.status === 200,
+      `status=${localFeed.status}`,
+    );
+    check(
+      "LOCAL GET /feed: POS coverage disclosure renders (trust rule #9)",
+      localHtml.includes("of POS transactions are identified"),
+    );
+    const localCards = [
+      ["lapsed-regular win-back", "Win back lapsed regulars"],
+      ["catering upsell", "Pitch catering to repeat large-order customers"],
+      ["Meta seed + suppression", "suppress recent purchasers"],
+    ];
+    for (const [recipe, marker] of localCards) {
+      check(
+        `LOCAL GET /feed: ${recipe} card renders`,
+        localHtml.includes(marker),
+        `marker "${marker}" not found`,
+      );
+    }
+    check(
+      "LOCAL GET /feed: Meta card stays Directional",
+      localHtml.includes("Directional"),
+    );
+    check(
+      "LOCAL GET /feed: DTC feed unchanged by vertical routing (regression)",
+      feedHtml.includes("Recover abandoned checkouts") &&
+        !feedHtml.includes("Win back lapsed regulars") &&
+        !localHtml.includes("Recover abandoned checkouts"),
+    );
+
+    // LOCAL approve cycle: before/after (audience < 500, NO holdout), catering
+    // and Meta never found-money, Meta directional.
+    console.log(
+      "[smoke] running LOCAL approve cycle (node --import tsx scripts/smoke-cycle-local.mts)...",
+    );
+    const localCycleOk = runSync(
+      ["--import", "tsx", "scripts/smoke-cycle-local.mts"],
+      "local-cycle",
+    );
+    check("LOCAL approve cycle: all module checks passed", localCycleOk);
   } finally {
     server.kill();
   }

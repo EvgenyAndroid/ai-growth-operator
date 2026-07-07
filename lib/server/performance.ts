@@ -19,6 +19,7 @@ import type {
 import { HOLDOUT_INELIGIBLE_ACTIVATION_LEVELS } from "../contracts";
 import db from "../db";
 import { writeLedger } from "../ledger";
+import { buildIdentifiedCoverage, getVerticalDefinition } from "../verticals";
 import {
   buildBeforeAfterReadout,
   buildDirectionalReadout,
@@ -283,6 +284,28 @@ export async function getPerformance(params: {
       summary: `${actionName}: audience of ${audienceCustomerIds.length} synced to Meta (simulated) with a ${(matchRate * 100).toFixed(1)}% match rate. ${downstreamPurchases} downstream purchases were observed from synced customers in this ${readoutWindow.readType} window — observational only, not a causal claim.`,
       extraCaveats: inProgressCaveat,
     });
+  }
+
+  // LOCAL trust rule #9 — every LOCAL readout states the identified-transaction
+  // share (estimates cover identified/loyalty-matched customers only). Routed
+  // via the vertical registry (trust rule #10 — no hardcoded vertical checks);
+  // DTC readouts are byte-identical to before. The disclosure note contains no
+  // META_DISALLOWED_TERMS, so it is safe on directional readouts too.
+  if (getVerticalDefinition(account.vertical).requiresCoverageDisclosure) {
+    const posPurchaseWhere = {
+      accountId: params.accountId,
+      eventType: { in: ["purchase", "repeat_purchase"] },
+    };
+    const [totalPos, identifiedPos] = await Promise.all([
+      db.event.count({ where: posPurchaseWhere }),
+      db.event.count({
+        where: { ...posPurchaseWhere, customerId: { not: null } },
+      }),
+    ]);
+    const coverage = buildIdentifiedCoverage(
+      totalPos > 0 ? identifiedPos / totalPos : 0,
+    );
+    readout = { ...readout, caveats: [...readout.caveats, coverage.note] };
   }
 
   await writeLedger({

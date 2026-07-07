@@ -3,6 +3,9 @@
  * Connect Data Sources and Data Readiness screens (PRD 8.1-8.3).
  */
 
+// Type-only import from the shared contracts layer (erased at build; the
+// runtime import-direction rule ui -> lib/server is preserved).
+import type { Vertical } from "@/lib/contracts";
 import type { ConnectionStatusView } from "@/lib/server";
 
 export type SourceId = ConnectionStatusView["source"];
@@ -26,6 +29,17 @@ export const SOURCE_ORDER: SourceId[] = [
   "ga4",
   "stripe",
 ];
+
+/**
+ * Connector-card order per vertical (mirrors lib/verticals connectorSet plus
+ * the DTC-only optional Stripe card). DTC is the pre-vertical SOURCE_ORDER
+ * unchanged; LOCAL shows Square-like POS + Mailchimp-like email + GBP + the
+ * shared Meta destination.
+ */
+export const SOURCE_ORDER_BY_VERTICAL: Record<Vertical, SourceId[]> = {
+  shopify_dtc: SOURCE_ORDER,
+  local_service: ["square", "mailchimp", "gbp", "meta"],
+};
 
 export const SOURCE_COPY: Record<SourceId, SourceCopy> = {
   shopify: {
@@ -93,6 +107,47 @@ export const SOURCE_COPY: Record<SourceId, SourceCopy> = {
     ],
     note: "Not included in the alpha demo dataset.",
   },
+  // LOCAL vertical pack (demo-mode). Not in SOURCE_ORDER, so the DTC
+  // onboarding screens are unchanged; ordered via SOURCE_ORDER_BY_VERTICAL.
+  square: {
+    id: "square",
+    name: "Square POS",
+    tier: "required",
+    tierLabel: "Required",
+    description:
+      "In-store orders, tickets, and loyalty matches — the demand signal for local.",
+    unlocks: [
+      "Visit cadence for lapsed-regular win-back",
+      "Large-order detection for catering upsell",
+      "Identified-transaction share behind every local estimate",
+    ],
+    note: "Estimates cover identified (loyalty-matched) customers only.",
+  },
+  mailchimp: {
+    id: "mailchimp",
+    name: "Mailchimp",
+    tier: "required",
+    tierLabel: "Required",
+    description:
+      "Audiences, consent, and campaigns — the safe-send layer for local email.",
+    unlocks: [
+      "Consent + suppression checks on every audience",
+      "Email activation ladder (campaign draft, exportable brief)",
+    ],
+  },
+  gbp: {
+    id: "gbp",
+    name: "Google Business Profile",
+    tier: "recommended",
+    tierLabel: "Recommended — local discovery",
+    description:
+      "Listing views, reviews, and local search context for interpretation.",
+    unlocks: [
+      "Local demand and review context",
+      "Richer performance interpretation",
+    ],
+    note: "GBP absence never blocks your first opportunity.",
+  },
 };
 
 /** Order connections for display; sources missing from the DB come back null. */
@@ -100,6 +155,21 @@ export function orderConnections(
   connections: ConnectionStatusView[],
 ): Array<{ copy: SourceCopy; status: ConnectionStatusView | null }> {
   return SOURCE_ORDER.map((id) => ({
+    copy: SOURCE_COPY[id],
+    status: connections.find((c) => c.source === id) ?? null,
+  }));
+}
+
+/**
+ * Vertical-aware ordering (trust rule #10 — vertical selection routes the
+ * connect + readiness screens). "shopify_dtc" is byte-identical to
+ * orderConnections().
+ */
+export function orderConnectionsForVertical(
+  vertical: Vertical,
+  connections: ConnectionStatusView[],
+): Array<{ copy: SourceCopy; status: ConnectionStatusView | null }> {
+  return SOURCE_ORDER_BY_VERTICAL[vertical].map((id) => ({
     copy: SOURCE_COPY[id],
     status: connections.find((c) => c.source === id) ?? null,
   }));

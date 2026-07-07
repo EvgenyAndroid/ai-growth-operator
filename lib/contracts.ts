@@ -118,13 +118,32 @@ export const ESTIMATE_LABELS = [
 ] as const;
 export type EstimateLabel = (typeof ESTIMATE_LABELS)[number];
 
-/** The three v0 recipes (PRD 1.7). No others exist in v0. */
-export const RECIPE_IDS = [
+/** Vertical packs. Vertical selection routes recipes/copy/connectors (lib/verticals.ts). */
+export const VERTICALS = ["shopify_dtc", "local_service"] as const;
+export type Vertical = (typeof VERTICALS)[number];
+
+/** The three DTC v0 recipes (PRD 1.7). */
+export const DTC_RECIPE_IDS = [
   "abandoned_checkout_recovery",
   "lapsed_winback",
   "meta_seed_suppression",
 ] as const;
-export type RecipeId = (typeof RECIPE_IDS)[number];
+export type DtcRecipeId = (typeof DTC_RECIPE_IDS)[number];
+
+/** LOCAL vertical pack recipes. The Meta seed recipe is SHARED with DTC. */
+export const LOCAL_RECIPE_IDS = [
+  "local_lapsed_regular",
+  "catering_upsell",
+  "meta_seed_suppression",
+] as const;
+export type LocalRecipeId = (typeof LOCAL_RECIPE_IDS)[number];
+
+/**
+ * Back-compat alias: the DTC v0 recipe list. Vertical-aware code must route
+ * through the registry in lib/verticals.ts, never iterate this directly.
+ */
+export const RECIPE_IDS = DTC_RECIPE_IDS;
+export type RecipeId = DtcRecipeId | LocalRecipeId;
 
 export type ContractActionType =
   | "klaviyo_recovery_flow"
@@ -208,7 +227,17 @@ export type ContractLedgerEventType =
   | "export"
   | "chat_interaction";
 
-export type IntegrationSource = "shopify" | "klaviyo" | "meta" | "ga4" | "stripe";
+export type IntegrationSource =
+  | "shopify"
+  | "klaviyo"
+  | "meta"
+  | "ga4"
+  | "stripe"
+  // LOCAL vertical pack (demo-mode): Square-like POS, Mailchimp-like email,
+  // Google Business Profile. POS orders reuse Event/purchase with source "square".
+  | "square"
+  | "mailchimp"
+  | "gbp";
 
 // ---------------------------------------------------------------------------
 // Explanation contract — PRD 4.4: no recommendation renders without ALL of this
@@ -259,6 +288,18 @@ export interface EstimateRange {
 }
 
 /**
+ * LOCAL vertical POS coverage disclosure (trust rule #9): local estimates
+ * cover identified (loyalty-matched) customers ONLY. Every local card and
+ * readout must render this share + note. Absent for DTC results.
+ */
+export interface IdentifiedCoverage {
+  /** Share (0..1) of POS transactions matched to an identified customer. */
+  identifiedShare: number;
+  /** Plain-English disclosure rendered verbatim on cards/readouts. */
+  note: string;
+}
+
+/**
  * PRD 16.2 — found-money header may ONLY sum recovery + win-back opportunities
  * with Medium or High confidence. Never Meta/directional/low/beta.
  */
@@ -269,7 +310,10 @@ export function isFoundMoneyEligible(input: {
 }): boolean {
   return (
     (input.recipeId === "abandoned_checkout_recovery" ||
-      input.recipeId === "lapsed_winback") &&
+      input.recipeId === "lapsed_winback" ||
+      // LOCAL pack: lapsed-regular win-back is the local recovery/win-back
+      // analogue. catering_upsell and Meta are NEVER found-money eligible.
+      input.recipeId === "local_lapsed_regular") &&
     (input.confidence === "high" || input.confidence === "medium") &&
     input.estimateLabel !== "directional" &&
     input.estimateLabel !== "unavailable"
@@ -301,7 +345,48 @@ export interface RecipeConfigShape {
     seedPercentile: number; // default 15 (top 15% by refund-adjusted value)
     recentPurchaserWindowDays: number; // default 30 (suppression)
   };
+  // LOCAL vertical pack (identified/loyalty-matched customers only)
+  local_lapsed_regular: {
+    cadenceMultiplier: number; // default 1.5 (gap > 1.5x personal median visit cadence)
+    minVisitsForPersonalCadence: number; // default 3
+    minIntervalsForPersonalCadence: number; // default 2
+    conservativeReturnRate: number; // modeled default, editable (26A.6)
+    holdoutPercent: number; // default 10
+    minHoldoutAudience: number; // default 500 — local audiences run smaller, so before/after applies
+  };
+  catering_upsell: {
+    largeOrderThreshold: number; // default 60 (POS order value suggesting catering-scale)
+    minLargeOrders: number; // default 2
+    lookbackDays: number; // default 90
+    conservativeUpsellRate: number; // modeled default, editable
+    holdoutPercent: number; // default 10
+    minHoldoutAudience: number; // default 500
+  };
 }
+
+/** LOCAL pack defaults. minHoldoutAudience stays 500 (shared law); local demo
+ *  audiences are engineered SMALLER than 500 so the before/after path exercises. */
+export const LOCAL_RECIPE_CONFIG_DEFAULTS: Pick<
+  RecipeConfigShape,
+  "local_lapsed_regular" | "catering_upsell"
+> = {
+  local_lapsed_regular: {
+    cadenceMultiplier: 1.5,
+    minVisitsForPersonalCadence: 3,
+    minIntervalsForPersonalCadence: 2,
+    conservativeReturnRate: 0.04,
+    holdoutPercent: 10,
+    minHoldoutAudience: 500,
+  },
+  catering_upsell: {
+    largeOrderThreshold: 60,
+    minLargeOrders: 2,
+    lookbackDays: 90,
+    conservativeUpsellRate: 0.05,
+    holdoutPercent: 10,
+    minHoldoutAudience: 500,
+  },
+};
 
 export const RECIPE_CONFIG_DEFAULTS: RecipeConfigShape = {
   abandoned_checkout_recovery: {
@@ -323,6 +408,7 @@ export const RECIPE_CONFIG_DEFAULTS: RecipeConfigShape = {
     seedPercentile: 15,
     recentPurchaserWindowDays: 30,
   },
+  ...LOCAL_RECIPE_CONFIG_DEFAULTS,
 };
 
 export interface RecipeInput<R extends RecipeId = RecipeId> {
@@ -350,7 +436,7 @@ export interface RecipeResult<R extends RecipeId = RecipeId> {
   recipeId: R;
   recipeVersion: string;
   title: string;
-  category: "recovery" | "winback" | "paid_audience";
+  category: "recovery" | "winback" | "paid_audience" | "upsell";
   sourceSignal: string;
   audience: AudienceSpec;
   /** For meta_seed_suppression: the suppression audience. */
@@ -366,6 +452,12 @@ export interface RecipeResult<R extends RecipeId = RecipeId> {
   explanation: ExplanationContract;
   dataAsOf: string;
   dedupKey: string; // `${accountId}:${recipeId}` (26B.16)
+  /**
+   * REQUIRED for LOCAL vertical recipes (POS coverage disclosure — trust rule
+   * #9); absent for DTC recipes. Optional at the type level only because DTC
+   * results never carry it.
+   */
+  coverage?: IdentifiedCoverage;
   /** 26A.10 — populated when the recipe finds nothing, explaining what was checked. */
   noOpportunity?: {
     checked: Array<{ what: string; count: number }>;
@@ -484,7 +576,7 @@ export interface MeasurementReadout {
 // ---------------------------------------------------------------------------
 
 export interface DemoDataset {
-  account: { name: string; vertical: "shopify_dtc" };
+  account: { name: string; vertical: Vertical };
   constitution: {
     monthlyBudgetCap: number;
     maxDiscountPercent: number;
@@ -579,6 +671,16 @@ export const DEFAULT_MEASUREMENT_WINDOWS: Record<
     { readType: "long", days: 30 },
   ],
   meta_seed_suppression: [
+    { readType: "early", days: 7 },
+    { readType: "primary", days: 14 },
+    { readType: "long", days: 30 },
+  ],
+  local_lapsed_regular: [
+    { readType: "early", days: 7 },
+    { readType: "primary", days: 21 },
+    { readType: "long", days: 30 },
+  ],
+  catering_upsell: [
     { readType: "early", days: 7 },
     { readType: "primary", days: 14 },
     { readType: "long", days: 30 },

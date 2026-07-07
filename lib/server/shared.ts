@@ -12,13 +12,19 @@ import type {
   ContractLedgerEventType,
   DataFreshness,
   ExplanationContract,
+  IdentifiedCoverage,
   IntegrationSource,
   LedgerEntry,
   Opportunity,
   Prisma,
   RecipeId,
 } from "../contracts";
-import { MEASUREMENT_LABELS, MEASUREMENT_LABEL_COPY, RECIPE_IDS } from "../contracts";
+import {
+  DTC_RECIPE_IDS,
+  LOCAL_RECIPE_IDS,
+  MEASUREMENT_LABELS,
+  MEASUREMENT_LABEL_COPY,
+} from "../contracts";
 import db from "../db";
 import { DEMO_REFERENCE_DATE } from "../demo";
 import type { ReachSource } from "../measurement";
@@ -81,9 +87,17 @@ export async function requireConstitution(accountId: string): Promise<Constituti
   return constitution;
 }
 
+/** Every recipe id across all vertical packs (DTC PRD 1.7 + LOCAL pack). */
+const ALL_RECIPE_IDS: readonly string[] = [
+  ...DTC_RECIPE_IDS,
+  ...LOCAL_RECIPE_IDS.filter(
+    (id) => !(DTC_RECIPE_IDS as readonly string[]).includes(id),
+  ),
+];
+
 export function requireRecipeId(value: string): RecipeId {
-  if ((RECIPE_IDS as readonly string[]).includes(value)) return value as RecipeId;
-  throw new Error(`"${value}" is not a v0 recipe id (PRD 1.7).`);
+  if (ALL_RECIPE_IDS.includes(value)) return value as RecipeId;
+  throw new Error(`"${value}" is not a known recipe id (PRD 1.7 / LOCAL pack).`);
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +180,15 @@ export async function loadExistingFlowReachSources(
 // Opportunity row -> card DTO
 // ---------------------------------------------------------------------------
 
-export function opportunityToCard(row: Opportunity): OpportunityCardView {
+export function opportunityToCard(
+  row: Opportunity,
+  /**
+   * LOCAL trust rule #9: the POS coverage disclosure is not persisted on the
+   * Opportunity row — callers holding a fresh RecipeResult attach it here.
+   * DTC callers omit it (null on the card).
+   */
+  coverage: IdentifiedCoverage | null = null,
+): OpportunityCardView {
   const explanation = row.explanation as unknown as ExplanationContract;
   const mode = explanation.measurementPlan.mode;
   return {
@@ -192,6 +214,7 @@ export function opportunityToCard(row: Opportunity): OpportunityCardView {
     measurementMode: mode,
     measurementLabel: MEASUREMENT_LABELS[mode],
     measurementLabelCopy: MEASUREMENT_LABEL_COPY[mode],
+    coverage,
     dismissedReason: row.dismissedReason,
     cooldownUntil: row.cooldownUntil ? row.cooldownUntil.toISOString() : null,
     updatedAt: row.updatedAt.toISOString(),
@@ -211,7 +234,7 @@ export async function loadRejectionDemotions(
   const demoted = new Set<RecipeId>();
   for (const pref of prefs) {
     const recipePart = pref.key.slice("rejection_pattern:".length);
-    if ((RECIPE_IDS as readonly string[]).includes(recipePart)) {
+    if (ALL_RECIPE_IDS.includes(recipePart)) {
       demoted.add(recipePart as RecipeId);
     }
   }

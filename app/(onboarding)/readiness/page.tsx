@@ -2,6 +2,9 @@
  * app/(onboarding)/readiness/page.tsx — Screen 6: Data Readiness (PRD 7.1,
  * 8.4-8.5, 26B.15). Per-source sync status and freshness against thresholds,
  * what each source unlocks, and the handoff into the Opportunity Feed.
+ * Vertical-aware (trust rule #10): required sources are the vertical's
+ * required-tier connectors (Shopify+Klaviyo for DTC, Square POS+Mailchimp for
+ * LOCAL), and LOCAL adds the POS coverage disclosure (trust rule #9).
  */
 
 import Link from "next/link";
@@ -11,7 +14,7 @@ import { createDemoAccount, getConnectionStatus } from "@/lib/server";
 // Freshness must reflect the live DB — never prerender at build time.
 export const dynamic = "force-dynamic";
 import { ResyncButton } from "../resync-button";
-import { orderConnections } from "../source-copy";
+import { orderConnectionsForVertical } from "../source-copy";
 import type { ConnectionStatusView } from "@/lib/server";
 
 function freshnessValue(status: ConnectionStatusView): string {
@@ -22,11 +25,18 @@ function freshnessValue(status: ConnectionStatusView): string {
 export default async function DataReadinessPage() {
   const account = await createDemoAccount();
   const connections = await getConnectionStatus(account.accountId);
-  const cards = orderConnections(connections);
+  const cards = orderConnectionsForVertical(account.vertical, connections);
+  const isLocal = account.vertical === "local_service";
 
-  const shopify = connections.find((c) => c.source === "shopify");
-  const klaviyo = connections.find((c) => c.source === "klaviyo");
-  const ready = Boolean(shopify && !shopify.isStale && klaviyo && !klaviyo.isStale);
+  // Required sources come from the vertical's required-tier connectors. For
+  // DTC this is exactly the pre-vertical Shopify + Klaviyo check.
+  const requiredCards = cards.filter((card) => card.copy.tier === "required");
+  const ready =
+    requiredCards.length > 0 &&
+    requiredCards.every((card) => card.status !== null && !card.status.isStale);
+  const requiredNames = requiredCards
+    .map((card) => card.copy.name)
+    .join(" and ");
 
   return (
     <div className="space-y-6">
@@ -70,8 +80,8 @@ export default async function DataReadinessPage() {
               }
             >
               {ready
-                ? "Shopify and Klaviyo are synced and within freshness thresholds. The Operator can rank opportunities now."
-                : "Shopify and Klaviyo must be synced and fresh before the Operator ranks opportunities. Re-sync below."}
+                ? `${requiredNames} are synced and within freshness thresholds. The Operator can rank opportunities now.`
+                : `${requiredNames} must be synced and fresh before the Operator ranks opportunities. Re-sync below.`}
             </p>
           </div>
           {ready ? (
@@ -155,15 +165,29 @@ export default async function DataReadinessPage() {
         ))}
       </div>
 
+      {isLocal ? (
+        <Card as="section" className="border-stone-200 bg-stone-50">
+          <h2 className="text-sm font-semibold text-stone-900">
+            How local numbers are counted
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-stone-600">
+            Local estimates cover identified (loyalty-matched) customers only —
+            every opportunity card and readout states the share of POS
+            transactions that are identified. Unidentified walk-in sales are
+            never included in an estimate.
+          </p>
+        </Card>
+      ) : null}
+
       <Card as="section" className="bg-stone-50">
         <h2 className="text-sm font-semibold text-stone-900">
           How the first sync works
         </h2>
         <p className="mt-1 text-sm leading-6 text-stone-600">
-          The last 90 days of orders, checkouts, and profiles sync first and
-          power your first opportunity; deeper history backfills in the
-          background, and estimates re-verify when the backfill completes. The
-          demo workspace runs on a fixed reference date of{" "}
+          {isLocal
+            ? "The last 90 days of POS tickets, loyalty matches, and email profiles sync first and power your first opportunity; deeper history backfills in the background, and estimates re-verify when the backfill completes."
+            : "The last 90 days of orders, checkouts, and profiles sync first and power your first opportunity; deeper history backfills in the background, and estimates re-verify when the backfill completes."}{" "}
+          The demo workspace runs on a fixed reference date of{" "}
           {new Date(account.referenceDate).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",

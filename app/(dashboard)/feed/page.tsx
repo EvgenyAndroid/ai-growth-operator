@@ -5,11 +5,17 @@
  * eligible items only, net-of-existing-automation framing per 26B.11), a
  * maximum of 5 active cards, dismissed-in-cooldown section, and the 26A.10
  * "what was checked" empty state per recipe that found nothing.
+ *
+ * Vertical-aware (trust rule #10): copy comes from the vertical registry
+ * (the DTC strings mirror the pre-vertical UI exactly), and LOCAL accounts
+ * render the POS coverage disclosure under the found-money header and on
+ * every card (trust rule #9).
  */
 
 import Link from "next/link";
 import type { FeedView } from "@/lib/server";
 import { listOpportunities } from "@/lib/server";
+import { getVerticalDefinition } from "@/lib/server/vertical";
 import { Badge, EmptyState, SectionHeading } from "@/components/ui/primitives";
 import { getDemoAccountId } from "./_shared/account";
 import { fmtDateTime, fmtRange, RECIPE_SHORT_NAMES } from "./_shared/format";
@@ -19,7 +25,15 @@ export const dynamic = "force-dynamic";
 
 const MAX_ACTIVE_CARDS = 5; // PRD 7.2 — maximum of ~5 active cards
 
-function FoundMoneyHeader({ header }: { header: FeedView["foundMoney"] }) {
+function FoundMoneyHeader({
+  header,
+  label,
+  coverage,
+}: {
+  header: FeedView["foundMoney"];
+  label: string;
+  coverage: FeedView["coverage"];
+}) {
   // PRD 16.2 — render the header ONLY when at least one eligible
   // (recovery/win-back, Medium/High confidence, real range) item exists.
   if (!header.show) return null;
@@ -29,13 +43,20 @@ function FoundMoneyHeader({ header }: { header: FeedView["foundMoney"] }) {
       className="rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4"
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-        Found money
+        {label}
       </p>
       <p className="mt-1 text-3xl font-semibold tracking-tight text-emerald-900">
         {fmtRange(header.totalLow, header.totalHigh)}
       </p>
       {header.headline ? (
         <p className="mt-1 text-sm text-emerald-800">{header.headline}</p>
+      ) : null}
+      {coverage ? (
+        // LOCAL trust rule #9 — POS coverage disclosure on the header.
+        <p className="mt-1 text-sm font-medium text-emerald-800">
+          Estimates cover identified loyalty customers —{" "}
+          {Math.round(coverage.identifiedShare * 100)}% of transactions.
+        </p>
       ) : null}
       {header.excluded.length > 0 ? (
         <details className="mt-2">
@@ -55,16 +76,21 @@ function FoundMoneyHeader({ header }: { header: FeedView["foundMoney"] }) {
   );
 }
 
-function NoOpportunityCards({ items }: { items: FeedView["noOpportunity"] }) {
+function NoOpportunityCards({
+  items,
+  title,
+  subtitle,
+}: {
+  items: FeedView["noOpportunity"];
+  title: string;
+  subtitle: string;
+}) {
   // 26A.10 — explain what was checked, why nothing qualified, the nearest
   // next action, and what connection/data would unlock more.
   if (items.length === 0) return null;
   return (
     <section className="space-y-3">
-      <SectionHeading
-        title="Nothing qualified here — and here is exactly what was checked"
-        subtitle="The Operator explains empty results instead of hiding them."
-      />
+      <SectionHeading title={title} subtitle={subtitle} />
       <div className="grid gap-3 md:grid-cols-2">
         {items.map((item) => (
           <EmptyState
@@ -109,13 +135,15 @@ export default async function FeedPage() {
   const accountId = await getDemoAccountId();
   const feed = await listOpportunities(accountId);
   const active = feed.opportunities.slice(0, MAX_ACTIVE_CARDS);
+  // Vertical registry copy — the DTC entry mirrors the pre-vertical strings.
+  const copy = getVerticalDefinition(feed.vertical).feedCopy;
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
-            Opportunity Feed
+            {copy.feedTitle}
           </h1>
           <p className="mt-0.5 text-sm text-stone-500">
             Generated {fmtDateTime(feed.generatedAt)}
@@ -139,7 +167,11 @@ export default async function FeedPage() {
         </div>
       </header>
 
-      <FoundMoneyHeader header={feed.foundMoney} />
+      <FoundMoneyHeader
+        header={feed.foundMoney}
+        label={copy.foundMoneyLabel}
+        coverage={feed.coverage}
+      />
 
       {active.length > 0 ? (
         <section className="space-y-4" aria-label="Active opportunities">
@@ -149,12 +181,16 @@ export default async function FeedPage() {
         </section>
       ) : feed.noOpportunity.length === 0 ? (
         <EmptyState
-          title="No active opportunities"
-          description="Every recipe ran and nothing is currently active. Check the dismissed section below or re-sync your data sources."
+          title={copy.emptyFeedTitle}
+          description={copy.emptyFeedDescription}
         />
       ) : null}
 
-      <NoOpportunityCards items={feed.noOpportunity} />
+      <NoOpportunityCards
+        items={feed.noOpportunity}
+        title={copy.noOpportunityTitle}
+        subtitle={copy.noOpportunitySubtitle}
+      />
 
       {feed.dismissed.length > 0 ? (
         <section className="space-y-2">

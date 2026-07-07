@@ -24,9 +24,11 @@ ui (app/, components/)  ->  lib/server  ->  modules  ->  lib/contracts + lib/db
 
 | Area | Path(s) | Owns |
 | --- | --- | --- |
-| Foundation | `prisma/`, `lib/contracts.ts`, `lib/db.ts`, `components/ui/primitives.tsx`, `package.json`, config files | Schema, shared types, DB singleton, UI primitives. **Frozen for module agents.** |
+| Foundation | `prisma/`, `lib/contracts.ts`, `lib/verticals.ts`, `lib/db.ts`, `components/ui/primitives.tsx`, `package.json`, config files | Schema, shared types, vertical pack registry, DB singleton, UI primitives. **Frozen for module agents.** |
 | Demo data | `lib/demo/` | `DemoDataset` generator + mocked connectors (Shopify/Klaviyo/Meta mocks, simulated `SyncRun`s). Fills `prisma/seed.ts` body. Must exercise all 3 recipes and all 3 measurement labels (PRD 25.1). |
-| Recipes | `lib/recipes/` | The three deterministic recipes (`abandoned_checkout_recovery`, `lapsed_winback`, `meta_seed_suppression`). `RecipeInput -> RecipeResult`. No I/O side effects other than reads via `lib/db`. |
+| Demo data (LOCAL) | `lib/demo/local/` | Café/bakery demo dataset + mocked connectors for the LOCAL pack (Square-like POS, Mailchimp-like email, Google Business Profile). POS orders reuse `Event`/`purchase` with source `square`; GBP is an `Integration` row. Local audiences are engineered SMALLER than 500 so the before/after path exercises. |
+| Recipes | `lib/recipes/` | The three deterministic DTC recipes (`abandoned_checkout_recovery`, `lapsed_winback`, `meta_seed_suppression`). `RecipeInput -> RecipeResult`. No I/O side effects other than reads via `lib/db`. |
+| Recipes (LOCAL) | `lib/recipes/local/` | The LOCAL pack recipes (`local_lapsed_regular`, `catering_upsell`; the Meta seed recipe is shared from `lib/recipes/`). Every result MUST carry `coverage: IdentifiedCoverage` (trust rule #9). |
 | Governance + Ledger | `lib/governance/`, `lib/ledger/` | Runtime gate (`GovernanceCheckInput -> GovernanceCheckResult`; consent, suppression, budget, discount, margin, approval, banned claims, freshness) and `LedgerWriteFn`. |
 | Measurement | `lib/measurement/` | Holdout assignment (>=500, 10%, randomized customer-level, Klaviyo flows only), simulated readouts, `MeasurementReadout`, 26A.1 downgrade rule, 26A.2 windows. |
 | Server actions | `lib/server/` | Next.js server actions / route handlers. The ONLY layer ui calls. Orchestrates modules, enforces governance-before-activation, writes ledger entries. Operator Chat intent router (26A.3) lives here. |
@@ -43,6 +45,16 @@ ui (app/, components/)  ->  lib/server  ->  modules  ->  lib/contracts + lib/db
 6. Draft is not activation — approval required before any send/sync (26A.4).
 7. Every recommendation carries a full `ExplanationContract` or does not render (PRD 4.4).
 8. Alpha has NO LLM calls: templates + deterministic intent routing only.
+9. **POS coverage disclosure (LOCAL pack):** local estimates cover identified
+   (loyalty-matched) customers only. Every LOCAL card and readout states the
+   identified-transaction share via `IdentifiedCoverage`
+   (`buildIdentifiedCoverage()` in `lib/verticals.ts`). `catering_upsell` and
+   Meta are never found-money eligible; `local_lapsed_regular` follows the
+   standard found-money gate.
+10. **Vertical routing:** `Account.vertical` selects everything — recipes,
+    constitution template, connector set, feed copy — via `VERTICAL_REGISTRY`
+    in `lib/verticals.ts`. No module hardcodes vertical checks, and the
+    `shopify_dtc` path must behave exactly as before the LOCAL pack existed.
 
 ## Schema notes
 

@@ -19,12 +19,14 @@ import type {
   EstimateLabel,
   EstimateRange,
   ExplanationContract,
+  IdentifiedCoverage,
   IntegrationSource,
   MeasurementLabel,
   MeasurementMode,
   MeasurementReadout,
   OpportunityStatus,
   RecipeId,
+  Vertical,
 } from "../contracts";
 import type { FoundMoneyHeader } from "../recipes";
 
@@ -35,6 +37,8 @@ import type { FoundMoneyHeader } from "../recipes";
 export interface CreateDemoAccountResult {
   accountId: string;
   accountName: string;
+  /** Vertical pack this workspace runs (trust rule #10 — routes everything). */
+  vertical: Vertical;
   demoMode: true; // PRD 20.3 — demo must be clearly labeled
   /** True when the demo dataset was (re)seeded in this call. */
   seeded: boolean;
@@ -102,6 +106,12 @@ export interface OpportunityCardView {
   measurementMode: MeasurementMode;
   measurementLabel: MeasurementLabel;
   measurementLabelCopy: string;
+  /**
+   * LOCAL trust rule #9 — POS coverage disclosure. Present on every LOCAL
+   * vertical card (identified-transaction share + verbatim note); always null
+   * for DTC cards.
+   */
+  coverage: IdentifiedCoverage | null;
   dismissedReason: string | null;
   cooldownUntil: string | null;
   updatedAt: string;
@@ -118,10 +128,18 @@ export interface NoOpportunityView {
 
 export interface FeedView {
   accountId: string;
+  /** Vertical pack the account runs — drives feed copy + coverage disclosure. */
+  vertical: Vertical;
   demoMode: boolean;
   generatedAt: string;
   /** PRD 16.2 — gated by isFoundMoneyEligible(); render only when show=true. */
   foundMoney: FoundMoneyHeader;
+  /**
+   * LOCAL trust rule #9 — account-level POS coverage disclosure rendered under
+   * the found-money header. Null for DTC accounts (and until a local recipe
+   * run reports its identified-transaction share).
+   */
+  coverage: IdentifiedCoverage | null;
   /** Ranked, active (non-dismissed) cards. */
   opportunities: OpportunityCardView[];
   /** Dismissed cards still inside their cooldown window. */

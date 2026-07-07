@@ -26,6 +26,25 @@ const ACTION_LABELS: Record<string, string> = {
   meta_audience_sync: "Meta seed + purchaser-suppression audience sync",
 };
 
+/**
+ * LOCAL trust rule #9 — the POS coverage disclosure. Rendered verbatim on
+ * every LOCAL card (coverage is null on DTC cards, so DTC renders nothing).
+ */
+function CoverageDisclosure({
+  coverage,
+}: {
+  coverage: OpportunityCardView["coverage"];
+}) {
+  if (!coverage) return null;
+  // The note is rendered verbatim (lib/contracts IdentifiedCoverage) and
+  // already states the identified-transaction share.
+  return (
+    <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+      {coverage.note}
+    </p>
+  );
+}
+
 const STATUS_TONE: Record<string, "neutral" | "info" | "positive"> = {
   drafted: "info",
   approved: "info",
@@ -68,6 +87,9 @@ export function OpportunityCard({
           large
         />
       </div>
+
+      {/* LOCAL POS coverage disclosure (trust rule #9); null for DTC */}
+      <CoverageDisclosure coverage={card.coverage} />
 
       {/* What was found / why it matters */}
       <div className="grid gap-2 text-sm text-stone-700 sm:grid-cols-2">

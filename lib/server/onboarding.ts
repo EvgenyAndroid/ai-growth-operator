@@ -12,8 +12,10 @@
 
 import { DEMO_ACCOUNT_NAME, loadDemoDataset, seedDemoDatabase } from "../demo";
 import db from "../db";
-import type { IntegrationSource } from "../contracts";
+import type { IntegrationSource, Vertical } from "../contracts";
 import { writeLedger } from "../ledger";
+import { ensureLocalDemoAccount } from "./local-demo";
+import { getActiveVertical } from "./vertical";
 import {
   accountClock,
   latestConstitution,
@@ -33,10 +35,19 @@ const MS_PER_HOUR = 3_600_000;
 /**
  * Create (or reuse) the demo workspace (PRD 20.2, 25.1). Seeding is
  * idempotent — `reset: true` wipes and reseeds the demo account.
+ *
+ * Vertical routing (trust rule #10): resolves the vertical from the explicit
+ * option, else the Business Setup cookie, else "shopify_dtc" — so all existing
+ * DTC call sites behave exactly as before a vertical was ever selected.
  */
 export async function createDemoAccount(
-  options: { reset?: boolean } = {},
+  options: { reset?: boolean; vertical?: Vertical } = {},
 ): Promise<CreateDemoAccountResult> {
+  const vertical = options.vertical ?? (await getActiveVertical());
+  if (vertical === "local_service") {
+    return ensureLocalDemoAccount({ reset: options.reset });
+  }
+
   if (!options.reset) {
     const existing = await db.account.findFirst({
       where: { name: DEMO_ACCOUNT_NAME, demoMode: true },
@@ -51,6 +62,7 @@ export async function createDemoAccount(
       return {
         accountId: existing.id,
         accountName: existing.name,
+        vertical: "shopify_dtc",
         demoMode: true,
         seeded: false,
         referenceDate: loadDemoDataset().referenceDate,
@@ -83,6 +95,7 @@ export async function createDemoAccount(
   return {
     accountId: summary.accountId,
     accountName: summary.accountName,
+    vertical: "shopify_dtc",
     demoMode: true,
     seeded: true,
     referenceDate: summary.referenceDate,

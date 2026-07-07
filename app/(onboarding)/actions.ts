@@ -16,6 +16,7 @@ import {
   saveOperatingRules,
   type ConnectionStatusView,
 } from "@/lib/server";
+import { setActiveVertical } from "@/lib/server/vertical";
 
 /**
  * Screen 1 CTA — "Enter demo workspace". No real auth in the alpha (PRD 25.1);
@@ -30,6 +31,18 @@ export async function enterDemoWorkspace(): Promise<void> {
 export async function resetDemoWorkspace(): Promise<void> {
   await createDemoAccount({ reset: true });
   redirect("/setup");
+}
+
+/**
+ * Screen 2 — Business Setup. Persists the vertical choice (cookie — trust
+ * rule #10: vertical selection routes everything downstream) and provisions
+ * the matching demo workspace, then moves on to the Operating Rules template.
+ * "shopify_dtc" keeps the existing DTC alpha exactly as-is.
+ */
+export async function selectBusinessTypeAction(vertical: string): Promise<void> {
+  const selected = await setActiveVertical(vertical); // validates; throws on unknown
+  await createDemoAccount({ vertical: selected });
+  redirect("/rules");
 }
 
 export interface SaveRulesFormState {

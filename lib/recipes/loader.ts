@@ -19,8 +19,10 @@ import type {
   RecipeId,
   RecipeInput,
   RecipeResult,
+  Vertical,
 } from "../contracts";
 import db from "../db";
+import { getVerticalDefinition, recipeIdsForVertical } from "../verticals";
 import { resolveRecipeConfig } from "./config";
 import { runRecipe } from "./run";
 import type {
@@ -174,33 +176,47 @@ export async function loadRecipeInput<R extends RecipeId>(
   };
 }
 
+/** Account vertical — vertical selection routes everything (lib/verticals.ts). */
+async function loadAccountVertical(accountId: string): Promise<Vertical> {
+  const account = await db.account.findUnique({
+    where: { id: accountId },
+    select: { vertical: true },
+  });
+  if (!account) throw new Error(`Account ${accountId} not found.`);
+  return getVerticalDefinition(account.vertical).vertical;
+}
+
 /** Convenience for lib/server: load + run a single recipe for an account. */
 export async function runRecipeForAccount<R extends RecipeId>(
   accountId: string,
   recipeId: R,
   asOf: Date = new Date(),
 ): Promise<RecipeResult<R>> {
-  const [input, snapshot] = await Promise.all([
+  const [input, snapshot, vertical] = await Promise.all([
     loadRecipeInput(accountId, recipeId, asOf),
     loadRecipeSnapshot(accountId, asOf),
+    loadAccountVertical(accountId),
   ]);
-  return runRecipe(input, snapshot);
+  return runRecipe(input, snapshot, vertical);
 }
 
-/** Run all three v0 recipes against one snapshot (single read set). */
+/**
+ * Run every recipe the account's vertical registers (lib/verticals.ts) against
+ * one snapshot (single read set). DTC accounts run the identical three v0
+ * recipes in the identical order as before.
+ */
 export async function runAllRecipesForAccount(
   accountId: string,
   asOf: Date = new Date(),
 ): Promise<RecipeResult[]> {
-  const snapshot = await loadRecipeSnapshot(accountId, asOf);
+  const [snapshot, vertical] = await Promise.all([
+    loadRecipeSnapshot(accountId, asOf),
+    loadAccountVertical(accountId),
+  ]);
   const results: RecipeResult[] = [];
-  for (const recipeId of [
-    "abandoned_checkout_recovery",
-    "lapsed_winback",
-    "meta_seed_suppression",
-  ] as const) {
+  for (const recipeId of recipeIdsForVertical(vertical)) {
     const input = await loadRecipeInput(accountId, recipeId, asOf);
-    results.push(runRecipe(input, snapshot));
+    results.push(runRecipe(input, snapshot, vertical));
   }
   return results;
 }

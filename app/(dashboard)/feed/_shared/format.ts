@@ -82,6 +82,12 @@ export const RECIPE_ESTIMATE_FORMULAS: Record<RecipeId, string> = {
     "eligible lapsed customers × win-back rate × average order value — low bound uses the conservative configured rate, high bound uses the merchant historical rate when available (PRD 10.3, net of existing win-back flows per 26B.11).",
   meta_seed_suppression:
     "No dollar estimate. Meta audience sync is directional-only in v0 — audience quality metrics only, never lift or recovered-revenue math (PRD 10.4, 15.4).",
+  // LOCAL vertical pack. Estimates cover identified (loyalty-matched)
+  // customers only; every local card states the identified-transaction share.
+  local_lapsed_regular:
+    "lapsed identified regulars × return rate × average identified ticket — low bound uses the conservative configured rate, high bound uses the merchant historical rate when available. Covers identified (loyalty-matched) customers only.",
+  catering_upsell:
+    "identified large-order customers × upsell rate × average catering-scale order value — low bound uses the conservative configured rate. Covers identified (loyalty-matched) customers only.",
 };
 
 /**
@@ -107,12 +113,24 @@ export const RECIPE_INCLUSION_RULES: Record<RecipeId, string[]> = {
     "Seed: ads consent present (consent_ads, 26B.13)",
     "Suppression: purchased within the last 30 days",
   ],
+  local_lapsed_regular: [
+    "Identified (loyalty-matched) customer with an established visit cadence",
+    "Visit gap exceeds 1.5× the customer's personal median visit cadence",
+    "Email consent present",
+  ],
+  catering_upsell: [
+    "Identified (loyalty-matched) customer with repeated large POS orders",
+    "At least 2 orders at catering-scale value within the lookback window",
+    "Email consent present",
+  ],
 };
 
 export const RECIPE_SHORT_NAMES: Record<RecipeId, string> = {
   abandoned_checkout_recovery: "Abandoned checkout recovery",
   lapsed_winback: "Lapsed customer win-back",
   meta_seed_suppression: "High-LTV Meta seed + purchaser suppression",
+  local_lapsed_regular: "Lapsed regulars win-back",
+  catering_upsell: "Catering / large-order upsell",
 };
 
 export const READ_TYPE_LABELS: Record<string, string> = {

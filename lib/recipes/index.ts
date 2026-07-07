@@ -6,7 +6,12 @@
  *   2. lapsed_winback              — personal-median cadence gate, category/merchant fallback
  *   3. meta_seed_suppression      — top-15% seed + 30d purchaser suppression, directional, no $
  *
- * Pure core: runRecipe(input, snapshot). I/O lives only in loader.ts.
+ * LOCAL vertical pack (lib/recipes/local, version 1.0.0):
+ *   4. local_lapsed_regular — POS visit-cadence win-back, identified customers only
+ *   5. catering_upsell      — repeat large-order outreach brief, modeled, never found-money
+ *   (meta_seed_suppression is SHARED; LOCAL wiring adds the coverage disclosure)
+ *
+ * Pure core: runRecipe(input, snapshot, vertical). I/O lives only in loader.ts.
  */
 
 export { RECIPE_VERSION } from "./types";
@@ -18,11 +23,28 @@ export type {
   RecipeDataSnapshot,
 } from "./types";
 
-// Pure recipe functions + dispatcher
+// Pure recipe functions + dispatcher (dispatch is vertical-aware — lib/verticals.ts)
 export { runAbandonedCheckoutRecovery } from "./abandoned-checkout";
 export { runLapsedWinback } from "./lapsed-winback";
 export { runMetaSeedSuppression } from "./meta-seed";
 export { runRecipe } from "./run";
+
+// LOCAL vertical pack (café/bakery, demo-mode) — POS coverage disclosure law
+export {
+  buildCateringUpsellBrief,
+  buildLocalEmailMeasurementPlan,
+  buildLocalLapsedRegularSteps,
+  computeIdentifiedAvgTicket,
+  computePosCoverage,
+  runCateringUpsell,
+  runLocalLapsedRegular,
+  runLocalMetaSeed,
+} from "./local";
+export type {
+  LocalDraftParams,
+  LocalDraftStep,
+  PosCoverageStats,
+} from "./local";
 
 // Confidence scoring (PRD 11 — deterministic, inspectable)
 export { scoreConfidence } from "./confidence";
