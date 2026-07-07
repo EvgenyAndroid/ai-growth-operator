@@ -1,0 +1,43 @@
+diff --git a/node_modules/@opennextjs/cloudflare/dist/cli/build/patches/plugins/turbopack.js b/node_modules/@opennextjs/cloudflare/dist/cli/build/patches/plugins/turbopack.js
+index 1111111..2222222 100644
+--- a/node_modules/@opennextjs/cloudflare/dist/cli/build/patches/plugins/turbopack.js
++++ b/node_modules/@opennextjs/cloudflare/dist/cli/build/patches/plugins/turbopack.js
+@@ -166,7 +166,7 @@ function discoverBareExternalImports(tracedFiles, runtimeCode) {
+     const externalImportAlias = propMatch[1];
+     // Chunks call externalImport as e.g. `.y("shiki")` — build a regex using the discovered property name.
+     const externalImportRegexp = new RegExp(`\\.${externalImportAlias}\\("([^"]+)"\\)`, "g");
+-    const chunkFiles = tracedFiles.filter((f) => f.includes(".next/server/chunks/"));
++    const chunkFiles = tracedFiles.filter((f) => f.replace(/\\/g, "/").includes(".next/server/chunks/"));
+     for (const filePath of chunkFiles) {
+         try {
+             const content = fs.readFileSync(filePath, "utf-8");
+@@ -245,11 +245,14 @@ export const patchTurbopackRuntime = {
+ function getInlinableChunks(tracedFiles) {
+     const chunks = new Set();
+     for (const file of tracedFiles) {
+-        if (file === "[turbopack]_runtime.js") {
++        // Normalize Windows path separators so both the filter below and the
++        // generated `require("<path>")` cases work on all platforms.
++        const normalized = file.replace(/\\/g, "/");
++        if (normalized === "[turbopack]_runtime.js") {
+             continue;
+         }
+-        if (file.includes(".next/server/chunks/")) {
+-            chunks.add(file);
++        if (normalized.includes(".next/server/chunks/")) {
++            chunks.add(normalized);
+         }
+     }
+     return Array.from(chunks);
+@@ -280,8 +283,10 @@ function inlineChunksFn(tracedFiles) {
+  * statically discover every wasm chunk and include them in the final build.
+  */
+ export function loadWasmChunkFn(tracedFiles) {
+-    const wasmFiles = tracedFiles.filter((f) => f.endsWith(".wasm"));
++    const wasmFiles = tracedFiles
++        .map((f) => f.replace(/\\/g, "/"))
++        .filter((f) => f.endsWith(".wasm"));
+     const cases = wasmFiles
+         .map((absPath) => ({ absPath, relPath: absPath.replace(/.*\/\.next\//, "") }))
+         .map(({ absPath, relPath }) => `      case "${relPath}": return (await import("${absPath}")).default;`)
+         .join("\n");

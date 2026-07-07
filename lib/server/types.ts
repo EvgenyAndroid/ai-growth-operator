@@ -373,7 +373,8 @@ export interface ExportStateResult {
   format: ExportFormat;
   status: "completed";
   fileName: string;
-  /** Absolute path of the file written under exports/. */
+  /** Absolute path of the file written under exports/ (empty string on
+   *  Cloudflare Workers, where exports are response-only). */
   filePath: string;
   /** The serialized payload, returned directly as a download body. */
   content: string;

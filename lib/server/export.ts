@@ -21,6 +21,16 @@ import type { ExportFormat, ExportObjectType, ExportStateResult } from "./types"
 
 type Row = Record<string, string | number | boolean | null>;
 
+/** True on the Cloudflare workerd runtime, where there is no writable disk —
+ *  exports are then response-only (the UI downloads from `content` anyway). */
+function isWorkerd(): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    typeof navigator.userAgent === "string" &&
+    navigator.userAgent.includes("Cloudflare-Workers")
+  );
+}
+
 function csvEscape(value: string | number | boolean | null): string {
   if (value === null) return "";
   const text = String(value);
@@ -241,14 +251,23 @@ export async function exportState(params: {
 
   const stamp = now.toISOString().replace(/[:.]/g, "-");
   const fileName = `${params.objectType}-${stamp}.${format}`;
-  const dir = path.join(process.cwd(), "exports", params.accountId);
-  const filePath = path.join(dir, fileName);
-  await mkdir(dir, { recursive: true });
-  await writeFile(filePath, content, "utf8");
+  // On Workers there is no writable filesystem: skip the archival copy and
+  // return the payload response-only. Locally, keep writing under exports/.
+  let filePath = "";
+  if (!isWorkerd()) {
+    const dir = path.join(process.cwd(), "exports", params.accountId);
+    filePath = path.join(dir, fileName);
+    await mkdir(dir, { recursive: true });
+    await writeFile(filePath, content, "utf8");
+  }
 
   await db.exportJob.update({
     where: { id: job.id },
-    data: { status: "completed", resultPath: filePath, completedAt: now },
+    data: {
+      status: "completed",
+      resultPath: filePath || null,
+      completedAt: now,
+    },
   });
 
   await writeLedger({

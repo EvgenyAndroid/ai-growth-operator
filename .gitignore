@@ -41,8 +41,16 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+/lib/generated/prisma-workerd
 
 # sqlite
 *.db
 *.db-journal
 exports/
+
+# cloudflare / opennext
+/.open-next/
+/schema.sql
+/d1-seed*.sql
+cloudflare-env.d.ts
+.wrangler/

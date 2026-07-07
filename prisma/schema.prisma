@@ -14,6 +14,15 @@ generator client {
   output   = "../lib/generated/prisma"
 }
 
+// Cloudflare Workers (workerd) client — loads the query-compiler WASM via a
+// module import (runtime WASM compilation from bytes is disallowed on
+// Workers). Used only by the Workers branch of lib/db.ts.
+generator clientWorkerd {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma-workerd"
+  runtime  = "workerd"
+}
+
 datasource db {
   provider = "sqlite"
 }
