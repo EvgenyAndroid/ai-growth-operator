@@ -236,7 +236,7 @@ export default async function PerformancePage({
             <SimulatedBadge />
           </div>
           <p className="mt-2 text-xs text-ink-soft">
-            Action <span className="font-mono">{view.actionId}</span> ·{" "}
+            Action <span className="break-all font-mono">{view.actionId}</span> ·{" "}
             {view.actionType} · recipe {view.recipeId} · launched{" "}
             {fmtDate(view.launchedAt)}
           </p>

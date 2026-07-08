@@ -150,7 +150,7 @@ export default async function FeedPage() {
   const copy = getVerticalDefinition(feed.vertical).feedCopy;
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
+    <main className="mx-auto w-full max-w-4xl space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
@@ -161,17 +161,17 @@ export default async function FeedPage() {
             {feed.demoMode ? " · demo dataset" : null}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {feed.demoMode ? <Badge tone="info">Demo mode</Badge> : null}
           <Link
             href="/opportunities/audiences"
-            className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+            className="inline-flex items-center whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
           >
             Audience Builder
           </Link>
           <Link
             href="/approvals"
-            className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+            className="inline-flex items-center whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
           >
             Approval Center
           </Link>

@@ -135,7 +135,7 @@ export default async function DraftReviewPage({
   const plan = card.explanation.measurementPlan;
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-4 px-4 py-8">
+    <main className="mx-auto w-full max-w-4xl space-y-4">
       <nav className="flex gap-3 text-sm text-ink-muted">
         <Link
           href="/approvals"

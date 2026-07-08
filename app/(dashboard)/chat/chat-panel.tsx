@@ -138,8 +138,8 @@ function OperatorTurn({ turn }: { turn: Turn }) {
           <strong>Draft created — nothing was launched.</strong> Drafting is
           not activation; this action needs your explicit approval before any
           customer-facing send (26A.4). Action{" "}
-          <span className="font-mono text-xs">{response.draftedAction.actionId}</span>,
-          draft <span className="font-mono text-xs">{response.draftedAction.draftId}</span>.
+          <span className="break-all font-mono text-xs">{response.draftedAction.actionId}</span>,
+          draft <span className="break-all font-mono text-xs">{response.draftedAction.draftId}</span>.
         </p>
       ) : null}
 

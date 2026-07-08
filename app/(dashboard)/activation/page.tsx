@@ -210,7 +210,7 @@ export default async function ActivationPage({
                   </p>
                 ) : null}
                 <p className="mt-2 text-xs text-ink-soft">
-                  Action <span className="font-mono">{activation.actionId}</span>
+                  Action <span className="break-all font-mono">{activation.actionId}</span>
                   {activation.latest.destination
                     ? ` · destination: ${activation.latest.destination}`
                     : ""}
@@ -251,7 +251,7 @@ export default async function ActivationPage({
             subtitle={
               <>
                 Every ledger entry for action{" "}
-                <span className="font-mono">{selectedActionId}</span> (PRD 18.4).
+                <span className="break-all font-mono">{selectedActionId}</span> (PRD 18.4).
               </>
             }
           />

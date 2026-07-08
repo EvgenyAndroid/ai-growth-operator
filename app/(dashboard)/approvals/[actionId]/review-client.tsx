@@ -361,7 +361,7 @@ export function ReviewActions({
             placeholder="Edit summary (required) — e.g. “softened tone, removed urgency”"
             className="w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-sm text-ink placeholder:text-ink-soft"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={saveEdit} disabled={busy}>
               {busy ? "Saving…" : "Save edit (new draft version)"}
             </Button>
@@ -401,7 +401,7 @@ export function ReviewActions({
             rows={2}
             className="w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-sm text-ink placeholder:text-ink-soft"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="danger" onClick={reject} disabled={busy}>
               {busy ? "Rejecting…" : "Reject draft"}
             </Button>

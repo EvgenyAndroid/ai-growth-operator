@@ -64,10 +64,10 @@ export function OnboardingStepper() {
               aria-current={state === "active" ? "step" : undefined}
               className={
                 state === "active"
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm"
+                  ? "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm"
                   : state === "done"
-                    ? "inline-flex items-center gap-1.5 rounded-full border border-transparent bg-neutral-soft px-2.5 py-0.5 text-xs font-medium text-ink-secondary"
-                    : "inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-ink-soft"
+                    ? "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-transparent bg-neutral-soft px-2.5 py-0.5 text-xs font-medium text-ink-secondary"
+                    : "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-ink-soft"
               }
             >
               {state === "done" ? <CheckIcon /> : null}

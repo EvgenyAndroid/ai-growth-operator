@@ -126,13 +126,13 @@ export default async function LedgerPage({
             Filtered to{" "}
             {actionId ? (
               <>
-                action <span className="font-mono text-xs">{actionId}</span>
+                action <span className="break-all font-mono text-xs">{actionId}</span>
               </>
             ) : null}
             {actionId && opportunityId ? " and " : null}
             {opportunityId ? (
               <>
-                opportunity <span className="font-mono text-xs">{opportunityId}</span>
+                opportunity <span className="break-all font-mono text-xs">{opportunityId}</span>
               </>
             ) : null}
             {" · "}
@@ -148,8 +148,8 @@ export default async function LedgerPage({
 
       <LedgerTable entries={page.entries} />
 
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-ink-soft">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="min-w-0 flex-1 text-xs text-ink-soft">
           Showing {page.entries.length} entries
           {eventType ? ` of type "${eventType}"` : ""}
           {cursor ? " (paged)" : ""}. Every entry written through the Operator
@@ -163,7 +163,7 @@ export default async function LedgerPage({
               opportunity: opportunityId,
               cursor: page.nextCursor,
             })}
-            className="rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+            className="shrink-0 whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
           >
             Older entries →
           </Link>

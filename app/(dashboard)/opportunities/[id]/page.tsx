@@ -123,7 +123,7 @@ export default async function OpportunityDetailPage({
       : "—";
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-4 px-4 py-8">
+    <main className="mx-auto w-full max-w-4xl space-y-4">
       <nav className="text-sm text-ink-muted">
         <Link
           href="/feed"

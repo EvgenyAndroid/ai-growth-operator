@@ -32,11 +32,11 @@ const SCREENS: Array<{ key: ScreenKey; href: string; label: string }> = [
 ];
 
 const SCREEN_LINK_IDLE =
-  "rounded-md px-2.5 py-1 text-[13px] font-medium text-ink-muted " +
+  "whitespace-nowrap rounded-md px-2 py-1 text-[13px] font-medium text-ink-muted " +
   "transition-colors duration-150 hover:bg-neutral-soft hover:text-ink";
 
 const SCREEN_LINK_ACTIVE =
-  "rounded-md bg-primary px-2.5 py-1 text-[13px] font-semibold text-white shadow-sm";
+  "whitespace-nowrap rounded-md bg-primary px-2 py-1 text-[13px] font-semibold text-white shadow-sm";
 
 export function ScreenNav({ active }: { active: ScreenKey }) {
   return (

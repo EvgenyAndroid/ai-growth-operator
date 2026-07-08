@@ -82,7 +82,7 @@ export function FreshnessList({
       {/* Key includes the index: in demo mode several integrations all report
           source "demo", so source alone is not unique. */}
       {freshness.map((f, i) => (
-        <li key={`${f.source}:${i}`} className="flex items-center gap-2 text-sm text-ink-muted">
+        <li key={`${f.source}:${i}`} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-ink-muted">
           <span className="font-medium capitalize text-ink">{f.source}</span>
           <span>synced {fmtDateTime(f.lastSyncAt)}</span>
           <span className="text-ink-soft">(threshold {f.thresholdHours}h)</span>

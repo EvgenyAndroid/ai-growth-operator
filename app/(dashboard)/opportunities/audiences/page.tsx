@@ -109,7 +109,7 @@ export default async function AudienceBuilderPage() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8">
+    <main className="mx-auto w-full max-w-4xl space-y-5">
       <nav className="text-sm text-ink-muted">
         <Link
           href="/feed"
