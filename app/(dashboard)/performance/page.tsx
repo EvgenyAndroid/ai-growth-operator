@@ -23,6 +23,7 @@ import {
   MetaDirectionalDisclaimer,
   MetricsTable,
   ModeBadge,
+  READOUT_ACCENT,
   ReadoutCard,
   shortId,
   SimulatedBadge,
@@ -198,8 +199,8 @@ export default async function PerformancePage({
                   href={`/performance?action=${entry.actionId}`}
                   className={
                     entry.actionId === selectedActionId
-                      ? "inline-flex items-center gap-2 rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-sm"
-                      : "inline-flex items-center gap-2 rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+                      ? "inline-flex items-center gap-2 rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)]"
+                      : "inline-flex items-center gap-2 rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-xs transition-colors duration-150 hover:border-slate-300 hover:bg-surface-soft hover:text-ink"
                   }
                 >
                   <span className="font-mono text-xs">{shortId(entry.actionId)}</span>
@@ -228,7 +229,14 @@ export default async function PerformancePage({
       ) : null}
 
       {view ? (
-        <Card as="section">
+        <Card
+          as="section"
+          variant="flat"
+          className={[
+            READOUT_ACCENT[view.readout.mode],
+            view.readout.mode !== "holdout" ? "shadow-card" : "",
+          ].join(" ")}
+        >
           {/* ONE measurement label, prominent (PRD 7.5) */}
           <div className="flex flex-wrap items-center gap-2">
             <ModeBadge mode={view.readout.mode} large />
@@ -256,8 +264,8 @@ export default async function PerformancePage({
                     href={`/performance?action=${view.actionId}&read=${window.readType}`}
                     className={
                       window.used
-                        ? "inline-flex items-center gap-1 rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-white"
-                        : "inline-flex items-center gap-1 rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-muted transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+                        ? "inline-flex items-center gap-1 rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)]"
+                        : "inline-flex items-center gap-1 rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-muted shadow-xs transition-colors duration-150 hover:border-slate-300 hover:bg-surface-soft hover:text-ink"
                     }
                   >
                     {window.readType} · {fmtDate(window.start)} → {fmtDate(window.end)}

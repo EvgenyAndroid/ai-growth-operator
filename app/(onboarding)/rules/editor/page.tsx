@@ -31,7 +31,7 @@ export default async function OperatingRulesEditorPage({
     <div className="space-y-6">
       <div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-3xl font-bold tracking-tight text-ink">
+          <h1 className="text-3xl font-bold tracking-tight text-ink-900">
             Set your three numbers
           </h1>
           <Badge tone="info">{templateName}</Badge>
@@ -52,7 +52,7 @@ export default async function OperatingRulesEditorPage({
         }}
       />
 
-      <Card as="section" className="bg-surface-soft/60 shadow-none">
+      <Card as="section" variant="flat" className="bg-surface-soft/60">
         <h2 className="text-sm font-semibold text-ink">
           Worth knowing for the demo
         </h2>

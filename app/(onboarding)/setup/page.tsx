@@ -22,6 +22,43 @@ import {
 
 const STORAGE_KEY = "ago.business_setup";
 
+/**
+ * Brief v2 §2 — selected setup cards: subtle gradient surface, stronger
+ * border, soft blue glow; polished inactive cards with a quiet hover lift.
+ */
+const SELECTED_CARD_CLASSES =
+  "relative cursor-pointer rounded-card border border-accent/60 " +
+  "bg-gradient-to-br from-accent-soft/45 via-surface to-surface p-4 text-left " +
+  "ring-1 ring-accent/50 " +
+  "shadow-[0_1px_2px_rgb(15_23_42/0.06),0_10px_28px_-8px_var(--color-accent-glow)] " +
+  "transition-[box-shadow,border-color,background-color] duration-150";
+
+const INACTIVE_CARD_CLASSES =
+  "cursor-pointer rounded-card border border-border bg-surface p-4 text-left " +
+  "shadow-card transition-[box-shadow,border-color] duration-150 " +
+  "hover:border-border-strong hover:shadow-card-hover";
+
+/** Accent-filled "Selected" pill, pinned top-right of the chosen card. */
+function SelectedPill() {
+  return (
+    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold leading-5 text-white shadow-[0_1px_2px_rgb(37_99_235/0.35)]">
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 12 12"
+        className="h-3 w-3 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M2.5 6.5l2.5 2.5 4.5-5.5" />
+      </svg>
+      Selected
+    </span>
+  );
+}
+
 type BusinessType = "shopify_dtc" | "local_service";
 
 const BUSINESS_TYPES: Array<{
@@ -136,7 +173,7 @@ export default function BusinessSetupPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">
+        <h1 className="text-3xl font-bold tracking-tight text-ink-900">
           Tell the Operator about your business
         </h1>
         <p className="mt-1.5 text-sm text-ink-muted">
@@ -163,11 +200,7 @@ export default function BusinessSetupPage() {
                 role="radio"
                 aria-checked={selected}
                 onClick={() => selectBusinessType(type.id)}
-                className={
-                  selected
-                    ? "cursor-pointer rounded-card border border-accent bg-accent-soft/30 p-4 text-left shadow-card ring-1 ring-accent transition-colors duration-150"
-                    : "cursor-pointer rounded-card border border-border bg-surface p-4 text-left shadow-card transition-colors duration-150 hover:border-border-strong hover:bg-surface-soft/40"
-                }
+                className={selected ? SELECTED_CARD_CLASSES : INACTIVE_CARD_CLASSES}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span
@@ -179,7 +212,7 @@ export default function BusinessSetupPage() {
                   >
                     {type.label}
                   </span>
-                  {selected ? <Badge tone="info">Selected</Badge> : null}
+                  {selected ? <SelectedPill /> : null}
                 </div>
                 <p
                   className={
@@ -236,8 +269,8 @@ export default function BusinessSetupPage() {
                 key={goal.id}
                 className={
                   checked
-                    ? "flex cursor-pointer items-start gap-3 rounded-card border border-accent bg-accent-soft/30 p-4 shadow-card ring-1 ring-accent transition-colors duration-150"
-                    : "flex cursor-pointer items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors duration-150 hover:border-border-strong hover:bg-surface-soft/40"
+                    ? `flex items-start gap-3 ${SELECTED_CARD_CLASSES}`
+                    : `flex items-start gap-3 ${INACTIVE_CARD_CLASSES}`
                 }
               >
                 <input

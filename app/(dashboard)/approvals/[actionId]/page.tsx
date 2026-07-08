@@ -99,7 +99,11 @@ function Section({
 }) {
   return (
     <Card as="section">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+      <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+        <span
+          aria-hidden="true"
+          className="h-3 w-0.5 shrink-0 rounded-full bg-accent/60"
+        />
         {title}
       </h2>
       <div className="mt-2.5">{children}</div>
@@ -233,11 +237,14 @@ export default async function DraftReviewPage({
           {draft.copy.map((step) => (
             <li
               key={step.step}
-              className="rounded-md border border-border bg-surface-soft/60 p-4"
+              className="overflow-hidden rounded-lg border border-border bg-surface shadow-xs"
             >
-              <div className="flex flex-wrap items-center gap-2 text-xs text-ink-soft">
+              {/* Meta strip: step, channel, timing, offer logic */}
+              <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-soft/60 px-4 py-2 text-xs text-ink-soft">
                 <Badge tone="neutral">step {step.step}</Badge>
-                <span>{step.channel === "email" ? "Email" : "Meta audience"}</span>
+                <span className="font-medium text-ink-secondary">
+                  {step.channel === "email" ? "Email" : "Meta audience"}
+                </span>
                 {typeof step.sendDelayHours === "number" ? (
                   <span>· sends {step.sendDelayHours}h after the previous step</span>
                 ) : null}
@@ -249,17 +256,20 @@ export default async function DraftReviewPage({
                   <Badge tone="neutral">no discount in this step</Badge>
                 )}
               </div>
-              {step.subject ? (
-                <p className="mt-2.5 text-sm font-semibold tracking-tight text-ink">
-                  {step.subject}
+              {/* Email-preview body */}
+              <div className="px-4 py-3">
+                {step.subject ? (
+                  <p className="text-sm font-semibold tracking-tight text-ink">
+                    {step.subject}
+                  </p>
+                ) : null}
+                {step.previewText ? (
+                  <p className="mt-0.5 text-xs text-ink-soft">{step.previewText}</p>
+                ) : null}
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">
+                  {step.body}
                 </p>
-              ) : null}
-              {step.previewText ? (
-                <p className="mt-0.5 text-xs text-ink-soft">{step.previewText}</p>
-              ) : null}
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">
-                {step.body}
-              </p>
+              </div>
             </li>
           ))}
         </ol>

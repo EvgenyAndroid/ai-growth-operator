@@ -8,6 +8,7 @@
  * the 26B.17 Level-1 reality and the 26A.1 measurement downgrade rule.
  */
 
+import * as React from "react";
 import Link from "next/link";
 import {
   createDemoAccount,
@@ -79,6 +80,119 @@ function groupActivations(
     });
   }
   return [...byAction.values()];
+}
+
+// ---------------------------------------------------------------------------
+// Activation progress timeline (design brief v2 §8) — a stepper over the
+// EXISTING lifecycle facts only: every action listed here was drafted and
+// routed through the governance chokepoint before activation (26A.4), the
+// holdout node reflects whether a holdout_assignment ledger entry exists, and
+// the final node reflects the recorded activation outcome. No invented states.
+// ---------------------------------------------------------------------------
+
+type StepState = "done" | "skipped" | "failed" | "pending";
+
+const STEP_DOT: Record<StepState, string> = {
+  done: "bg-success ring-4 ring-emerald-100",
+  skipped: "border border-border-strong bg-surface ring-4 ring-surface-soft",
+  failed: "bg-danger ring-4 ring-red-100",
+  pending: "bg-warning ring-4 ring-amber-100",
+};
+
+const STEP_LABEL: Record<StepState, string> = {
+  done: "text-ink",
+  skipped: "text-ink-soft",
+  failed: "text-red-700",
+  pending: "text-amber-800",
+};
+
+function TimelineStep({
+  state,
+  label,
+  detail,
+  last,
+}: {
+  state: StepState;
+  label: string;
+  detail?: React.ReactNode;
+  last?: boolean;
+}) {
+  return (
+    <li className="flex min-w-0 flex-1 items-start gap-2">
+      <span className="flex flex-col items-center self-stretch">
+        <span
+          aria-hidden="true"
+          className={cx("mt-1 h-2 w-2 shrink-0 rounded-full", STEP_DOT[state])}
+        />
+      </span>
+      <span className="min-w-0">
+        <span
+          className={cx(
+            "block text-[11px] font-semibold tracking-wide uppercase",
+            STEP_LABEL[state]
+          )}
+        >
+          {label}
+        </span>
+        {detail ? (
+          <span className="mt-0.5 block text-xs leading-5 text-ink-muted">
+            {detail}
+          </span>
+        ) : null}
+      </span>
+      {!last ? (
+        <span
+          aria-hidden="true"
+          className="mx-1 mt-2 hidden h-px min-w-4 flex-1 bg-border sm:block"
+        />
+      ) : null}
+    </li>
+  );
+}
+
+function cx(...parts: Array<string | false | null | undefined>): string {
+  return parts.filter(Boolean).join(" ");
+}
+
+function ActivationTimeline({ activation }: { activation: ActionActivation }) {
+  const { latest, holdout, outcome } = activation;
+  const pushedState: StepState =
+    outcome === "launched" ? "done" : outcome === "failed" ? "failed" : "pending";
+  return (
+    <ol className="mt-3 flex flex-col gap-2 rounded-lg border border-border bg-surface-soft/50 px-3 py-2.5 sm:flex-row sm:items-start sm:gap-0">
+      <TimelineStep state="done" label="Draft prepared" detail="Approved by you" />
+      <TimelineStep
+        state="done"
+        label="Governance checked"
+        detail={
+          latest.constitutionVersion !== null
+            ? `Operating Rules v${latest.constitutionVersion}`
+            : "Chokepoint passed"
+        }
+      />
+      <TimelineStep
+        state={holdout ? "done" : "skipped"}
+        label={holdout ? "Holdout assigned" : "No holdout"}
+        detail={holdout ? "Randomized at launch" : "None assigned at launch"}
+      />
+      <TimelineStep
+        state={pushedState}
+        label={
+          outcome === "launched"
+            ? "Pushed"
+            : outcome === "failed"
+              ? "Push failed"
+              : "Push attempted"
+        }
+        detail={
+          isActivationLevel(latest.activationLevel) ? (
+            <ActivationBadge level={latest.activationLevel} className="mt-0.5" />
+          ) : undefined
+        }
+        last
+      />
+    </ol>
+  );
 }
 
 const LADDER_ROWS: Array<{
@@ -189,14 +303,12 @@ export default async function ActivationPage({
                         ? "Activation failed"
                         : "Attempted"}
                   </Badge>
-                  {isActivationLevel(activation.latest.activationLevel) ? (
-                    <ActivationBadge level={activation.latest.activationLevel} />
-                  ) : null}
                   <SimulatedBadge />
                   {isMeasurementMode(activation.latest.measurementMode) ? (
                     <MeasurementBadge mode={activation.latest.measurementMode} />
                   ) : null}
                 </div>
+                <ActivationTimeline activation={activation} />
                 <p className="mt-2 text-sm text-ink-secondary">
                   {activation.latest.reasoningSummary ??
                     activation.latest.actionTaken ??

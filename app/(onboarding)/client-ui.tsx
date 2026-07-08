@@ -23,18 +23,24 @@ function cx(...parts: Array<string | false | null | undefined>): string {
 export type ClientButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const BUTTON_CLASSES: Record<ClientButtonVariant, string> = {
+  // Deep console navy with a hairline top sheen; presses flat.
   primary:
-    "border border-transparent bg-primary text-white shadow-sm " +
-    "hover:bg-primary-hover active:bg-primary-hover active:shadow-none",
+    "border border-transparent bg-primary text-white " +
+    "shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] " +
+    "hover:bg-primary-hover " +
+    "active:bg-primary-hover active:shadow-none active:translate-y-px",
   secondary:
-    "border border-border-strong bg-surface text-ink shadow-sm " +
-    "hover:bg-surface-soft active:bg-primary-soft active:shadow-none",
+    "border border-border-strong bg-surface text-ink shadow-xs " +
+    "hover:bg-surface-soft hover:border-slate-300 " +
+    "active:bg-primary-soft active:shadow-none active:translate-y-px",
+  // Tertiary: quiet text action.
   ghost:
     "border border-transparent bg-transparent text-ink-secondary " +
     "hover:bg-neutral-soft hover:text-ink active:bg-primary-soft",
   danger:
-    "border border-red-200 bg-surface text-red-700 shadow-sm " +
-    "hover:bg-red-50 hover:border-red-300 active:bg-danger-soft active:shadow-none",
+    "border border-red-200 bg-surface text-red-700 shadow-xs " +
+    "hover:bg-red-50 hover:border-red-300 " +
+    "active:bg-danger-soft active:shadow-none active:translate-y-px",
 };
 
 export function ClientButton({
@@ -50,7 +56,7 @@ export function ClientButton({
     <button
       className={cx(
         "inline-flex items-center justify-center gap-2 rounded-md font-medium select-none",
-        "transition-colors duration-150",
+        "transition-[background-color,border-color,box-shadow,transform] duration-150",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
         "disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm",
@@ -74,12 +80,12 @@ export type ClientBadgeTone =
 
 const TONE_CLASSES: Record<ClientBadgeTone, string> = {
   neutral: "border-slate-200 bg-neutral-soft text-slate-600",
-  positive: "border-emerald-200 bg-success-soft text-emerald-800",
-  caution: "border-amber-200 bg-warning-soft text-amber-800",
+  positive: "border-emerald-300/70 bg-success-soft text-emerald-800",
+  caution: "border-amber-300/70 bg-warning-soft text-amber-800",
   info: "border-blue-200 bg-info-soft text-blue-800",
   danger: "border-red-200 bg-danger-soft text-red-800",
-  // Deliberately quieter than "positive": violet/slate, no strong border.
-  directional: "border-violet-200/70 bg-directional-soft text-violet-700",
+  // Deliberately quieter than "positive": violet/slate, washed border, no dot.
+  directional: "border-violet-200/60 bg-directional-soft/70 text-violet-700",
 };
 
 export function ClientBadge({
@@ -94,8 +100,9 @@ export function ClientBadge({
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5",
         "text-xs font-medium leading-5 whitespace-nowrap",
+        "shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
         TONE_CLASSES[tone],
         className,
       )}
@@ -107,20 +114,45 @@ export function ClientBadge({
 
 // --- Card (mirror of primitives.tsx Card) -----------------------------------
 
+type ClientCardVariant = "flat" | "raised" | "glass" | "hero";
+
+const CARD_VARIANT_CLASSES: Record<ClientCardVariant, string> = {
+  flat: "border border-border bg-surface",
+  raised: "border border-border bg-surface",
+  glass: "border border-white/60 bg-surface-glass backdrop-blur-md",
+  hero: "gradient-border bg-surface",
+};
+
+const CARD_SHADOW_CLASSES: Record<ClientCardVariant, string | null> = {
+  flat: null,
+  raised: "shadow-card",
+  glass: "shadow-card",
+  hero: "shadow-md",
+};
+
 export function ClientCard({
   children,
   className,
   as: Tag = "div",
+  variant = "raised",
+  glow = false,
+  interactive = false,
 }: {
   children: React.ReactNode;
   className?: string;
   as?: "div" | "section" | "article" | "li";
+  variant?: ClientCardVariant;
+  glow?: boolean;
+  interactive?: boolean;
 }) {
   return (
     <Tag
       className={cx(
-        "rounded-card border border-border bg-surface shadow-card",
-        "p-5",
+        "rounded-card p-5",
+        CARD_VARIANT_CLASSES[variant],
+        glow ? "shadow-glow" : CARD_SHADOW_CLASSES[variant],
+        interactive &&
+          "transition-shadow duration-150 hover:shadow-card-hover",
         className,
       )}
     >

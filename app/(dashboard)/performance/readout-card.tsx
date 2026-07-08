@@ -98,8 +98,8 @@ const MODE_CLASSES: Record<MeasurementMode, string> = {
 };
 
 const MODE_DOT: Record<MeasurementMode, string | null> = {
-  holdout: "bg-success",
-  before_after_no_control: "bg-warning",
+  holdout: "bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]",
+  before_after_no_control: "bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]",
   directional: null,
 };
 
@@ -284,13 +284,17 @@ export function CaveatList({
 // ---------------------------------------------------------------------------
 
 /**
- * Per-mode top accent keeps the three measurement modes visually distinct at
- * card level; directional stays the most muted of the three.
+ * Per-mode card treatment — the authority hierarchy is visible at card level
+ * (design brief v2 §9): holdout-verified is the most authoritative (emerald
+ * rail + faint verified glow), before/after sits mid (amber rail), and
+ * directional stays the most muted of the three (washed violet, flat).
  */
-const READOUT_ACCENT: Record<MeasurementMode, string> = {
-  holdout: "border-t-2 border-t-success",
+export const READOUT_ACCENT: Record<MeasurementMode, string> = {
+  holdout:
+    "border-t-2 border-t-success " +
+    "shadow-[0_1px_2px_rgb(15_23_42/0.06),0_2px_8px_rgb(15_23_42/0.05),0_12px_32px_-10px_rgb(5_150_105/0.25)]",
   before_after_no_control: "border-t-2 border-t-warning",
-  directional: "border-t-2 border-t-violet-200",
+  directional: "border-t-2 border-t-violet-200/80",
 };
 
 export function ReadoutCard({
@@ -305,8 +309,11 @@ export function ReadoutCard({
   return (
     <section
       className={cx(
-        "rounded-card border border-border bg-surface p-5 shadow-card",
-        "transition-shadow duration-150 hover:shadow-card-hover",
+        "rounded-card border border-border bg-surface p-5",
+        // Holdout carries its own verified-glow shadow; others rest on card.
+        readout.mode === "holdout"
+          ? null
+          : "shadow-card transition-shadow duration-150 hover:shadow-card-hover",
         READOUT_ACCENT[readout.mode],
         className
       )}

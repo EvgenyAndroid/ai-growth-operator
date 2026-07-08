@@ -4,9 +4,14 @@
  * app/app-shell.tsx — global chrome: demo-mode banner (PRD 20.3), the top bar
  * (workspace name + connector pills), plus the left nav for the product
  * surface (Feed / Chat / Approvals / Performance / Ledger / Settings).
- * Under 768px the left nav collapses into a hamburger menu in the top bar.
- * Onboarding routes render without the nav so the first-run flow stays a
- * focused, linear track (PRD 6.1, 7.1 screens 1-6).
+ *
+ * Brief v2 §3 "premium operator console": semi-dark cockpit sidebar (deep
+ * #0B1220 = --color-primary) against light content, product mark, demo badge,
+ * strong active states; elevated glassy top bar with refined connection
+ * pills; faint radial accent glow on the app background. Under 768px the
+ * left nav collapses into a hamburger menu in the top bar. Onboarding routes
+ * render without the nav so the first-run flow stays a focused, linear track
+ * (PRD 6.1, 7.1 screens 1-6).
  */
 
 import * as React from "react";
@@ -57,10 +62,38 @@ function isActivePath(pathname: string, href: string): boolean {
 /** PRD 20.3 — demo mode must be clearly labeled, on every screen. */
 function DemoBanner() {
   return (
-    <div className="border-b border-amber-200/70 bg-amber-50/70 px-4 py-1 text-center text-[11px] font-medium leading-5 text-amber-800">
+    <div className="border-b border-amber-200/70 bg-amber-50/80 px-4 py-1 text-center text-[11px] font-medium leading-5 text-amber-800">
       Demo workspace — sample data only. No real customer data is shown, and
       every send, sync, and launch is simulated.
     </div>
+  );
+}
+
+/** Dependency-free product mark: growth spark on a deep-blue tile. */
+function ProductMark({ size = "md" }: { size?: "sm" | "md" }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cx(
+        "flex shrink-0 items-center justify-center",
+        size === "sm" ? "h-6 w-6 rounded-md" : "h-8 w-8 rounded-lg",
+        "bg-gradient-to-br from-[#3b82f6] to-[#1e40af]",
+        "shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_rgb(2_6_23/0.45)]",
+      )}
+    >
+      <svg
+        viewBox="0 0 16 16"
+        className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"}
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M2.5 11.5 6.25 7.5l2.5 2.5L13.5 4.5" />
+        <path d="M10.5 4.5h3v3" />
+      </svg>
+    </span>
   );
 }
 
@@ -78,16 +111,19 @@ function ConnectionPill({
       className={cx(
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5",
         "text-[11px] font-medium leading-5 whitespace-nowrap",
+        "shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
         connected
-          ? "border-emerald-200/80 bg-success-soft/50 text-emerald-800"
-          : "border-blue-200/80 bg-info-soft/50 text-blue-800",
+          ? "border-border bg-surface text-ink-secondary"
+          : "border-blue-200/80 border-dashed bg-surface text-ink-muted",
       )}
     >
       <span
         aria-hidden="true"
         className={cx(
           "h-1.5 w-1.5 shrink-0 rounded-full",
-          connected ? "bg-success" : "bg-info",
+          connected
+            ? "bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]"
+            : "bg-info shadow-[0_0_0_3px_rgb(37_99_235/0.14)]",
         )}
       />
       {name}
@@ -95,7 +131,7 @@ function ConnectionPill({
         {connected ? " connected" : " recommended"}
       </span>
       {!connected ? (
-        <span className="font-normal text-blue-700/80">Recommended</span>
+        <span className="font-normal text-accent">Recommended</span>
       ) : null}
     </span>
   );
@@ -104,10 +140,13 @@ function ConnectionPill({
 function NavLink({
   item,
   active,
+  dark = false,
   onNavigate,
 }: {
   item: { label: string; href: string };
   active: boolean;
+  /** Cockpit sidebar (dark) vs mobile dropdown (light) treatments. */
+  dark?: boolean;
   onNavigate?: () => void;
 }) {
   return (
@@ -117,9 +156,13 @@ function NavLink({
       onClick={onNavigate}
       className={cx(
         "rounded-md px-3 py-1.5 text-sm transition-colors duration-150",
-        active
-          ? "bg-neutral-soft font-semibold text-ink shadow-[inset_2px_0_0_var(--color-accent)]"
-          : "font-medium text-ink-muted hover:bg-surface-soft hover:text-ink",
+        dark
+          ? active
+            ? "bg-white/[0.09] font-semibold text-white shadow-[inset_2px_0_0_var(--color-accent)]"
+            : "font-medium text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"
+          : active
+            ? "bg-neutral-soft font-semibold text-ink shadow-[inset_2px_0_0_var(--color-accent)]"
+            : "font-medium text-ink-muted hover:bg-surface-soft hover:text-ink",
       )}
     >
       {item.label}
@@ -135,7 +178,7 @@ function TopBar({
   onToggleMenu: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-10 flex h-12 items-center justify-between gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur md:px-6">
+    <header className="sticky top-0 z-10 flex h-12 items-center justify-between gap-3 border-b border-border/90 bg-surface/85 px-4 shadow-[0_4px_16px_-8px_rgb(15_23_42/0.08)] backdrop-blur-md md:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
@@ -168,13 +211,22 @@ function TopBar({
             )}
           </svg>
         </button>
-        <Link href="/feed" className="min-w-0 md:hidden">
+        <Link
+          href="/feed"
+          className="flex min-w-0 items-center gap-2 md:hidden"
+        >
+          <ProductMark size="sm" />
           <span className="block truncate text-sm font-semibold tracking-tight text-ink">
             AI Growth Operator
           </span>
         </Link>
-        <span className="hidden truncate text-sm font-semibold tracking-tight text-ink md:block">
-          Demo workspace
+        <span className="hidden min-w-0 items-baseline gap-2 md:flex">
+          <span className="truncate text-sm font-semibold tracking-tight text-ink-800">
+            Demo workspace
+          </span>
+          <span className="text-[10px] font-medium tracking-[0.14em] text-ink-soft uppercase">
+            Simulated data
+          </span>
         </span>
       </div>
       <div className="hidden items-center gap-1.5 sm:flex">
@@ -197,7 +249,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isOnboardingPath(pathname)) {
     return (
-      <div className="flex min-h-full flex-1 flex-col bg-canvas">
+      <div className="bg-app-glow flex min-h-full flex-1 flex-col">
         <DemoBanner />
         <div className="flex flex-1 flex-col">{children}</div>
       </div>
@@ -208,36 +260,47 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full flex-1 flex-col bg-canvas">
       <DemoBanner />
       <div className="flex flex-1">
-        <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-surface md:flex">
-          <div className="border-b border-border px-4 py-4">
-            <Link href="/feed" className="block">
-              <span className="text-sm font-semibold tracking-tight text-ink">
-                AI Growth Operator
+        {/* Cockpit sidebar — deep navy against the light working canvas. */}
+        <aside className="hidden w-60 shrink-0 flex-col border-r border-white/10 bg-primary md:flex">
+          <div className="px-4 pt-5 pb-4">
+            <Link href="/feed" className="flex items-center gap-2.5 rounded-md">
+              <ProductMark />
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold tracking-tight text-white">
+                  AI Growth Operator
+                </span>
+                <span className="block text-[10px] font-medium tracking-[0.14em] text-slate-500 uppercase">
+                  Growth console
+                </span>
               </span>
             </Link>
-            <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-warning-soft/60 px-2 py-0.5 text-[11px] font-medium leading-5 text-amber-800">
+            <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium leading-5 text-amber-300">
               <span
                 aria-hidden="true"
-                className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
               />
               Demo workspace
             </span>
           </div>
-          <nav aria-label="Primary" className="flex flex-1 flex-col gap-0.5 p-2">
+          <nav
+            aria-label="Primary"
+            className="flex flex-1 flex-col gap-0.5 border-t border-white/[0.07] p-2 pt-3"
+          >
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.href}
                 item={item}
+                dark
                 active={isActivePath(pathname, item.href)}
               />
             ))}
           </nav>
-          <div className="border-t border-border p-3 text-[11px] leading-4 text-ink-soft">
+          <div className="border-t border-white/[0.07] p-3 text-[11px] leading-4 text-slate-500">
             Measured lift, not vendor math — and when we cannot prove it, we
             say so.
           </div>
         </aside>
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="bg-app-glow flex min-w-0 flex-1 flex-col">
           <TopBar
             menuOpen={menuOpen}
             onToggleMenu={() => setMenuOpen((open) => !open)}
@@ -246,7 +309,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <nav
               id="mobile-nav"
               aria-label="Primary"
-              className="flex flex-col gap-0.5 border-b border-border bg-surface p-2 md:hidden"
+              className="flex flex-col gap-0.5 border-b border-border bg-surface p-2 shadow-md md:hidden"
             >
               {NAV_ITEMS.map((item) => (
                 <NavLink

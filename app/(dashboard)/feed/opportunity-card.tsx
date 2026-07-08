@@ -78,13 +78,14 @@ export function OpportunityCard({
       className={
         "relative flex flex-col gap-3 overflow-hidden " +
         "transition-[box-shadow,transform] duration-150 motion-safe:hover:-translate-y-0.5 hover:shadow-card-hover" +
-        (priority ? " border-border-strong" : "")
+        (priority ? " border-border-strong shadow-md" : "")
       }
     >
       {priority ? (
+        // Priority accent line (brief §4): accent fading out, one quiet edge.
         <span
           aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-0.5 bg-accent"
+          className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-accent via-accent/50 to-transparent"
         />
       ) : null}
 
@@ -130,12 +131,16 @@ export function OpportunityCard({
         </div>
       </div>
 
-      {/* Recommended action + approval needed */}
-      <div className="rounded-md border border-border bg-surface-soft/70 px-3.5 py-2.5 text-sm">
-        <p>
-          <span className="font-medium text-ink">Recommended action: </span>
-          <span className="text-ink-secondary">{recommended}</span>
+      {/* Recommended action callout (brief §4) + approval needed */}
+      <div className="relative overflow-hidden rounded-lg border border-blue-200/70 bg-info-soft/30 px-3.5 py-2.5 text-sm">
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-0.5 bg-accent/70"
+        />
+        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
+          Recommended action
         </p>
+        <p className="mt-1 font-medium text-ink">{recommended}</p>
         <p className="mt-1 text-ink-muted">
           <span className="font-medium text-ink">Approval needed: </span>
           {card.explanation.approvalNeeded}
@@ -151,7 +156,7 @@ export function OpportunityCard({
           <DismissButton accountId={accountId} opportunityId={card.id} />
           <Link
             href={`/opportunities/${card.id}`}
-            className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:shadow-none"
+            className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:translate-y-px active:shadow-none"
           >
             Review &amp; draft
           </Link>

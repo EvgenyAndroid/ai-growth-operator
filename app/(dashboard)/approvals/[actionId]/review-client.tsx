@@ -258,8 +258,12 @@ export function ReviewActions({
   const blockedByGovernance = result !== null && !result.activated;
 
   return (
-    <Card as="section" className="space-y-4 border-border-strong">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+    <Card as="section" variant="hero" className="space-y-4">
+      <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+        <span
+          aria-hidden="true"
+          className="h-3 w-0.5 shrink-0 rounded-full bg-accent/60"
+        />
         Decision
       </h2>
 
@@ -373,7 +377,7 @@ export function ReviewActions({
       ) : null}
 
       {mode === "reject" ? (
-        <div className="space-y-2.5 rounded-md border border-border-strong bg-surface-soft/70 p-3.5">
+        <div className="space-y-2.5 rounded-md border border-red-200 bg-red-50/40 p-3.5">
           <p className="text-sm font-medium text-ink">Why reject this draft?</p>
           <div className="flex flex-wrap gap-1.5">
             {REJECTION_REASONS.map((r) => (
@@ -432,7 +436,10 @@ export function ReviewActions({
               </span>
             </label>
           ) : null}
-          <div className="flex flex-wrap gap-2">
+          {/* Brief §6: Approve = primary, Edit = secondary, Reject = tertiary
+              (quiet text action — the destructive confirm lives inside the
+              reason UI, so nothing is one accidental click away). */}
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               onClick={() => approve(overrides)}
               disabled={busy || (isMeta && !metaRights)}
@@ -442,9 +449,19 @@ export function ReviewActions({
             <Button variant="secondary" onClick={() => setMode("edit")} disabled={busy}>
               Edit
             </Button>
-            <Button variant="danger" onClick={() => setMode("reject")} disabled={busy}>
+            <button
+              type="button"
+              onClick={() => setMode("reject")}
+              disabled={busy}
+              className={
+                "inline-flex select-none items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-red-700 " +
+                "transition-colors duration-150 hover:bg-red-50 " +
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
+                "disabled:pointer-events-none disabled:opacity-50"
+              }
+            >
               Reject
-            </Button>
+            </button>
           </div>
           <p className="text-xs leading-5 text-ink-soft">
             Approval runs the governance chokepoint (consent, suppression,

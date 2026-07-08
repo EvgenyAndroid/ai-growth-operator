@@ -90,7 +90,7 @@ export function PageShell({
         </div>
       </div>
       <header className="mt-6">
-        <h1 className="text-[1.75rem] leading-9 font-bold tracking-tight text-ink">
+        <h1 className="text-[2rem] leading-10 font-bold tracking-tight text-ink-900">
           {title}
         </h1>
         {subtitle ? (
@@ -154,7 +154,12 @@ export function LedgerTable({
     );
   }
   return (
-    <ol className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
+    <ol className="relative overflow-hidden rounded-card border border-border bg-surface shadow-card">
+      {/* Audit-timeline spine: a hairline rail the event dots sit on. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute top-5 bottom-5 left-[19.5px] w-px bg-border"
+      />
       {entries.map((entry) => {
         const tone = eventTone(entry.eventType);
         return (
@@ -167,6 +172,30 @@ export function LedgerTable({
                   "[&::-webkit-details-marker]:hidden"
                 )}
               >
+                <span
+                  aria-hidden="true"
+                  className={cx(
+                    "relative z-[1] h-2 w-2 shrink-0 rounded-full ring-4 ring-surface",
+                    TONE_DOT[tone]
+                  )}
+                />
+                <span className="font-mono text-xs whitespace-nowrap text-ink-muted tabular-nums">
+                  {fmtDateTime(entry.timestamp)}
+                </span>
+                <Badge tone={tone}>{entry.eventType}</Badge>
+                <span className="min-w-0 flex-1 truncate text-sm text-ink-secondary">
+                  {entry.reasoningSummary ?? entry.actionTaken ?? "—"}
+                </span>
+                {entry.measurementMode ? (
+                  <span className="hidden shrink-0 font-mono text-[11px] text-ink-soft lg:inline">
+                    {entry.measurementMode}
+                  </span>
+                ) : null}
+                {entry.constitutionVersion !== null ? (
+                  <span className="hidden shrink-0 text-xs text-ink-soft tabular-nums sm:inline">
+                    v{entry.constitutionVersion}
+                  </span>
+                ) : null}
                 <svg
                   aria-hidden="true"
                   viewBox="0 0 12 12"
@@ -179,22 +208,6 @@ export function LedgerTable({
                 >
                   <path d="M4.5 2.5L8 6l-3.5 3.5" />
                 </svg>
-                <span
-                  aria-hidden="true"
-                  className={cx("h-1.5 w-1.5 shrink-0 rounded-full", TONE_DOT[tone])}
-                />
-                <span className="font-mono text-xs whitespace-nowrap text-ink-muted tabular-nums">
-                  {fmtDateTime(entry.timestamp)}
-                </span>
-                <Badge tone={tone}>{entry.eventType}</Badge>
-                <span className="min-w-0 flex-1 truncate text-sm text-ink-secondary">
-                  {entry.reasoningSummary ?? entry.actionTaken ?? "—"}
-                </span>
-                {entry.constitutionVersion !== null ? (
-                  <span className="hidden shrink-0 text-xs text-ink-soft tabular-nums sm:inline">
-                    v{entry.constitutionVersion}
-                  </span>
-                ) : null}
               </summary>
               <dl className="grid gap-x-6 gap-y-3 border-t border-dotted border-border bg-surface-soft/50 px-4 py-3 pl-10 sm:grid-cols-2 lg:grid-cols-3">
                 <DetailField

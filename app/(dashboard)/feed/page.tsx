@@ -40,37 +40,46 @@ function FoundMoneyHeader({
   return (
     <section
       aria-label="Found money"
-      className="relative overflow-hidden rounded-card border border-border bg-surface px-6 py-5 shadow-card"
+      className="relative overflow-hidden rounded-card border border-emerald-200/80 bg-surface px-6 py-6 shadow-[0_1px_2px_rgb(15_23_42/0.05),0_8px_24px_rgb(15_23_42/0.07),0_20px_48px_-16px_rgb(5_150_105/0.28)]"
     >
-      {/* Refined accent treatment: thin success keyline, no loud fills. */}
+      {/* Hero treatment (brief §4): emerald left rail + faint green glow. */}
       <span
         aria-hidden="true"
         className="absolute inset-y-0 left-0 w-1 bg-success"
       />
-      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-4 h-48 w-80 rounded-full bg-emerald-400/10 blur-3xl"
+      />
+      <p className="relative flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700">
         <span
           aria-hidden="true"
-          className="h-1.5 w-1.5 shrink-0 rounded-full bg-success"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]"
         />
         {label}
       </p>
-      <p className="mt-2 text-[2rem] font-bold leading-none tracking-tight text-ink tabular-nums">
+      <p className="relative mt-2.5 text-[2.5rem] font-bold leading-none tracking-tight text-ink tabular-nums md:text-[2.75rem]">
         {fmtRange(header.totalLow, header.totalHigh)}
       </p>
       {header.headline ? (
-        <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
+        <p className="relative mt-2.5 text-sm leading-relaxed text-ink-secondary">
           {header.headline}
         </p>
       ) : null}
       {coverage ? (
         // LOCAL trust rule #9 — POS coverage disclosure on the header.
-        <p className="mt-1 text-sm font-medium text-ink-secondary">
+        <p className="relative mt-1 text-sm font-medium text-ink-secondary">
           Estimates cover identified loyalty customers —{" "}
           {Math.round(coverage.identifiedShare * 100)}% of transactions.
         </p>
       ) : null}
+      {/* Trust microcopy + directional-excluded note (brief §4). */}
+      <p className="relative mt-2 text-xs leading-5 text-ink-soft">
+        Eligible opportunities only — real ranges at medium or high
+        confidence. Directional estimates are never counted in this total.
+      </p>
       {header.excluded.length > 0 ? (
-        <details className="mt-3 border-t border-border pt-2.5">
+        <details className="relative mt-3 border-t border-emerald-100 pt-2.5">
           <summary className="cursor-pointer text-xs font-medium text-ink-muted transition-colors duration-150 hover:text-ink">
             Not counted in this total ({header.excluded.length})
           </summary>
@@ -165,13 +174,13 @@ export default async function FeedPage() {
           {feed.demoMode ? <Badge tone="info">Demo mode</Badge> : null}
           <Link
             href="/opportunities/audiences"
-            className="inline-flex items-center whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+            className="inline-flex items-center whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-xs transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
           >
             Audience Builder
           </Link>
           <Link
             href="/approvals"
-            className="inline-flex items-center whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+            className="inline-flex items-center whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-xs transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
           >
             Approval Center
           </Link>

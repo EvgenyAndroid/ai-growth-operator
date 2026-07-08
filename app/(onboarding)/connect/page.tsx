@@ -39,13 +39,13 @@ function StatusBadge({ status }: { status: ConnectionStatusView | null }) {
   if (status.isStale)
     return (
       <Badge tone="caution">
-        <StatusDot className="bg-warning" />
+        <StatusDot className="bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]" />
         Connected — stale
       </Badge>
     );
   return (
     <Badge tone="positive">
-      <StatusDot className="bg-success" />
+      <StatusDot className="bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]" />
       Connected
     </Badge>
   );
@@ -61,10 +61,7 @@ function ConnectorCard({
   accountId: string;
 }) {
   return (
-    <Card
-      as="section"
-      className="flex flex-col transition-shadow duration-150 hover:shadow-card-hover"
-    >
+    <Card as="section" interactive className="flex flex-col">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-ink">{copy.name}</h2>
         <div className="flex flex-wrap gap-1.5">
@@ -141,7 +138,7 @@ export default async function ConnectDataSourcesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">
+        <h1 className="text-3xl font-bold tracking-tight text-ink-900">
           Connect your data sources
         </h1>
         <p className="mt-1.5 max-w-2xl text-sm leading-6 text-ink-muted">
@@ -171,7 +168,7 @@ export default async function ConnectDataSourcesPage() {
         <Link
           href="/readiness"
           aria-disabled={!requiredReady}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Check data readiness
         </Link>

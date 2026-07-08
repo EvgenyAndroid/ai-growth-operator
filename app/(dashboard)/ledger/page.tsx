@@ -58,6 +58,14 @@ function buildHref(params: {
 
 const PAGE_SIZE = 50;
 
+/** Event-type filter chips — technical mono labels, audit-console feel. */
+const CHIP_ACTIVE =
+  "rounded-full border border-primary bg-primary px-3 py-1 font-mono text-[11px] font-medium text-white " +
+  "shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)]";
+const CHIP_IDLE =
+  "rounded-full border border-border-strong bg-surface px-3 py-1 font-mono text-[11px] font-medium text-ink-muted " +
+  "shadow-xs transition-colors duration-150 hover:border-slate-300 hover:bg-surface-soft hover:text-ink";
+
 export default async function LedgerPage({
   searchParams,
 }: {
@@ -99,11 +107,7 @@ export default async function LedgerPage({
         <div className="mt-3 flex flex-wrap gap-1.5">
           <Link
             href={buildHref({ action: actionId, opportunity: opportunityId })}
-            className={
-              !eventType
-                ? "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-white"
-                : "rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-muted transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
-            }
+            className={!eventType ? CHIP_ACTIVE : CHIP_IDLE}
           >
             all
           </Link>
@@ -111,11 +115,7 @@ export default async function LedgerPage({
             <Link
               key={type}
               href={buildHref({ type, action: actionId, opportunity: opportunityId })}
-              className={
-                eventType === type
-                  ? "rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-white"
-                  : "rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-muted transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
-              }
+              className={eventType === type ? CHIP_ACTIVE : CHIP_IDLE}
             >
               {type}
             </Link>
@@ -163,7 +163,7 @@ export default async function LedgerPage({
               opportunity: opportunityId,
               cursor: page.nextCursor,
             })}
-            className="shrink-0 whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+            className="shrink-0 whitespace-nowrap rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-xs transition-colors duration-150 hover:border-slate-300 hover:bg-surface-soft hover:text-ink"
           >
             Older entries →
           </Link>

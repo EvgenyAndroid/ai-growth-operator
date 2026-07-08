@@ -39,7 +39,7 @@ function NumberField({
   step?: number;
 }) {
   return (
-    <label className="block bg-surface p-5">
+    <label className="block bg-surface p-5 transition-colors duration-150 focus-within:bg-accent-soft/15">
       <span className="block text-sm font-semibold text-ink">{label}</span>
       <span className="mt-0.5 block text-xs leading-5 text-ink-muted">{hint}</span>
       <span className="mt-4 flex items-baseline gap-2">
@@ -55,7 +55,7 @@ function NumberField({
           max={max}
           step={step ?? 1}
           inputMode="numeric"
-          className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-2xl font-semibold tracking-tight text-ink tabular-nums transition-colors duration-150 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+          className="w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-2xl font-semibold tracking-tight text-ink tabular-nums shadow-[inset_0_1px_2px_rgb(15_23_42/0.03)] transition-[border-color,box-shadow] duration-150 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent/20"
         />
         {suffix ? (
           <span className="text-xs font-medium whitespace-nowrap text-ink-soft">

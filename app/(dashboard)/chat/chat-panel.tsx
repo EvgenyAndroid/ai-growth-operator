@@ -90,6 +90,19 @@ function OpportunityMiniCard({ card }: { card: OpportunityCardView }) {
   );
 }
 
+/** Tiny operator identity mark — accent dot with a soft halo, no dependency. */
+function OperatorLabel() {
+  return (
+    <p className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-ink-soft uppercase">
+      <span
+        aria-hidden="true"
+        className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_0_3px_rgb(37_99_235/0.15)]"
+      />
+      Operator
+    </p>
+  );
+}
+
 function OperatorTurn({ turn }: { turn: Turn }) {
   if (turn.error) {
     return (
@@ -100,15 +113,17 @@ function OperatorTurn({ turn }: { turn: Turn }) {
   }
   if (!turn.response) {
     return (
-      <div className="rounded-card border border-border bg-surface p-4 text-sm text-ink-muted shadow-card">
-        Thinking…
+      <div className="rounded-card border border-border bg-surface p-4 shadow-card">
+        <OperatorLabel />
+        <p className="mt-2 text-sm text-ink-muted">Thinking…</p>
       </div>
     );
   }
   const response = turn.response;
   return (
     <div className="rounded-card border border-border bg-surface p-4 shadow-card">
-      <p className="text-sm whitespace-pre-wrap text-ink">{response.message}</p>
+      <OperatorLabel />
+      <p className="mt-2 text-sm whitespace-pre-wrap text-ink">{response.message}</p>
 
       {response.explanation ? (
         <div className="mt-3">
@@ -182,7 +197,8 @@ export function ChatPanel({ accountId }: { accountId: string }) {
   }
 
   return (
-    <div className="space-y-4">
+    // Compact assistant column — the feed is the product, chat stays modest.
+    <div className="max-w-3xl space-y-4">
       <section>
         <h2 className="text-xs font-semibold tracking-wide text-ink-soft uppercase">
           Supported questions (v0)
@@ -194,7 +210,7 @@ export function ChatPanel({ accountId }: { accountId: string }) {
               type="button"
               disabled={isPending}
               onClick={() => send(question)}
-              className="rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-secondary transition-colors duration-150 hover:bg-surface-soft hover:text-ink disabled:pointer-events-none disabled:opacity-50"
+              className="rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-secondary shadow-xs transition-[background-color,border-color,color] duration-150 hover:border-accent/40 hover:bg-accent-soft/40 hover:text-ink active:bg-accent-soft/60 disabled:pointer-events-none disabled:opacity-50"
             >
               {question}
             </button>
@@ -223,7 +239,7 @@ export function ChatPanel({ accountId }: { accountId: string }) {
           turns.map((turn) => (
             <div key={turn.id} className="space-y-2">
               <div className="flex justify-end">
-                <p className="max-w-[85%] rounded-lg bg-primary px-4 py-2 text-sm text-white">
+                <p className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2 text-sm text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)]">
                   {turn.question}
                 </p>
               </div>
@@ -246,12 +262,12 @@ export function ChatPanel({ accountId }: { accountId: string }) {
           onChange={(event) => setInput(event.target.value)}
           placeholder='Try "What should I do this week to grow revenue?"'
           aria-label="Ask the Operator"
-          className="flex-1 rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-ink transition-colors duration-150 placeholder:text-ink-soft focus:border-accent focus:ring-2 focus:ring-accent-soft focus:outline-none"
+          className="flex-1 rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-ink shadow-xs transition-[border-color,box-shadow] duration-150 placeholder:text-ink-soft focus:border-accent focus:ring-2 focus:ring-accent-soft focus:outline-none"
         />
         <button
           type="submit"
           disabled={isPending || input.trim().length === 0}
-          className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:shadow-none disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
         >
           {isPending ? "Sending…" : "Send"}
         </button>

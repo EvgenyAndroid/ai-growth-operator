@@ -107,13 +107,13 @@ export function ExportPanel({ accountId }: { accountId: string }) {
   }
 
   return (
-    <ul className="space-y-3">
+    <ul className="grid gap-4 xl:grid-cols-2">
       {OBJECT_TYPES.map(({ objectType, label, description }) => {
         const state = rows[objectType];
         return (
           <li
             key={objectType}
-            className="rounded-card border border-border bg-surface p-5 shadow-card transition-shadow duration-150 hover:shadow-card-hover"
+            className="flex flex-col rounded-card border border-border bg-surface p-5 shadow-card transition-shadow duration-150 hover:shadow-card-hover"
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
@@ -125,7 +125,7 @@ export function ExportPanel({ accountId }: { accountId: string }) {
                   type="button"
                   disabled={state.status === "running"}
                   onClick={() => runExport(objectType, "csv")}
-                  className="inline-flex items-center rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-ink shadow-sm transition-colors duration-150 hover:bg-surface-soft disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex items-center rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-ink shadow-xs transition-[background-color,border-color,box-shadow,transform] duration-150 hover:border-slate-300 hover:bg-surface-soft active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50"
                 >
                   {state.status === "running" && state.format === "csv"
                     ? "Exporting…"
@@ -135,7 +135,7 @@ export function ExportPanel({ accountId }: { accountId: string }) {
                   type="button"
                   disabled={state.status === "running"}
                   onClick={() => runExport(objectType, "json")}
-                  className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                 >
                   {state.status === "running" && state.format === "json"
                     ? "Exporting…"
@@ -160,7 +160,15 @@ function ExportStatus({
 }) {
   if (state.status === "idle") return null;
   if (state.status === "running") {
-    return <p className="mt-3 text-sm text-ink-muted">Export job running…</p>;
+    return (
+      <p className="mt-3 flex items-center gap-2 text-sm text-ink-muted">
+        <span
+          aria-hidden="true"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent motion-safe:animate-pulse"
+        />
+        Export job running…
+      </p>
+    );
   }
   if (state.status === "error") {
     return (

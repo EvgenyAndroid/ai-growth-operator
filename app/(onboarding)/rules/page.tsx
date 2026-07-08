@@ -27,7 +27,7 @@ const BEAUTY_WELLNESS_EXTRA_CLAIMS = [
 ];
 
 const LINK_BUTTON_CLASSES =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  "inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 function RuleNumbers({
   rules,
@@ -72,7 +72,7 @@ export default async function OperatingRulesPickerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">
+        <h1 className="text-3xl font-bold tracking-tight text-ink-900">
           Pick your Operating Rules template
         </h1>
         <p className="mt-1.5 max-w-2xl text-sm leading-6 text-ink-muted">
@@ -84,10 +84,7 @@ export default async function OperatingRulesPickerPage() {
 
       {isLocal ? (
         <div className="grid gap-4 md:grid-cols-2">
-          <Card
-            as="section"
-            className="flex flex-col transition-shadow duration-150 hover:shadow-card-hover"
-          >
+          <Card as="section" interactive className="flex flex-col">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold text-ink">
                 Local café / bakery
@@ -111,7 +108,11 @@ export default async function OperatingRulesPickerPage() {
             </div>
           </Card>
 
-          <Card as="section" className="flex flex-col bg-surface-soft/60 shadow-none">
+          <Card
+            as="section"
+            variant="flat"
+            className="flex flex-col bg-surface-soft/60"
+          >
             <h2 className="text-base font-semibold text-ink">
               How local numbers are counted
             </h2>
@@ -127,10 +128,7 @@ export default async function OperatingRulesPickerPage() {
         </div>
       ) : (
       <div className="grid gap-4 md:grid-cols-2">
-        <Card
-          as="section"
-          className="flex flex-col transition-shadow duration-150 hover:shadow-card-hover"
-        >
+        <Card as="section" interactive className="flex flex-col">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-ink">
               Shopify DTC
@@ -153,10 +151,7 @@ export default async function OperatingRulesPickerPage() {
           </div>
         </Card>
 
-        <Card
-          as="section"
-          className="flex flex-col transition-shadow duration-150 hover:shadow-card-hover"
-        >
+        <Card as="section" interactive className="flex flex-col">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-ink">
               Beauty / wellness variant

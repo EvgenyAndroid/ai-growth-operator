@@ -33,21 +33,38 @@ interface QueueItem {
   card: OpportunityCardView;
 }
 
+/** Destination (channel) shown first on each queue row (brief §7). */
+const DESTINATION_LABELS: Record<string, string> = {
+  klaviyo_recovery_flow: "Klaviyo",
+  klaviyo_winback_flow: "Klaviyo",
+  meta_audience_sync: "Meta Ads",
+};
+
 function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
   const { action, card } = item;
+  // Status rail: awaiting review = amber, activated = emerald, else slate.
+  const rail = pending
+    ? "bg-warning"
+    : action.status === "launched"
+      ? "bg-success"
+      : "bg-slate-300";
   return (
     <Card
       as="li"
       className={
-        "flex flex-wrap items-center justify-between gap-3 " +
+        "relative flex flex-wrap items-center justify-between gap-3 overflow-hidden py-4 " +
         "transition-[box-shadow] duration-150 hover:shadow-card-hover" +
         (pending ? "" : " bg-surface-soft/40")
       }
     >
+      <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 ${rail}`} />
       <div className="min-w-0">
         <p className="font-semibold tracking-tight text-ink">{card.title}</p>
         <p className="mt-0.5 text-sm text-ink-muted">
-          {RECIPE_SHORT_NAMES[card.recipeId]} · {action.type} ·{" "}
+          <span className="font-medium text-ink-secondary">
+            {DESTINATION_LABELS[action.type] ?? action.type}
+          </span>{" "}
+          · {RECIPE_SHORT_NAMES[card.recipeId]} ·{" "}
           {action.audienceSize !== null
             ? `${action.audienceSize.toLocaleString()} recipients`
             : "audience —"}{" "}
@@ -78,8 +95,8 @@ function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
         href={`/approvals/${action.actionId}?opp=${card.id}`}
         className={
           pending
-            ? "inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:shadow-none"
-            : "inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-sm transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
+            ? "inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:translate-y-px active:shadow-none"
+            : "inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-xs transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
         }
       >
         {pending ? "Review draft" : "View"}
@@ -130,7 +147,7 @@ export default async function ApprovalCenterPage() {
           {pending.length > 0 ? (
             <span
               aria-hidden="true"
-              className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]"
             />
           ) : null}
         </h2>

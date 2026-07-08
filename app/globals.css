@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 /**
- * Design tokens — see docs/design-brief.md.
- * Declared inside @theme so Tailwind 4 both emits them as CSS variables on
- * :root AND generates utilities (bg-surface, border-border, text-ink, …).
+ * Design tokens v2 — "premium growth cockpit" (docs/design-brief-v2.md,
+ * supersedes design-brief.md). Declared inside @theme so Tailwind 4 both
+ * emits them as CSS variables on :root AND generates utilities
+ * (bg-surface, border-border, text-ink, shadow-card, …).
  * Offline-capable: Inter is requested via the system font stack only — no
  * font CDN, no @font-face downloads.
  */
@@ -17,28 +18,41 @@
     ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
     monospace;
 
-  /* Base */
-  --color-bg: #f7f8fa;
+  /* Base surfaces */
+  --color-bg: #f6f8fb;
+  --color-bg-page: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-soft: #f1f4f8;
+  --color-surface-soft: #f1f5f9;
   --color-surface-raised: #ffffff;
+  --color-surface-glass: rgba(255, 255, 255, 0.78);
+
+  /* Ink scale (900 = display headings … 400 = faint meta) */
+  --color-ink-900: #07111f;
+  --color-ink-800: #0f172a;
+  --color-ink-700: #1e293b;
+  --color-ink-600: #334155;
+  --color-ink-500: #64748b;
+  --color-ink-400: #94a3b8;
+
+  /* Text roles (kept for round-1 utility names) */
   --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
+  --color-text-secondary: #334155;
   --color-text-muted: #64748b;
   --color-text-soft: #94a3b8;
   --color-border: #e2e8f0;
   --color-border-strong: #cbd5e1;
 
-  /* Primary — deep blue-black */
-  --color-primary: #111827;
+  /* Primary — deep console navy (matches the cockpit sidebar) */
+  --color-primary: #0b1220;
   --color-primary-hover: #020617;
-  --color-primary-soft: #e5e7eb;
+  --color-primary-soft: #e2e8f0;
   --color-primary-muted: #334155;
 
   /* Accent — restrained electric blue, important highlights only */
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
   --color-accent-soft: #dbeafe;
+  --color-accent-glow: rgba(37, 99, 235, 0.22);
 
   /* Status */
   --color-success: #059669;
@@ -53,14 +67,29 @@
   --color-directional-soft: #ede9fe;
   --color-neutral-soft: #f1f5f9;
 
-  /* Elevation — calm, no heavy shadows */
+  /* Elevation — layered, calm. sm = resting card, md = raised, lg = modal/hero */
+  --shadow-xs: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-sm:
+    0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.04);
+  --shadow-md:
+    0 2px 6px rgb(15 23 42 / 0.05), 0 8px 24px rgb(15 23 42 / 0.08);
+  --shadow-lg:
+    0 4px 12px rgb(15 23 42 / 0.06), 0 24px 60px rgb(15 23 42 / 0.12);
   --shadow-card:
-    0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+    0 1px 2px rgb(15 23 42 / 0.06), 0 2px 8px rgb(15 23 42 / 0.05);
   --shadow-card-hover:
-    0 2px 4px rgb(15 23 42 / 0.05), 0 4px 12px rgb(15 23 42 / 0.08);
+    0 2px 6px rgb(15 23 42 / 0.06), 0 12px 32px rgb(15 23 42 / 0.1);
+  /* Accent-glow elevation for hero objects (found-money card, sign-in card) */
+  --shadow-glow:
+    0 2px 6px rgb(15 23 42 / 0.05), 0 8px 24px rgb(15 23 42 / 0.08),
+    0 16px 48px -12px rgb(37 99 235 / 0.22);
 
-  /* Radii */
-  --radius-card: 0.625rem;
+  /* Radius scale 8 / 12 / 18 / 24 */
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-card: 12px;
 }
 
 /* Readable aliases for token utilities (text-ink, bg-canvas, …). */
@@ -121,5 +150,44 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+@layer components {
+  /**
+   * App-background radial glow (brief §3): a faint accent bloom at the top of
+   * the working canvas so the console reads "lit", never a gradient wash.
+   */
+  .bg-app-glow {
+    background-color: var(--color-bg);
+    background-image:
+      radial-gradient(
+        1100px 460px at 50% -140px,
+        rgb(37 99 235 / 0.07),
+        transparent 70%
+      ),
+      radial-gradient(
+        800px 380px at 88% -100px,
+        rgb(15 23 42 / 0.04),
+        transparent 70%
+      );
+    background-repeat: no-repeat;
+  }
+
+  /**
+   * Gradient hairline border for hero-tier cards: accent fades into the
+   * normal border color — one quiet highlight edge, not a rainbow frame.
+   */
+  .gradient-border {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+      linear-gradient(
+          150deg,
+          rgb(37 99 235 / 0.45),
+          var(--color-border) 42%,
+          var(--color-border) 100%
+        )
+        border-box;
   }
 }

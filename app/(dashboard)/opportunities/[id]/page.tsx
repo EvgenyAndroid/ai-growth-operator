@@ -57,7 +57,11 @@ function Section({
 }) {
   return (
     <Card as="section">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+      <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+        <span
+          aria-hidden="true"
+          className="h-3 w-0.5 shrink-0 rounded-full bg-accent/60"
+        />
         {title}
       </h2>
       <div className="mt-2.5">{children}</div>
@@ -280,7 +284,9 @@ export default async function OpportunityDetailPage({
 
       <Card
         as="section"
-        className="flex flex-wrap items-center justify-between gap-3 border-border-strong"
+        variant="hero"
+        glow
+        className="flex flex-wrap items-center justify-between gap-3"
       >
         <div>
           <h2 className="text-base font-semibold tracking-tight text-ink">

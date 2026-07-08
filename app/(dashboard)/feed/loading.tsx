@@ -25,10 +25,14 @@ export default function FeedLoading() {
         </div>
       </header>
 
-      {/* Found-money header placeholder */}
-      <div className="rounded-card border border-border bg-surface px-6 py-5 shadow-card">
+      {/* Found-money hero placeholder (emerald rail, large value) */}
+      <div className="relative overflow-hidden rounded-card border border-emerald-200/60 bg-surface px-6 py-6 shadow-card">
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-1 bg-emerald-200"
+        />
         <Skeleton className="h-3 w-40" />
-        <Skeleton className="mt-3 h-9 w-56" />
+        <Skeleton className="mt-3 h-11 w-64" />
         <Skeleton className="mt-3 h-4 w-full max-w-md" />
       </div>
 

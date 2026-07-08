@@ -41,7 +41,7 @@ export default async function DataReadinessPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">
+        <h1 className="text-3xl font-bold tracking-tight text-ink-900">
           Data readiness
         </h1>
         <p className="mt-1.5 max-w-2xl text-sm leading-6 text-ink-muted">
@@ -87,7 +87,7 @@ export default async function DataReadinessPage() {
           {ready ? (
             <Link
               href="/feed"
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               Go to your Opportunity Feed
             </Link>
@@ -97,11 +97,7 @@ export default async function DataReadinessPage() {
 
       <div className="space-y-3">
         {cards.map(({ copy, status }) => (
-          <Card
-            as="section"
-            key={copy.id}
-            className="transition-shadow duration-150 hover:shadow-card-hover"
-          >
+          <Card as="section" key={copy.id} interactive>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -114,7 +110,7 @@ export default async function DataReadinessPage() {
                     <Badge tone="caution">
                       <span
                         aria-hidden="true"
-                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]"
                       />
                       Stale — re-sync recommended
                     </Badge>
@@ -122,7 +118,7 @@ export default async function DataReadinessPage() {
                     <Badge tone="positive">
                       <span
                         aria-hidden="true"
-                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-success"
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]"
                       />
                       Fresh
                     </Badge>
@@ -182,7 +178,7 @@ export default async function DataReadinessPage() {
       </div>
 
       {isLocal ? (
-        <Card as="section" className="bg-surface-soft/60 shadow-none">
+        <Card as="section" variant="flat" className="bg-surface-soft/60">
           <h2 className="text-sm font-semibold text-ink">
             How local numbers are counted
           </h2>
@@ -195,7 +191,7 @@ export default async function DataReadinessPage() {
         </Card>
       ) : null}
 
-      <Card as="section" className="bg-surface-soft/60 shadow-none">
+      <Card as="section" variant="flat" className="bg-surface-soft/60">
         <h2 className="text-sm font-semibold text-ink">
           How the first sync works
         </h2>
@@ -216,7 +212,7 @@ export default async function DataReadinessPage() {
       <div className="flex justify-end">
         <Link
           href="/feed"
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:bg-primary-hover active:shadow-none active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Go to your Opportunity Feed
         </Link>

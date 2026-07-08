@@ -55,7 +55,7 @@ export function OnboardingStepper() {
                 aria-hidden
                 className={
                   state === "done" || state === "active"
-                    ? "h-px w-4 bg-border-strong"
+                    ? "h-px w-4 bg-gradient-to-r from-border-strong to-accent/40"
                     : "h-px w-4 bg-border"
                 }
               />
@@ -64,10 +64,10 @@ export function OnboardingStepper() {
               aria-current={state === "active" ? "step" : undefined}
               className={
                 state === "active"
-                  ? "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm"
+                  ? "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_1px_2px_rgb(2_6_23/0.35),0_0_0_3px_var(--color-accent-glow)]"
                   : state === "done"
-                    ? "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-transparent bg-neutral-soft px-2.5 py-0.5 text-xs font-medium text-ink-secondary"
-                    : "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-ink-soft"
+                    ? "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-200/70 bg-success-soft/60 px-2.5 py-0.5 text-xs font-medium text-emerald-800"
+                    : "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-surface/70 px-2.5 py-0.5 text-xs font-medium text-ink-soft"
               }
             >
               {state === "done" ? <CheckIcon /> : null}
