@@ -139,7 +139,7 @@ export default async function OpportunityDetailPage({
 
       <header className="space-y-2">
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
+          <h1 className="text-[2.125rem] font-bold leading-tight tracking-tight text-ink">
             {card.title}
           </h1>
           <ConfidenceBadge level={card.confidence} />
@@ -284,8 +284,7 @@ export default async function OpportunityDetailPage({
 
       <Card
         as="section"
-        variant="hero"
-        glow
+        variant="premium"
         className="flex flex-wrap items-center justify-between gap-3"
       >
         <div>
@@ -313,6 +312,10 @@ export default async function OpportunityDetailPage({
                 key={e.id}
                 className="rounded-md border border-border bg-surface px-3.5 py-2 text-sm text-ink-muted shadow-card"
               >
+                <span
+                  aria-hidden="true"
+                  className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle shadow-[0_0_0_3px_rgb(37_99_235/0.12)]"
+                />
                 <span className="font-medium text-ink">{e.eventType}</span>
                 {" · "}
                 {fmtDateTime(e.timestamp)}

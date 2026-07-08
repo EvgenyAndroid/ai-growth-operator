@@ -39,7 +39,7 @@ export function EstimateValue({
       <span
         className={
           large
-            ? "text-2xl font-semibold tracking-tight text-ink tabular-nums"
+            ? "text-[1.75rem] font-semibold leading-tight tracking-tight text-ink tabular-nums"
             : "font-semibold text-ink tabular-nums"
         }
       >
@@ -223,7 +223,7 @@ export function DraftNotActivationBanner({
   return (
     <div
       role="note"
-      className="rounded-md border border-amber-200 bg-warning-soft/60 px-4 py-3"
+      className="relative overflow-hidden rounded-md border border-amber-200 bg-warning-soft/60 px-4 py-3 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:to-amber-300/40"
     >
       <p className="text-sm font-semibold text-amber-900">
         Draft is not activation.

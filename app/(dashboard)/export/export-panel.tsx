@@ -113,19 +113,28 @@ export function ExportPanel({ accountId }: { accountId: string }) {
         return (
           <li
             key={objectType}
-            className="flex flex-col rounded-card border border-border bg-surface p-5 shadow-card transition-shadow duration-150 hover:shadow-card-hover"
+            className="flex flex-col rounded-card border border-border bg-surface p-5 shadow-card transition-[box-shadow,translate] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-card-hover"
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <h3 className="text-base font-semibold tracking-tight text-ink">{label}</h3>
-                <p className="mt-0.5 text-sm text-ink-muted">{description}</p>
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                {/* Icon-like CSS mark — blue->emerald, matching the product mark. */}
+                <span
+                  aria-hidden="true"
+                  className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-gradient-to-br from-accent-soft via-surface to-success-soft shadow-xs"
+                >
+                  <span className="h-2 w-2 rounded-full bg-gradient-to-br from-accent to-success" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold tracking-tight text-ink">{label}</h3>
+                  <p className="mt-0.5 text-sm text-ink-muted">{description}</p>
+                </div>
               </div>
               <div className="flex shrink-0 gap-2">
                 <button
                   type="button"
                   disabled={state.status === "running"}
                   onClick={() => runExport(objectType, "csv")}
-                  className="inline-flex items-center rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-ink shadow-xs transition-[background-color,border-color,box-shadow,transform] duration-150 hover:border-slate-300 hover:bg-surface-soft active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex items-center rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-ink shadow-xs transition-[background-color,border-color,box-shadow,translate] duration-150 ease-out hover:border-slate-300 hover:bg-surface-soft active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50"
                 >
                   {state.status === "running" && state.format === "csv"
                     ? "Exporting…"
@@ -135,7 +144,7 @@ export function ExportPanel({ accountId }: { accountId: string }) {
                   type="button"
                   disabled={state.status === "running"}
                   onClick={() => runExport(objectType, "json")}
-                  className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                  className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,translate] duration-150 ease-out hover:bg-primary-hover active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                 >
                   {state.status === "running" && state.format === "json"
                     ? "Exporting…"
@@ -179,7 +188,7 @@ function ExportStatus({
   }
   const { job } = state;
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-emerald-200 bg-success-soft/60 px-3 py-2 text-sm text-emerald-900">
+    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-emerald-200 border-l-2 border-l-success bg-success-soft/60 px-3 py-2 text-sm text-emerald-900 shadow-[inset_0_1px_8px_rgb(16_185_129/0.08)]">
       <span>
         <strong>Completed</strong> — {job.fileName} ({job.format.toUpperCase()},{" "}
         {job.rowCount.toLocaleString("en-US")} rows)

@@ -91,18 +91,46 @@ export default async function OperatingRulesEditorPage({
           />
         </StatList>
         {rules.bannedClaims.length > 0 ? (
-          <ul className="mt-3 flex flex-wrap gap-1.5">
-            {rules.bannedClaims.map((claim) => (
-              <li key={claim}>
-                <Badge tone="danger">&ldquo;{claim}&rdquo;</Badge>
-              </li>
-            ))}
-          </ul>
+          <>
+            <p className="mt-4 text-xs font-semibold tracking-wide text-ink-soft uppercase">
+              Flagged claims
+            </p>
+            <ul className="mt-2 flex flex-wrap gap-1.5">
+              {rules.bannedClaims.map((claim) => (
+                <li key={claim}>
+                  <Badge tone="danger">&ldquo;{claim}&rdquo;</Badge>
+                </li>
+              ))}
+            </ul>
+          </>
         ) : null}
-        <p className="mt-3 text-xs leading-5 text-ink-soft">
-          Saving creates Operating Rules v{rules.version + 1}; every draft,
-          approval, and launch records the version it was checked against.
-        </p>
+        {/* Version callout (brief v3 area 8) — saving creates a new version. */}
+        <div className="relative mt-4 overflow-hidden rounded-lg border border-accent/25 bg-gradient-to-br from-accent-soft/35 via-surface to-surface p-3 pl-4">
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-accent to-accent/25"
+          />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge tone="neutral">v{rules.version} current</Badge>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 12 12"
+              className="h-3 w-3 shrink-0 text-ink-soft"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M2 6h8M7 3l3 3-3 3" />
+            </svg>
+            <Badge tone="info">v{rules.version + 1} on save</Badge>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-ink-secondary">
+            Saving creates Operating Rules v{rules.version + 1}; every draft,
+            approval, and launch records the version it was checked against.
+          </p>
+        </div>
       </Card>
     </div>
   );

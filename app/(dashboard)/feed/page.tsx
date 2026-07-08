@@ -40,25 +40,33 @@ function FoundMoneyHeader({
   return (
     <section
       aria-label="Found money"
-      className="relative overflow-hidden rounded-card border border-emerald-200/80 bg-surface px-6 py-6 shadow-[0_1px_2px_rgb(15_23_42/0.05),0_8px_24px_rgb(15_23_42/0.07),0_20px_48px_-16px_rgb(5_150_105/0.28)]"
+      className="group relative overflow-hidden rounded-card border border-emerald-200/80 bg-found-money px-6 py-6 shadow-[0_1px_2px_rgb(15_23_42/0.05),0_8px_24px_rgb(15_23_42/0.07),0_18px_55px_-12px_rgb(16_185_129/0.30)]"
     >
-      {/* Hero treatment (brief §4): emerald left rail + faint green glow. */}
+      {/* ICONIC hero treatment (brief v3 §3): found-money gradient surface,
+          stronger emerald rail, ambient bloom, and a second bloom that fades
+          in on hover (the CSS-only "gradient shifts on hover"). */}
       <span
         aria-hidden="true"
-        className="absolute inset-y-0 left-0 w-1 bg-success"
+        className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-emerald-400 via-success to-emerald-600"
       />
       <span
         aria-hidden="true"
         className="pointer-events-none absolute -top-24 left-4 h-48 w-80 rounded-full bg-emerald-400/10 blur-3xl"
       />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_-30%,rgb(16_185_129/0.14),transparent_50%)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100"
+      />
       <p className="relative flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700">
+        {/* Glossy, softly pulsing dot (brief v3 §3); pulse dies under the
+            global reduced-motion kill-switch. */}
         <span
           aria-hidden="true"
-          className="h-1.5 w-1.5 shrink-0 rounded-full bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]"
+          className="connector-dot-live h-2 w-2 shrink-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#6ee7b7,#059669_72%)]"
         />
         {label}
       </p>
-      <p className="relative mt-2.5 text-[2.5rem] font-bold leading-none tracking-tight text-ink tabular-nums md:text-[2.75rem]">
+      <p className="relative mt-2.5 text-[clamp(2.25rem,9vw,2.75rem)] font-bold leading-none tracking-tight text-ink tabular-nums md:text-[3.25rem]">
         {fmtRange(header.totalLow, header.totalHigh)}
       </p>
       {header.headline ? (
@@ -79,7 +87,9 @@ function FoundMoneyHeader({
         confidence. Directional estimates are never counted in this total.
       </p>
       {header.excluded.length > 0 ? (
-        <details className="relative mt-3 border-t border-emerald-100 pt-2.5">
+        // Refined divider (brief v3 §3): gradient hairline instead of a flat
+        // border above the "Not counted in this total" disclosure.
+        <details className="relative mt-3 pt-2.5 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-emerald-300/70 before:via-emerald-200/50 before:to-transparent">
           <summary className="cursor-pointer text-xs font-medium text-ink-muted transition-colors duration-150 hover:text-ink">
             Not counted in this total ({header.excluded.length})
           </summary>
@@ -162,7 +172,7 @@ export default async function FeedPage() {
     <main className="mx-auto w-full max-w-4xl space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
+          <h1 className="text-[2.125rem] font-bold leading-tight tracking-tight text-ink">
             {copy.feedTitle}
           </h1>
           <p className="mt-1 text-sm text-ink-muted">

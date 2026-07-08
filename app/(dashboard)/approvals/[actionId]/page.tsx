@@ -157,7 +157,7 @@ export default async function DraftReviewPage({
 
       <header className="space-y-2">
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
+          <h1 className="text-[2.125rem] font-bold leading-tight tracking-tight text-ink">
             Campaign Draft Review
           </h1>
           <Badge tone={action.status === "launched" ? "positive" : "caution"}>

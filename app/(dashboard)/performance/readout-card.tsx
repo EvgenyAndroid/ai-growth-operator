@@ -92,9 +92,14 @@ const MODE_COPY: Record<MeasurementMode, string> = {
  * directional must never look as strong as holdout-verified.
  */
 const MODE_CLASSES: Record<MeasurementMode, string> = {
-  holdout: "bg-success-soft text-emerald-800 border-emerald-200",
-  before_after_no_control: "bg-warning-soft text-amber-800 border-amber-200",
-  directional: "bg-directional-soft text-violet-700 border-violet-200/70",
+  // pill-* utilities (globals.css, brief v3 area 5): the inner emerald glow is
+  // what "proven" looks like; caution keeps a flat ring; directional stays
+  // washed so it never reads as strong as verified.
+  holdout: "bg-success-soft text-emerald-800 border-emerald-200 pill-holdout",
+  before_after_no_control:
+    "bg-warning-soft text-amber-800 border-amber-200 pill-caution",
+  directional:
+    "bg-directional-soft text-violet-700 border-violet-200/70 pill-directional",
 };
 
 const MODE_DOT: Record<MeasurementMode, string | null> = {
@@ -134,9 +139,10 @@ export function ModeBadge({
 }
 
 const CONFIDENCE_CLASSES: Record<Confidence, string> = {
-  high: "bg-success-soft text-emerald-800 border-emerald-200",
-  medium: "bg-info-soft text-blue-800 border-blue-200",
-  low: "bg-warning-soft text-amber-800 border-amber-200",
+  high: "bg-success-soft text-emerald-800 border-emerald-200 pill-holdout",
+  medium:
+    "bg-info-soft text-blue-800 border-blue-200 shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
+  low: "bg-warning-soft text-amber-800 border-amber-200 pill-caution",
 };
 
 const CONFIDENCE_COPY: Record<Confidence, string> = {
@@ -219,6 +225,73 @@ export function ContaminationNotice({
       may also be reached by other active flows or campaigns — see the caveats
       below. Confidence has been lowered accordingly (PRD 14.4 / 26A.5).
     </p>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// AudienceSplitRow — eligible / holdout / exposed as a hero metric row
+// (brief v3 area 7). Purely presentational: derives from the readout metrics
+// that MetricsTable already lists in full; renders only when all three
+// holdout-arm counts are present, so it can never appear on a directional or
+// no-control read.
+// ---------------------------------------------------------------------------
+
+const SPLIT_TILES: Array<{
+  key: string;
+  label: string;
+  tile: string;
+  label_cls: string;
+}> = [
+  {
+    key: "eligible_audience",
+    label: "Eligible",
+    tile: "border-border bg-surface-soft/60",
+    label_cls: "text-ink-soft",
+  },
+  {
+    key: "holdout_size",
+    label: "Holdout",
+    tile:
+      "border-emerald-200/70 bg-success-soft/40 " +
+      "shadow-[inset_0_1px_8px_rgb(16_185_129/0.08)]",
+    label_cls: "text-emerald-700",
+  },
+  {
+    key: "exposed_audience",
+    label: "Exposed",
+    tile: "border-border bg-surface-soft/60",
+    label_cls: "text-ink-soft",
+  },
+];
+
+export function AudienceSplitRow({
+  metrics,
+  className,
+}: {
+  metrics: Record<string, number | string>;
+  className?: string;
+}) {
+  if (SPLIT_TILES.some(({ key }) => typeof metrics[key] !== "number")) {
+    return null;
+  }
+  return (
+    <div className={cx("grid grid-cols-3 gap-2", className)}>
+      {SPLIT_TILES.map(({ key, label, tile, label_cls }) => (
+        <div key={key} className={cx("rounded-lg border px-3 py-2", tile)}>
+          <p
+            className={cx(
+              "text-[10px] font-semibold tracking-wider uppercase",
+              label_cls
+            )}
+          >
+            {label}
+          </p>
+          <p className="mt-0.5 text-lg leading-6 font-semibold tracking-tight text-ink tabular-nums">
+            {(metrics[key] as number).toLocaleString("en-US")}
+          </p>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -350,6 +423,10 @@ export function ReadoutCard({
           Lift not proven on this read — the confidence band includes zero or a
           measurement arm was empty. We say so rather than claiming impact.
         </p>
+      ) : null}
+
+      {readout.mode === "holdout" ? (
+        <AudienceSplitRow metrics={readout.metrics} className="mt-4" />
       ) : null}
 
       <MetricsTable metrics={readout.metrics} className="mt-4" />

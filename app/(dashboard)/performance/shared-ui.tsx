@@ -36,7 +36,8 @@ const SCREEN_LINK_IDLE =
   "transition-colors duration-150 hover:bg-neutral-soft hover:text-ink";
 
 const SCREEN_LINK_ACTIVE =
-  "whitespace-nowrap rounded-md bg-primary px-2 py-1 text-[13px] font-semibold text-white shadow-sm";
+  "whitespace-nowrap rounded-md bg-primary px-2 py-1 text-[13px] font-semibold text-white " +
+  "shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35),0_0_16px_var(--glow-blue)]";
 
 export function ScreenNav({ active }: { active: ScreenKey }) {
   return (
@@ -90,7 +91,8 @@ export function PageShell({
         </div>
       </div>
       <header className="mt-6">
-        <h1 className="text-[2rem] leading-10 font-bold tracking-tight text-ink-900">
+        {/* Page title 34-42px (brief v3 §Typography) */}
+        <h1 className="text-[2.125rem] leading-[2.6rem] font-bold tracking-tight text-ink-900">
           {title}
         </h1>
         {subtitle ? (
@@ -154,16 +156,31 @@ export function LedgerTable({
     );
   }
   return (
+    <>
+      {/* Smooth ledger expand (brief v3 area 9) — CSS-only; the global
+          reduced-motion kill-switch in globals.css disables it. */}
+      <style>{`@keyframes ledger-reveal{from{opacity:0;transform:translateY(-3px)}}.ledger-reveal{animation:ledger-reveal .18s ease-out both}`}</style>
     <ol className="relative overflow-hidden rounded-card border border-border bg-surface shadow-card">
-      {/* Audit-timeline spine: a hairline rail the event dots sit on. */}
+      {/* Audit-timeline spine: a hairline rail the event dots sit on,
+          fading out at both ends. */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute top-5 bottom-5 left-[19.5px] w-px bg-border"
+        className="pointer-events-none absolute top-3 bottom-3 left-[19.5px] w-px bg-gradient-to-b from-transparent via-border-strong/80 to-transparent"
       />
-      {entries.map((entry) => {
+      {entries.map((entry, index) => {
         const tone = eventTone(entry.eventType);
+        // Subtle day grouping: a quiet mono date row whenever the day changes.
+        const day = entry.timestamp.slice(0, 10);
+        const previousDay =
+          index > 0 ? entries[index - 1].timestamp.slice(0, 10) : null;
         return (
-          <li key={entry.id} className="border-b border-border last:border-b-0">
+          <React.Fragment key={entry.id}>
+            {day !== previousDay ? (
+              <li className="border-b border-border bg-surface-soft/60 px-4 py-1 pl-10 font-mono text-[10px] font-medium tracking-wider text-ink-soft uppercase tabular-nums">
+                {day}
+              </li>
+            ) : null}
+            <li className="border-b border-border last:border-b-0">
             <details className="group">
               <summary
                 className={cx(
@@ -209,7 +226,7 @@ export function LedgerTable({
                   <path d="M4.5 2.5L8 6l-3.5 3.5" />
                 </svg>
               </summary>
-              <dl className="grid gap-x-6 gap-y-3 border-t border-dotted border-border bg-surface-soft/50 px-4 py-3 pl-10 sm:grid-cols-2 lg:grid-cols-3">
+              <dl className="ledger-reveal grid gap-x-6 gap-y-3 border-t border-dotted border-border bg-surface-soft/50 px-4 py-3 pl-10 shadow-[inset_0_2px_6px_rgb(15_23_42/0.03)] sm:grid-cols-2 lg:grid-cols-3">
                 <DetailField
                   label="Summary"
                   value={entry.reasoningSummary ?? entry.actionTaken ?? "—"}
@@ -235,22 +252,26 @@ export function LedgerTable({
                 <DetailField label="Destination" value={entry.destination ?? "—"} />
               </dl>
             </details>
-          </li>
+            </li>
+          </React.Fragment>
         );
       })}
     </ol>
+    </>
   );
 }
 
 type EventTone = "neutral" | "positive" | "caution" | "info" | "danger";
 
-/** Timeline dot color per event tone — muted, audit-grade, not loud. */
+/** Timeline dot color per event tone — muted, audit-grade, not loud. Each
+ * toned dot carries a faint matching halo so the rail reads as proof, with the
+ * event type always named in the adjacent Badge (never color-only status). */
 const TONE_DOT: Record<EventTone, string> = {
   neutral: "bg-border-strong",
-  positive: "bg-success",
-  caution: "bg-warning",
-  info: "bg-info",
-  danger: "bg-danger",
+  positive: "bg-success shadow-[0_0_6px_rgb(5_150_105/0.45)]",
+  caution: "bg-warning shadow-[0_0_6px_rgb(217_119_6/0.4)]",
+  info: "bg-info shadow-[0_0_6px_rgb(37_99_235/0.4)]",
+  danger: "bg-danger shadow-[0_0_6px_rgb(220_38_38/0.4)]",
 };
 
 function eventTone(eventType: LedgerEntryView["eventType"]): EventTone {

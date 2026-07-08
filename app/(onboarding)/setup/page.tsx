@@ -27,20 +27,22 @@ import {
 const STORAGE_KEY = "ago.business_setup";
 
 /**
- * Brief v2 §2 — selected setup cards: subtle gradient surface, stronger
- * border, soft blue glow; polished inactive cards with a quiet hover lift.
+ * Brief v3 micro-interactions — "onboarding selected cards elevate": the
+ * chosen card lifts (translate + deeper accent glow) over the gradient
+ * surface; inactive cards get a quiet hover lift. 150ms ease-out, and the
+ * global reduced-motion kill-switch flattens all of it.
  */
 const SELECTED_CARD_CLASSES =
   "relative cursor-pointer rounded-card border border-accent/60 " +
   "bg-gradient-to-br from-accent-soft/45 via-surface to-surface p-4 text-left " +
-  "ring-1 ring-accent/50 " +
-  "shadow-[0_1px_2px_rgb(15_23_42/0.06),0_10px_28px_-8px_var(--color-accent-glow)] " +
-  "transition-[box-shadow,border-color,background-color] duration-150";
+  "ring-1 ring-accent/50 -translate-y-0.5 " +
+  "shadow-[0_2px_4px_rgb(15_23_42/0.06),0_14px_32px_-8px_var(--color-accent-glow)] " +
+  "transition-[box-shadow,border-color,background-color,translate] duration-150 ease-out";
 
 const INACTIVE_CARD_CLASSES =
   "cursor-pointer rounded-card border border-border bg-surface p-4 text-left " +
-  "shadow-card transition-[box-shadow,border-color] duration-150 " +
-  "hover:border-border-strong hover:shadow-card-hover";
+  "shadow-card transition-[box-shadow,border-color,translate] duration-150 ease-out " +
+  "hover:-translate-y-0.5 hover:border-border-strong hover:shadow-card-hover";
 
 /** Accent-filled "Selected" pill, pinned top-right of the chosen card. */
 function SelectedPill() {

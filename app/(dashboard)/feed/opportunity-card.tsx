@@ -57,6 +57,19 @@ const STATUS_TONE: Record<string, "neutral" | "info" | "positive"> = {
   learned: "positive",
 };
 
+/**
+ * Top accent rail by measurement mode (brief v3 area 4). Trust hierarchy is
+ * encoded in the CSS: holdout = saturated emerald, before/after = amber,
+ * directional = washed violet that never reads as strong as verified.
+ */
+const MODE_RAIL: Record<string, string> = {
+  holdout: "bg-gradient-to-r from-emerald-500 via-emerald-400/60 to-transparent",
+  before_after_no_control:
+    "bg-gradient-to-r from-amber-500 via-amber-400/55 to-transparent",
+  directional:
+    "bg-gradient-to-r from-violet-300 via-violet-200/50 to-transparent",
+};
+
 export function OpportunityCard({
   accountId,
   card,
@@ -77,21 +90,23 @@ export function OpportunityCard({
       as="article"
       className={
         "relative flex flex-col gap-3 overflow-hidden " +
-        "transition-[box-shadow,transform] duration-150 motion-safe:hover:-translate-y-0.5 hover:shadow-card-hover" +
+        "transition-[box-shadow,translate] duration-150 ease-out motion-safe:hover:-translate-y-0.5 " +
+        "hover:shadow-card-hover hover:ring-1 hover:ring-accent/15" +
         (priority ? " border-border-strong shadow-md" : "")
       }
     >
-      {priority ? (
-        // Priority accent line (brief §4): accent fading out, one quiet edge.
-        <span
-          aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-accent via-accent/50 to-transparent"
-        />
-      ) : null}
+      {/* Measurement-mode accent rail (brief v3 area 4) — every card carries
+          its mode color; directional stays deliberately washed. */}
+      <span
+        aria-hidden="true"
+        className={`absolute inset-x-0 top-0 h-[3px] ${
+          MODE_RAIL[card.measurementMode] ?? ""
+        }`}
+      />
 
       {/* Title row + badges */}
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <h3 className="text-base font-semibold leading-snug tracking-tight text-ink">
+        <h3 className="text-lg font-semibold leading-snug tracking-tight text-ink">
           {card.title}
         </h3>
         <div className="flex flex-wrap gap-1.5">
@@ -115,15 +130,16 @@ export function OpportunityCard({
       {/* LOCAL POS coverage disclosure (trust rule #9); null for DTC */}
       <CoverageDisclosure coverage={card.coverage} />
 
-      {/* What was found / why it matters */}
+      {/* What was found / why it matters — two-column panels w/ subtle bg
+          (brief v3 area 4) */}
       <div className="grid gap-3 text-sm leading-relaxed text-ink-secondary sm:grid-cols-2">
-        <div>
+        <div className="rounded-lg bg-surface-soft/50 px-3.5 py-3">
           <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
             What was found
           </span>
           <p className="mt-1">{card.explanation.found}</p>
         </div>
-        <div>
+        <div className="rounded-lg bg-surface-soft/50 px-3.5 py-3">
           <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
             Why it matters
           </span>
@@ -131,11 +147,12 @@ export function OpportunityCard({
         </div>
       </div>
 
-      {/* Recommended action callout (brief §4) + approval needed */}
-      <div className="relative overflow-hidden rounded-lg border border-blue-200/70 bg-info-soft/30 px-3.5 py-2.5 text-sm">
+      {/* Recommended action callout (brief v3 area 4): card-blue gradient
+          surface + gradient accent rail — the intentional CTA zone. */}
+      <div className="relative overflow-hidden rounded-lg border border-blue-200/70 bg-card-blue px-3.5 py-2.5 text-sm">
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-0.5 bg-accent/70"
+          className="absolute inset-y-0 left-0 w-0.5 bg-gradient-to-b from-accent to-accent/30"
         />
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
           Recommended action
@@ -150,13 +167,14 @@ export function OpportunityCard({
       {/* Footer: data-as-of + CTA + dismiss */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
         <span className="text-xs text-ink-soft">
-          Data as of {fmtDateTime(card.dataAsOf)} · {card.measurementLabelCopy}
+          Recipe v{card.recipeVersion} · Data as of {fmtDateTime(card.dataAsOf)}{" "}
+          · {card.measurementLabelCopy}
         </span>
         <div className="flex items-center gap-2">
           <DismissButton accountId={accountId} opportunityId={card.id} />
           <Link
             href={`/opportunities/${card.id}`}
-            className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:translate-y-px active:shadow-none"
+            className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,translate] duration-150 ease-out hover:bg-primary-hover active:translate-y-px active:shadow-none"
           >
             Review &amp; draft
           </Link>

@@ -42,18 +42,20 @@ const DESTINATION_LABELS: Record<string, string> = {
 
 function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
   const { action, card } = item;
-  // Status rail: awaiting review = amber, activated = emerald, else slate.
+  // Status rail (color + text status badges below — never color-only):
+  // awaiting review = amber gradient, activated = emerald gradient, else slate.
   const rail = pending
-    ? "bg-warning"
+    ? "bg-gradient-to-b from-amber-400 via-warning to-amber-600"
     : action.status === "launched"
-      ? "bg-success"
+      ? "bg-gradient-to-b from-emerald-400 via-success to-emerald-600"
       : "bg-slate-300";
   return (
     <Card
       as="li"
       className={
         "relative flex flex-wrap items-center justify-between gap-3 overflow-hidden py-4 " +
-        "transition-[box-shadow] duration-150 hover:shadow-card-hover" +
+        "transition-[box-shadow] duration-150 ease-out hover:shadow-card-hover " +
+        "hover:ring-1 hover:ring-accent/15" +
         (pending ? "" : " bg-surface-soft/40")
       }
     >
@@ -95,7 +97,7 @@ function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
         href={`/approvals/${action.actionId}?opp=${card.id}`}
         className={
           pending
-            ? "inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:translate-y-px active:shadow-none"
+            ? "inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,translate] duration-150 ease-out hover:bg-primary-hover active:translate-y-px active:shadow-none"
             : "inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary shadow-xs transition-colors duration-150 hover:bg-surface-soft hover:text-ink"
         }
       >

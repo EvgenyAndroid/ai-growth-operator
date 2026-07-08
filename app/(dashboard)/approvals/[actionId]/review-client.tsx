@@ -93,9 +93,26 @@ function ActivationPanel({ result }: { result: ApproveActionResult }) {
       <p className="text-sm font-semibold text-emerald-900">
         Activated (simulated — alpha): {result.activation.levelCopy}
       </p>
-      <ol className="space-y-1">
+      {/* Fallback ladder as a controlled delivery system (brief v3 area 6):
+          connected stepper line + per-step dot; outcome text stays in the
+          badge, so status is never color-only. */}
+      <ol className="space-y-1.5">
         {result.activation.ladder.map((step) => (
-          <li key={step.level} className="flex flex-wrap items-center gap-2 text-sm">
+          <li
+            key={step.level}
+            className="relative flex flex-wrap items-center gap-2 pl-5 text-sm before:absolute before:-bottom-2 before:left-[3px] before:top-[15px] before:w-px before:bg-emerald-300/60 last:before:hidden"
+          >
+            <span
+              aria-hidden="true"
+              className={
+                "absolute left-0 top-[7px] h-2 w-2 rounded-full " +
+                (step.outcome === "succeeded_simulated"
+                  ? "bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]"
+                  : step.outcome === "unavailable"
+                    ? "bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]"
+                    : "bg-slate-300 shadow-[0_0_0_3px_rgb(148_163_184/0.15)]")
+              }
+            />
             <Badge
               tone={
                 step.outcome === "succeeded_simulated"
@@ -258,7 +275,7 @@ export function ReviewActions({
   const blockedByGovernance = result !== null && !result.activated;
 
   return (
-    <Card as="section" variant="hero" className="space-y-4">
+    <Card as="section" variant="hero" glow className="space-y-4">
       <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
         <span
           aria-hidden="true"

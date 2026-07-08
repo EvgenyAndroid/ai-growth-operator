@@ -5,16 +5,19 @@
  * workspace, clearly labeled as such (PRD 20.3). The sign-in form is a
  * disabled stub so the eventual surface is visible without pretending to work.
  *
- * Brief v2 §1 "premium login/landing": refined radial glow, wordmark
- * treatment, hero-tier glass sign-in card (gradient hairline + accent bloom),
- * loop as an elegant pill sequence, trust callout with an accent rail.
+ * Brief v3 area 1 "login = launch-quality product narrative" (supersedes v2
+ * §1): orbit atmosphere (applied by the shell), designed loop pills with
+ * connectors + light dimensionality, a mini Opportunity-Feed preview card so
+ * the left side sells the product, an elevated premium sign-in card, and the
+ * trust callout with an accent rail + soft glow. Copy is byte-identical to
+ * round 1 except the new preview-card copy (additive only).
  */
 
 // Prerendered pages get s-maxage=1y at the edge and Workers deploys do not
 // purge the zone cache — render dynamically so deploys are visible immediately.
 export const dynamic = "force-dynamic";
 
-import { Badge, Card } from "@/components/ui/primitives";
+import { Badge, Card, MeasurementBadge } from "@/components/ui/primitives";
 import { enterDemoWorkspace, resetDemoWorkspace } from "./(onboarding)/actions";
 import { SubmitButton } from "./(onboarding)/submit-button";
 
@@ -92,11 +95,14 @@ export default function LandingPage() {
                     <path d="M3.5 1.5 7 5 3.5 8.5" />
                   </svg>
                 ) : null}
+                {/* Same paddings/text size as round 1 — the six chips must
+                    keep fitting ONE row at desktop (~436px used of ~546px);
+                    dimensionality comes from gradients + hover lift only. */}
                 <span
                   className={
                     i === 0
-                      ? "whitespace-nowrap rounded-full border border-accent/35 bg-accent-soft/70 px-2 py-0.5 text-xs font-semibold text-accent-hover shadow-[0_1px_1px_rgb(15_23_42/0.04)]"
-                      : "whitespace-nowrap rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-ink-secondary shadow-[0_1px_1px_rgb(15_23_42/0.04)]"
+                      ? "whitespace-nowrap rounded-full border border-accent/40 bg-gradient-to-b from-accent-soft/80 to-accent-soft/45 px-2 py-0.5 text-xs font-semibold text-accent-hover shadow-[0_1px_1px_rgb(15_23_42/0.05),0_2px_8px_-2px_var(--color-accent-glow)] transition-[box-shadow,translate,border-color] duration-150 ease-out hover:-translate-y-px hover:border-accent/60 hover:shadow-[0_1px_1px_rgb(15_23_42/0.05),0_4px_12px_-2px_var(--color-accent-glow)]"
+                      : "whitespace-nowrap rounded-full border border-border bg-gradient-to-b from-surface to-surface-soft/70 px-2 py-0.5 text-xs font-medium text-ink-secondary shadow-[0_1px_1px_rgb(15_23_42/0.05)] transition-[box-shadow,translate,border-color] duration-150 ease-out hover:-translate-y-px hover:border-border-strong hover:shadow-[0_2px_6px_rgb(15_23_42/0.08)]"
                   }
                 >
                   {step}
@@ -104,8 +110,36 @@ export default function LandingPage() {
               </li>
             ))}
           </ol>
-          {/* Trust callout — accent rail, quiet gradient tint. */}
-          <div className="relative mt-7 max-w-md overflow-hidden rounded-card border border-accent/25 bg-gradient-to-br from-accent-soft/30 via-surface to-surface p-4 pl-5 shadow-card">
+          {/* Mini Opportunity-Feed preview — the product narrative object:
+              what a verified opportunity looks like once the loop has run.
+              Emerald top rail + glow are the holdout-verified treatment. */}
+          <div className="glow-verified relative mt-7 max-w-md overflow-hidden rounded-card border border-emerald-200/70 bg-surface p-4">
+            <span
+              aria-hidden="true"
+              className="absolute inset-x-0 top-0 h-[2.5px] bg-gradient-to-r from-emerald-500/80 via-emerald-400/45 to-transparent"
+            />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold tracking-[0.14em] text-ink-soft uppercase">
+                Opportunity feed — preview
+              </span>
+              <MeasurementBadge mode="holdout" />
+            </div>
+            <p className="mt-2 text-sm font-semibold tracking-tight text-ink-800">
+              Recover abandoned checkouts
+            </p>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-ink-900 tabular-nums">
+              $2,100–$4,200
+              <span className="ml-1.5 align-baseline text-xs font-medium tracking-normal text-ink-soft">
+                est. / month
+              </span>
+            </p>
+            <p className="mt-1.5 text-xs leading-5 text-ink-muted">
+              Net of what your current flows already catch — measured against a
+              held-out control group after you approve.
+            </p>
+          </div>
+          {/* Trust callout — accent rail, quiet gradient tint, soft glow. */}
+          <div className="relative mt-4 max-w-md overflow-hidden rounded-card border border-accent/25 bg-gradient-to-br from-accent-soft/30 via-surface to-surface p-4 pl-5 shadow-[0_1px_2px_rgb(15_23_42/0.05),0_10px_28px_-10px_var(--color-accent-glow)]">
             <span
               aria-hidden="true"
               className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-accent to-accent/25"
@@ -118,8 +152,9 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Sign-in card — hero tier: gradient hairline border + accent bloom. */}
-        <Card variant="hero" glow className="p-6">
+        {/* Sign-in card — premium tier: blue->emerald gradient border-box +
+            deep soft elevation (.card-premium, brief v3). */}
+        <Card variant="premium" className="p-6">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold tracking-tight text-ink-800">
               Sign in

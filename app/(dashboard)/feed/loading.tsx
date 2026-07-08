@@ -25,14 +25,15 @@ export default function FeedLoading() {
         </div>
       </header>
 
-      {/* Found-money hero placeholder (emerald rail, large value) */}
-      <div className="relative overflow-hidden rounded-card border border-emerald-200/60 bg-surface px-6 py-6 shadow-card">
+      {/* Found-money hero placeholder (gradient surface, emerald rail,
+          executive-scale value) */}
+      <div className="relative overflow-hidden rounded-card border border-emerald-200/60 bg-found-money px-6 py-6 shadow-card">
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-1 bg-emerald-200"
+          className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-emerald-200 to-emerald-300"
         />
         <Skeleton className="h-3 w-40" />
-        <Skeleton className="mt-3 h-11 w-64" />
+        <Skeleton className="mt-3 h-12 w-72" />
         <Skeleton className="mt-3 h-4 w-full max-w-md" />
       </div>
 

@@ -93,10 +93,11 @@ function groupActivations(
 type StepState = "done" | "skipped" | "failed" | "pending";
 
 const STEP_DOT: Record<StepState, string> = {
-  done: "bg-success ring-4 ring-emerald-100",
+  done: "bg-success ring-4 ring-emerald-100 shadow-[0_0_8px_rgb(16_185_129/0.45)]",
   skipped: "border border-border-strong bg-surface ring-4 ring-surface-soft",
-  failed: "bg-danger ring-4 ring-red-100",
-  pending: "bg-warning ring-4 ring-amber-100",
+  failed: "bg-danger ring-4 ring-red-100 shadow-[0_0_8px_rgb(220_38_38/0.35)]",
+  pending:
+    "bg-warning ring-4 ring-amber-100 shadow-[0_0_8px_rgb(217_119_6/0.35)]",
 };
 
 const STEP_LABEL: Record<StepState, string> = {
@@ -104,6 +105,14 @@ const STEP_LABEL: Record<StepState, string> = {
   skipped: "text-ink-soft",
   failed: "text-red-700",
   pending: "text-amber-800",
+};
+
+/** Connecting line out of a step — completed segments read as progress. */
+const STEP_LINE: Record<StepState, string> = {
+  done: "bg-gradient-to-r from-emerald-300/80 via-emerald-200/60 to-border",
+  skipped: "bg-border",
+  failed: "bg-gradient-to-r from-red-300/70 to-border",
+  pending: "bg-gradient-to-r from-amber-300/70 to-border",
 };
 
 function TimelineStep({
@@ -143,7 +152,10 @@ function TimelineStep({
       {!last ? (
         <span
           aria-hidden="true"
-          className="mx-1 mt-2 hidden h-px min-w-4 flex-1 bg-border sm:block"
+          className={cx(
+            "mx-1 mt-2 hidden h-px min-w-4 flex-1 sm:block",
+            STEP_LINE[state]
+          )}
         />
       ) : null}
     </li>
@@ -159,7 +171,7 @@ function ActivationTimeline({ activation }: { activation: ActionActivation }) {
   const pushedState: StepState =
     outcome === "launched" ? "done" : outcome === "failed" ? "failed" : "pending";
   return (
-    <ol className="mt-3 flex flex-col gap-2 rounded-lg border border-border bg-surface-soft/50 px-3 py-2.5 sm:flex-row sm:items-start sm:gap-0">
+    <ol className="mt-3 flex flex-col gap-2 rounded-lg border border-border bg-gradient-to-b from-surface-soft/80 to-surface-soft/30 px-3 py-2.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.7)] sm:flex-row sm:items-start sm:gap-0">
       <TimelineStep state="done" label="Draft prepared" detail="Approved by you" />
       <TimelineStep
         state="done"
@@ -286,7 +298,19 @@ export default async function ActivationPage({
         ) : (
           <ul className="mt-3 space-y-3">
             {activations.map((activation) => (
-              <Card key={activation.actionId} as="li">
+              <Card
+                key={activation.actionId}
+                as="li"
+                interactive
+                className={cx(
+                  "border-l-2",
+                  activation.outcome === "launched"
+                    ? "border-l-success"
+                    : activation.outcome === "failed"
+                      ? "border-l-danger"
+                      : "border-l-warning"
+                )}
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge
                     tone={
@@ -315,7 +339,7 @@ export default async function ActivationPage({
                     "No summary recorded."}
                 </p>
                 {activation.holdout ? (
-                  <p className="mt-2 rounded-md border border-blue-200 bg-info-soft/60 px-3 py-2 text-sm text-blue-900">
+                  <p className="mt-2 rounded-md border border-blue-200 border-l-2 border-l-info bg-info-soft/60 px-3 py-2 text-sm text-blue-900 shadow-[inset_0_1px_6px_rgb(37_99_235/0.06)]">
                     <strong>Holdout assigned:</strong>{" "}
                     {activation.holdout.reasoningSummary ??
                       "Randomized customer-level holdout assigned at launch."}
@@ -390,12 +414,57 @@ export default async function ActivationPage({
             </thead>
             <tbody>
               {LADDER_ROWS.map((row) => (
-                <tr key={row.level} className="border-b border-border align-top last:border-b-0">
-                  <td className="px-3 py-2 font-medium whitespace-nowrap text-ink">
-                    {row.level}
+                <tr
+                  key={row.level}
+                  className={cx(
+                    "border-b border-border align-top transition-colors duration-150 last:border-b-0",
+                    // Controlled-delivery treatment: the launch-reality level
+                    // reads live (emerald rail), the unavailable level reads
+                    // parked, and Meta keeps the directional (violet) hue —
+                    // never as strong as the verified path.
+                    row.status === "Launch reality"
+                      ? "bg-success-soft/30"
+                      : row.status === "Unavailable in Alpha"
+                        ? "bg-surface-soft/40"
+                        : "hover:bg-surface-soft/50"
+                  )}
+                >
+                  <td
+                    className={cx(
+                      "border-l-2 px-3 py-2 whitespace-nowrap",
+                      row.status === "Launch reality"
+                        ? "border-l-success"
+                        : row.level === "Meta"
+                          ? "border-l-violet-200"
+                          : "border-l-transparent"
+                    )}
+                  >
+                    <span
+                      className={cx(
+                        "inline-flex items-center rounded-md border px-1.5 py-0.5 font-mono text-[11px] font-medium",
+                        row.status === "Launch reality"
+                          ? "border-emerald-200 bg-success-soft/70 text-emerald-800"
+                          : "border-border bg-surface text-ink-secondary"
+                      )}
+                    >
+                      {row.level}
+                    </span>
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-ink-secondary">{row.name}</td>
-                  <td className="px-3 py-2 whitespace-nowrap text-ink-secondary">{row.status}</td>
+                  <td className="px-3 py-2 whitespace-nowrap font-medium text-ink">
+                    {row.name}
+                  </td>
+                  <td
+                    className={cx(
+                      "px-3 py-2 whitespace-nowrap",
+                      row.status === "Launch reality"
+                        ? "font-medium text-emerald-700"
+                        : row.status === "Unavailable in Alpha"
+                          ? "text-ink-soft"
+                          : "text-ink-secondary"
+                    )}
+                  >
+                    {row.status}
+                  </td>
                   <td className="px-3 py-2 text-ink-muted">{row.note}</td>
                 </tr>
               ))}

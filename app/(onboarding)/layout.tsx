@@ -40,7 +40,9 @@ export default function OnboardingLayout({
 }) {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b border-border/90 bg-surface/85 px-6 py-3 shadow-[0_4px_16px_-8px_rgb(15_23_42/0.08)] backdrop-blur-md">
+      {/* Glass sticky header (.glass-topbar, brief v3 area 2) — matches the
+          app shell's top bar treatment. The "Exit setup" link stays. */}
+      <header className="glass-topbar sticky top-0 z-10 border-b border-border/90 px-6 py-3 shadow-[0_4px_16px_-8px_rgb(15_23_42/0.08)]">
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
           <Link
             href="/"

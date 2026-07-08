@@ -61,10 +61,11 @@ const PAGE_SIZE = 50;
 /** Event-type filter chips — technical mono labels, audit-console feel. */
 const CHIP_ACTIVE =
   "rounded-full border border-primary bg-primary px-3 py-1 font-mono text-[11px] font-medium text-white " +
-  "shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)]";
+  "shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35),0_0_14px_var(--glow-blue)]";
 const CHIP_IDLE =
   "rounded-full border border-border-strong bg-surface px-3 py-1 font-mono text-[11px] font-medium text-ink-muted " +
-  "shadow-xs transition-colors duration-150 hover:border-slate-300 hover:bg-surface-soft hover:text-ink";
+  "shadow-xs transition-[background-color,border-color,color,translate] duration-150 ease-out " +
+  "hover:-translate-y-px hover:border-slate-300 hover:bg-surface-soft hover:text-ink";
 
 export default async function LedgerPage({
   searchParams,

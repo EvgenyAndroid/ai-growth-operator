@@ -113,15 +113,18 @@ function OperatorTurn({ turn }: { turn: Turn }) {
   }
   if (!turn.response) {
     return (
-      <div className="rounded-card border border-border bg-surface p-4 shadow-card">
+      <div className="rounded-card border border-border border-l-2 border-l-accent/40 bg-surface p-4 shadow-card">
         <OperatorLabel />
-        <p className="mt-2 text-sm text-ink-muted">Thinking…</p>
+        <p className="mt-2 text-sm text-ink-muted motion-safe:animate-pulse">Thinking…</p>
       </div>
     );
   }
   const response = turn.response;
   return (
-    <div className="rounded-card border border-border bg-surface p-4 shadow-card">
+    // Premium but secondary (brief v3 area 10): a quiet accent rail marks the
+    // Operator's voice; the card itself stays calm and never louder than feed
+    // cards.
+    <div className="rounded-card border border-border border-l-2 border-l-accent/40 bg-surface p-4 shadow-card">
       <OperatorLabel />
       <p className="mt-2 text-sm whitespace-pre-wrap text-ink">{response.message}</p>
 
@@ -158,9 +161,16 @@ function OperatorTurn({ turn }: { turn: Turn }) {
         </p>
       ) : null}
 
-      <p className="mt-3 text-xs text-ink-soft">
-        intent: {response.intent} · logged to Context Ledger{" "}
-        <span className="font-mono">{response.ledgerId.slice(0, 10)}…</span>
+      {/* Ledger-reference stamp — every turn traces back to the proof rail. */}
+      <p className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-dotted border-border pt-2 text-xs text-ink-soft">
+        <span
+          aria-hidden="true"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-info shadow-[0_0_6px_rgb(37_99_235/0.4)]"
+        />
+        <span>
+          intent: {response.intent} · logged to Context Ledger{" "}
+          <span className="font-mono">{response.ledgerId.slice(0, 10)}…</span>
+        </span>
       </p>
     </div>
   );
@@ -210,7 +220,7 @@ export function ChatPanel({ accountId }: { accountId: string }) {
               type="button"
               disabled={isPending}
               onClick={() => send(question)}
-              className="rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-secondary shadow-xs transition-[background-color,border-color,color] duration-150 hover:border-accent/40 hover:bg-accent-soft/40 hover:text-ink active:bg-accent-soft/60 disabled:pointer-events-none disabled:opacity-50"
+              className="rounded-full border border-border-strong bg-surface px-3 py-1 text-xs font-medium text-ink-secondary shadow-xs transition-[background-color,border-color,color,translate,box-shadow] duration-150 ease-out hover:-translate-y-px hover:border-accent/40 hover:bg-accent-soft/40 hover:text-ink hover:shadow-[0_2px_8px_rgb(37_99_235/0.12)] active:translate-y-0 active:bg-accent-soft/60 disabled:pointer-events-none disabled:opacity-50"
             >
               {question}
             </button>
@@ -226,6 +236,13 @@ export function ChatPanel({ accountId }: { accountId: string }) {
       <section className="space-y-4">
         {turns.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border-strong bg-surface-soft/60 px-6 py-10 text-center">
+            {/* CSS-only empty-state mark: the Operator dot, haloed. */}
+            <span
+              aria-hidden="true"
+              className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full border border-blue-200/70 bg-surface shadow-[0_0_18px_var(--glow-blue)]"
+            >
+              <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_0_3px_rgb(37_99_235/0.15)]" />
+            </span>
             <h3 className="text-base font-semibold text-ink">
               Ask the Operator
             </h3>
@@ -267,7 +284,7 @@ export function ChatPanel({ accountId }: { accountId: string }) {
         <button
           type="submit"
           disabled={isPending || input.trim().length === 0}
-          className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary-hover active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          className="inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] transition-[background-color,box-shadow,translate] duration-150 ease-out hover:bg-primary-hover active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
         >
           {isPending ? "Sending…" : "Send"}
         </button>

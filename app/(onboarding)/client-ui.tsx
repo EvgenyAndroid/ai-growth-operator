@@ -56,7 +56,7 @@ export function ClientButton({
     <button
       className={cx(
         "inline-flex items-center justify-center gap-2 rounded-md font-medium select-none",
-        "transition-[background-color,border-color,box-shadow,transform] duration-150",
+        "transition-[background-color,border-color,box-shadow,translate] duration-150 ease-out",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
         "disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm",

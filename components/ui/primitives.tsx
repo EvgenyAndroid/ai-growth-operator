@@ -1,8 +1,8 @@
 /**
  * components/ui/primitives.tsx — shared UI primitives for all slices.
  *
- * Token-driven premium style (docs/design-brief-v2.md — supersedes
- * design-brief.md). No external UI libraries. These components take no
+ * Token-driven premium style (docs/design-brief-v3.md, superseding v2 where
+ * they conflict). No external UI libraries. These components take no
  * function props by default, so they render in both Server and Client
  * Components; interactive Button usage belongs inside client components.
  *
@@ -27,22 +27,25 @@ function cx(...parts: Array<string | false | null | undefined>): string {
 }
 
 // ---------------------------------------------------------------------------
-// Card — elevation variants (brief v2 §Tokens + §4)
+// Card — elevation variants (brief v2 §Tokens + §4; premium tier per v3)
 //
-//   flat   — bordered surface, no shadow (dense lists, nested panels)
-//   raised — default; resting card with the layered card shadow
-//   glass  — translucent surface + blur, for chrome-adjacent panels
-//   hero   — gradient hairline border + md elevation; `glow` adds the
-//            accent bloom (found-money card, sign-in card)
+//   flat    — bordered surface, no shadow (dense lists, nested panels)
+//   raised  — default; resting card with the layered card shadow
+//   glass   — translucent surface + blur, for chrome-adjacent panels
+//   hero    — gradient hairline border + md elevation; `glow` adds the
+//             accent bloom (found-money card, sign-in card)
+//   premium — brief v3 .card-premium: blue->emerald gradient border-box +
+//             deep soft elevation; reserve for the screenshot-hero objects
 // ---------------------------------------------------------------------------
 
-type CardVariant = "flat" | "raised" | "glass" | "hero";
+type CardVariant = "flat" | "raised" | "glass" | "hero" | "premium";
 
 const CARD_VARIANT_CLASSES: Record<CardVariant, string> = {
   flat: "border border-border bg-surface",
   raised: "border border-border bg-surface",
   glass: "border border-white/60 bg-surface-glass backdrop-blur-md",
   hero: "gradient-border bg-surface",
+  premium: "card-premium",
 };
 
 /** Resting shadow per variant when no glow is requested. */
@@ -51,6 +54,7 @@ const CARD_SHADOW_CLASSES: Record<CardVariant, string | null> = {
   raised: "shadow-card",
   glass: "shadow-card",
   hero: "shadow-md",
+  premium: null, // elevation is baked into .card-premium
 };
 
 export function Card({
@@ -76,9 +80,14 @@ export function Card({
       className={cx(
         "rounded-card p-5",
         CARD_VARIANT_CLASSES[variant],
-        glow ? "shadow-glow" : CARD_SHADOW_CLASSES[variant],
+        glow
+          ? variant === "premium"
+            ? "glow-verified"
+            : "shadow-glow"
+          : CARD_SHADOW_CLASSES[variant],
         interactive &&
-          "transition-shadow duration-150 hover:shadow-card-hover",
+          "transition-[box-shadow,translate] duration-150 ease-out " +
+            "hover:-translate-y-0.5 hover:shadow-card-hover",
         className
       )}
     >
@@ -99,14 +108,28 @@ type BadgeTone =
   | "danger"
   | "directional";
 
+/**
+ * Per-tone chrome incl. shadow treatment (brief v3 area 5): emerald "proven"
+ * pills carry an inner glow, amber carries a caution ring, directional stays
+ * washed/flat so it never reads as strong as verified.
+ */
 const TONE_CLASSES: Record<BadgeTone, string> = {
-  neutral: "border-slate-200 bg-neutral-soft text-slate-600",
-  positive: "border-emerald-300/70 bg-success-soft text-emerald-800",
-  caution: "border-amber-300/70 bg-warning-soft text-amber-800",
-  info: "border-blue-200 bg-info-soft text-blue-800",
-  danger: "border-red-200 bg-danger-soft text-red-800",
+  neutral:
+    "border-slate-200 bg-neutral-soft text-slate-600 " +
+    "shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
+  positive:
+    "border-emerald-300/70 bg-success-soft text-emerald-800 pill-holdout",
+  caution: "border-amber-300/70 bg-warning-soft text-amber-800 pill-caution",
+  info:
+    "border-blue-200 bg-info-soft text-blue-800 " +
+    "shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
+  danger:
+    "border-red-200 bg-danger-soft text-red-800 " +
+    "shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
   // Deliberately quieter than "positive": violet/slate, washed border, no dot.
-  directional: "border-violet-200/60 bg-directional-soft/70 text-violet-700",
+  directional:
+    "border-violet-200/60 bg-directional-soft/70 text-violet-700 " +
+    "pill-directional",
 };
 
 export function Badge({
@@ -126,7 +149,7 @@ export function Badge({
       className={cx(
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5",
         "text-xs font-medium leading-5 whitespace-nowrap",
-        "shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
+        "transition-[box-shadow,background-color] duration-150 ease-out",
         TONE_CLASSES[tone],
         className
       )}
@@ -231,24 +254,29 @@ export function ActivationBadge({
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const BUTTON_CLASSES: Record<ButtonVariant, string> = {
-  // Deep console navy with a hairline top sheen; presses flat.
+  // Deep console navy with a hairline top sheen; presses in (tactile:
+  // sinks a hair, sheen flips to an inner shade — brief v3 area 5).
   primary:
     "border border-transparent bg-primary text-white " +
     "shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_1px_2px_rgb(2_6_23/0.35)] " +
-    "hover:bg-primary-hover " +
-    "active:bg-primary-hover active:shadow-none active:translate-y-px",
+    "hover:bg-primary-hover hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.07),0_2px_6px_rgb(2_6_23/0.4)] " +
+    "active:bg-primary-hover active:translate-y-px active:scale-[0.99] " +
+    "active:shadow-[inset_0_2px_4px_rgb(2_6_23/0.45)]",
   secondary:
     "border border-border-strong bg-surface text-ink shadow-xs " +
     "hover:bg-surface-soft hover:border-slate-300 " +
-    "active:bg-primary-soft active:shadow-none active:translate-y-px",
+    "active:bg-primary-soft active:translate-y-px active:scale-[0.99] " +
+    "active:shadow-[inset_0_1px_3px_rgb(15_23_42/0.12)]",
   // Tertiary: quiet text action.
   ghost:
     "border border-transparent bg-transparent text-ink-secondary " +
-    "hover:bg-neutral-soft hover:text-ink active:bg-primary-soft",
+    "hover:bg-neutral-soft hover:text-ink " +
+    "active:bg-primary-soft active:scale-[0.99]",
   danger:
     "border border-red-200 bg-surface text-red-700 shadow-xs " +
     "hover:bg-red-50 hover:border-red-300 " +
-    "active:bg-danger-soft active:shadow-none active:translate-y-px",
+    "active:bg-danger-soft active:translate-y-px active:scale-[0.99] " +
+    "active:shadow-[inset_0_1px_3px_rgb(153_27_27/0.15)]",
 };
 
 export function Button({
@@ -264,7 +292,7 @@ export function Button({
     <button
       className={cx(
         "inline-flex items-center justify-center gap-2 rounded-md font-medium select-none",
-        "transition-[background-color,border-color,box-shadow,transform] duration-150",
+        "transition-[background-color,border-color,box-shadow,translate,scale] duration-150 ease-out",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
         "disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm",
@@ -387,18 +415,15 @@ export function EmptyState({
 }
 
 // ---------------------------------------------------------------------------
-// Skeleton — loading placeholder (pulse is guarded by motion-safe)
+// Skeleton — loading placeholder (shimmer; killed by the global
+// reduced-motion switch in globals.css)
 // ---------------------------------------------------------------------------
 
 export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cx(
-        "rounded-md bg-gradient-to-r from-slate-200/70 via-slate-100 to-slate-200/70",
-        "motion-safe:animate-pulse",
-        className
-      )}
+      className={cx("skeleton-shimmer rounded-md", className)}
     />
   );
 }

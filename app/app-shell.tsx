@@ -5,10 +5,11 @@
  * (workspace name + connector pills), plus the left nav for the product
  * surface (Feed / Chat / Approvals / Performance / Ledger / Settings).
  *
- * Brief v2 §3 "premium operator console": semi-dark cockpit sidebar (deep
- * #0B1220 = --color-primary) against light content, product mark, demo badge,
- * strong active states; elevated glassy top bar with refined connection
- * pills; faint radial accent glow on the app background. Under 768px the
+ * Brief v3 area 2 "app shell = real console" (supersedes v2 §3): dark-panel
+ * gradient cockpit sidebar with a faint blue bloom texture, gradient icon
+ * tile mark, demo badge, active-nav glow rail; glass sticky top bar with
+ * refined connection pills; the orbit gradient on the app background
+ * (selective, subtle). Under 768px the
  * left nav collapses into a hamburger menu in the top bar. Onboarding routes
  * render without the nav so the first-run flow stays a focused, linear track
  * (PRD 6.1, 7.1 screens 1-6).
@@ -70,7 +71,7 @@ function DemoBanner() {
   );
 }
 
-/** Dependency-free product mark: growth spark on a deep-blue tile. */
+/** Dependency-free product mark: growth spark on a gradient icon tile. */
 function ProductMark({ size = "md" }: { size?: "sm" | "md" }) {
   return (
     <span
@@ -78,8 +79,9 @@ function ProductMark({ size = "md" }: { size?: "sm" | "md" }) {
       className={cx(
         "flex shrink-0 items-center justify-center",
         size === "sm" ? "h-6 w-6 rounded-md" : "h-8 w-8 rounded-lg",
-        "bg-gradient-to-br from-[#3b82f6] to-[#1e40af]",
-        "shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_rgb(2_6_23/0.45)]",
+        "bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#1e40af]",
+        "ring-1 ring-white/20",
+        "shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_rgb(2_6_23/0.45),0_4px_14px_-2px_var(--glow-blue)]",
       )}
     >
       <svg
@@ -113,9 +115,10 @@ function ConnectionPill({
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5",
         "text-[11px] font-medium leading-5 whitespace-nowrap",
         "shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
+        "transition-[background-color,border-color,box-shadow] duration-150 ease-out",
         connected
-          ? "border-border bg-surface text-ink-secondary"
-          : "border-blue-200/80 border-dashed bg-surface text-ink-muted",
+          ? "border-border bg-surface text-ink-secondary hover:border-emerald-300/70 hover:shadow-[0_1px_1px_rgb(15_23_42/0.04),0_2px_10px_-2px_var(--glow-emerald)]"
+          : "border-blue-200/80 border-dashed bg-blue-50/40 text-ink-muted hover:border-blue-300 hover:bg-blue-50/70",
       )}
     >
       <span
@@ -123,7 +126,7 @@ function ConnectionPill({
         className={cx(
           "h-1.5 w-1.5 shrink-0 rounded-full",
           connected
-            ? "bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]"
+            ? "connector-dot-live bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]"
             : "bg-info shadow-[0_0_0_3px_rgb(37_99_235/0.14)]",
         )}
       />
@@ -156,13 +159,15 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       onClick={onNavigate}
       className={cx(
-        "rounded-md px-3 py-1.5 text-sm transition-colors duration-150",
+        "rounded-md px-3 py-1.5 text-sm transition-[color,background-color,box-shadow] duration-150 ease-out",
         dark
           ? active
-            ? "bg-white/[0.09] font-semibold text-white shadow-[inset_2px_0_0_var(--color-accent)]"
+            ? // Active-nav glow rail: accent rail + a soft blue bloom behind
+              // the row (brief v3 area 2).
+              "bg-white/[0.09] font-semibold text-white shadow-[inset_2px_0_0_var(--color-accent),inset_12px_0_22px_-14px_var(--glow-blue),0_0_18px_-6px_var(--glow-blue)]"
             : "font-medium text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"
           : active
-            ? "bg-neutral-soft font-semibold text-ink shadow-[inset_2px_0_0_var(--color-accent)]"
+            ? "bg-neutral-soft font-semibold text-ink shadow-[inset_2px_0_0_var(--color-accent),inset_12px_0_22px_-14px_var(--glow-blue)]"
             : "font-medium text-ink-muted hover:bg-surface-soft hover:text-ink",
       )}
     >
@@ -179,7 +184,7 @@ function TopBar({
   onToggleMenu: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-10 flex h-12 items-center justify-between gap-3 border-b border-border/90 bg-surface/85 px-4 shadow-[0_4px_16px_-8px_rgb(15_23_42/0.08)] backdrop-blur-md md:px-6">
+    <header className="glass-topbar sticky top-0 z-10 flex h-12 items-center justify-between gap-3 border-b border-border/90 px-4 shadow-[0_4px_16px_-8px_rgb(15_23_42/0.08)] md:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
@@ -250,7 +255,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isOnboardingPath(pathname)) {
     return (
-      <div className="bg-app-glow flex min-h-full flex-1 flex-col">
+      <div className="bg-orbit flex min-h-full flex-1 flex-col">
         <DemoBanner />
         <div className="flex flex-1 flex-col">{children}</div>
       </div>
@@ -261,8 +266,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full flex-1 flex-col bg-canvas">
       <DemoBanner />
       <div className="flex flex-1">
-        {/* Cockpit sidebar — deep navy against the light working canvas. */}
-        <aside className="hidden w-60 shrink-0 flex-col border-r border-white/10 bg-primary md:flex">
+        {/* Cockpit sidebar — dark-panel gradient with a faint blue bloom. */}
+        <aside className="bg-dark-panel hidden w-60 shrink-0 flex-col border-r border-white/10 md:flex">
           <div className="px-4 pt-5 pb-4">
             <Link href="/feed" className="flex items-center gap-2.5 rounded-md">
               <ProductMark />
@@ -301,7 +306,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             say so.
           </div>
         </aside>
-        <div className="bg-app-glow flex min-w-0 flex-1 flex-col">
+        <div className="bg-orbit flex min-w-0 flex-1 flex-col">
           <TopBar
             menuOpen={menuOpen}
             onToggleMenu={() => setMenuOpen((open) => !open)}

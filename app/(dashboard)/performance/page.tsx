@@ -14,6 +14,7 @@ import type { ContractReadType, MeasurementReadout } from "@/lib/contracts";
 import { Card, SectionHeading } from "@/components/ui/primitives";
 import { LedgerTable, PageShell } from "./shared-ui";
 import {
+  AudienceSplitRow,
   CaveatList,
   ConfBadge,
   ContaminationNotice,
@@ -54,7 +55,24 @@ function launchedActions(entries: LedgerEntryView[]): LedgerEntryView[] {
 // The seven questions (PRD 7.5)
 // ---------------------------------------------------------------------------
 
-function QA({ question, children }: { question: string; children: React.ReactNode }) {
+function QA({
+  question,
+  children,
+  highlight = false,
+}: {
+  question: string;
+  children: React.ReactNode;
+  /** Next-action treatment (brief v3 area 7): accent callout, not a list row. */
+  highlight?: boolean;
+}) {
+  if (highlight) {
+    return (
+      <div className="mt-3 rounded-lg border border-blue-200/70 border-l-2 border-l-accent bg-info-soft/40 px-3.5 py-3 shadow-[inset_0_1px_8px_rgb(37_99_235/0.05)]">
+        <h3 className="text-sm font-semibold text-ink">{question}</h3>
+        <div className="mt-1 text-sm text-ink-secondary">{children}</div>
+      </div>
+    );
+  }
   return (
     <div className="border-b border-dotted border-border py-3 last:border-b-0">
       <h3 className="text-sm font-semibold text-ink">{question}</h3>
@@ -232,10 +250,16 @@ export default async function PerformancePage({
         <Card
           as="section"
           variant="flat"
-          className={[
-            READOUT_ACCENT[view.readout.mode],
-            view.readout.mode !== "holdout" ? "shadow-card" : "",
-          ].join(" ")}
+          // Authority hierarchy at card level (brief v3 area 7): the live
+          // holdout-verified read carries the emerald rail + verified glow
+          // (composed directly so the utility-layer shadow in READOUT_ACCENT
+          // cannot override .glow-verified); the other two modes rest on the
+          // plain card shadow and never look as strong.
+          className={
+            view.readout.mode === "holdout"
+              ? "border-t-2 border-t-success glow-verified"
+              : `${READOUT_ACCENT[view.readout.mode]} shadow-card`
+          }
         >
           {/* ONE measurement label, prominent (PRD 7.5) */}
           <div className="flex flex-wrap items-center gap-2">
@@ -276,6 +300,14 @@ export default async function PerformancePage({
             </ul>
           </div>
 
+          {/* Hero metric row — eligible / holdout / exposed (holdout mode only) */}
+          {view.readout.mode === "holdout" ? (
+            <AudienceSplitRow
+              metrics={view.readout.metrics}
+              className="mt-4 max-w-xl"
+            />
+          ) : null}
+
           {view.readout.mode === "directional" ? (
             <MetaDirectionalDisclaimer className="mt-4" />
           ) : null}
@@ -291,7 +323,7 @@ export default async function PerformancePage({
             <QA question="What is the confidence level?">
               <ConfBadge level={view.readout.confidence} />
             </QA>
-            <QA question="What should we do next?">
+            <QA question="What should we do next?" highlight>
               {nextStep(view.readout, usedWindow?.inProgress ?? false)}
             </QA>
           </div>
