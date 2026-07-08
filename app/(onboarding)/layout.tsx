@@ -57,6 +57,12 @@ export default function OnboardingLayout({
             </span>
           </Link>
           <OnboardingStepper />
+          <Link
+            href="/"
+            className="shrink-0 whitespace-nowrap text-xs font-medium text-ink-soft transition-colors duration-150 hover:text-ink-secondary"
+          >
+            Exit setup
+          </Link>
         </div>
       </header>
       <main className="flex-1 px-6 py-10">

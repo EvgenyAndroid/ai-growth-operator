@@ -38,7 +38,7 @@ export function OnboardingStepper() {
   const activeIndex = STEPS.findIndex((step) => step.match(pathname));
 
   return (
-    <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1.5">
       {STEPS.map((step, index) => {
         const state =
           activeIndex === -1
@@ -49,14 +49,14 @@ export function OnboardingStepper() {
                 ? "active"
                 : "upcoming";
         return (
-          <li key={step.label} className="flex items-center gap-2">
+          <li key={step.label} className="flex items-center gap-1.5">
             {index > 0 ? (
               <span
                 aria-hidden
                 className={
                   state === "done" || state === "active"
-                    ? "h-px w-4 bg-gradient-to-r from-border-strong to-accent/40"
-                    : "h-px w-4 bg-border"
+                    ? "hidden h-px w-3 bg-gradient-to-r lg:block from-border-strong to-accent/40"
+                    : "hidden h-px w-3 bg-border lg:block"
                 }
               />
             ) : null}
@@ -64,10 +64,10 @@ export function OnboardingStepper() {
               aria-current={state === "active" ? "step" : undefined}
               className={
                 state === "active"
-                  ? "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_1px_2px_rgb(2_6_23/0.35),0_0_0_3px_var(--color-accent-glow)]"
+                  ? "inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_1px_2px_rgb(2_6_23/0.35),0_0_0_3px_var(--color-accent-glow)]"
                   : state === "done"
-                    ? "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-200/70 bg-success-soft/60 px-2.5 py-0.5 text-xs font-medium text-emerald-800"
-                    : "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-surface/70 px-2.5 py-0.5 text-xs font-medium text-ink-soft"
+                    ? "inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-emerald-200/70 bg-success-soft/60 px-2 py-0.5 text-xs font-medium text-emerald-800"
+                    : "inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-border bg-surface/70 px-2 py-0.5 text-xs font-medium text-ink-soft"
               }
             >
               {state === "done" ? <CheckIcon /> : null}
