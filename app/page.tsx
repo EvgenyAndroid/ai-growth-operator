@@ -31,20 +31,20 @@ export default function LandingPage() {
             your Shopify and Klaviyo data, drafts the action, waits for your
             approval, then measures what actually happened.
           </p>
-          <ol className="mt-6 flex flex-wrap items-center gap-x-1.5 gap-y-2">
+          <ol className="mt-6 flex flex-wrap items-center gap-x-1 gap-y-2">
             {["Find money", "Draft", "Approve", "Activate", "Measure", "Learn"].map(
               (step, i) => (
-                <li key={step} className="flex items-center gap-1.5">
+                <li key={step} className="flex items-center gap-1">
                   {i > 0 ? (
-                    <span aria-hidden className="text-xs text-ink-soft">
+                    <span aria-hidden className="text-[11px] text-ink-soft">
                       &rarr;
                     </span>
                   ) : null}
                   <span
                     className={
                       i === 0
-                        ? "rounded-full border border-blue-200 bg-info-soft px-2.5 py-0.5 text-xs font-semibold text-blue-800"
-                        : "rounded-full border border-border bg-surface px-2.5 py-0.5 text-xs font-medium text-ink-secondary shadow-card"
+                        ? "whitespace-nowrap rounded-full border border-blue-200 bg-info-soft px-2 py-0.5 text-xs font-semibold text-blue-800"
+                        : "whitespace-nowrap rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-ink-secondary shadow-card"
                     }
                   >
                     {step}
