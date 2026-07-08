@@ -10,6 +10,10 @@
  * loop as an elegant pill sequence, trust callout with an accent rail.
  */
 
+// Prerendered pages get s-maxage=1y at the edge and Workers deploys do not
+// purge the zone cache — render dynamically so deploys are visible immediately.
+export const dynamic = "force-dynamic";
+
 import { Badge, Card } from "@/components/ui/primitives";
 import { enterDemoWorkspace, resetDemoWorkspace } from "./(onboarding)/actions";
 import { SubmitButton } from "./(onboarding)/submit-button";

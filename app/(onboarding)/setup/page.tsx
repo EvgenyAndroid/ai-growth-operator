@@ -12,6 +12,10 @@
  * kept in localStorage for continuity only.
  */
 
+// Prerendered pages get s-maxage=1y at the edge and Workers deploys do not
+// purge the zone cache — render dynamically so deploys are visible immediately.
+export const dynamic = "force-dynamic";
+
 import * as React from "react";
 import { selectBusinessTypeAction } from "../actions";
 import {
