@@ -11,13 +11,27 @@
  * the left side sells the product, an elevated premium sign-in card, and the
  * trust callout with an accent rail + soft glow. Copy is byte-identical to
  * round 1 except the new preview-card copy (additive only).
+ *
+ * Brief v4 LOGIN area "SaaS launch screen": the preview card becomes a
+ * floating mini console — money-hero surface, holdout pill, an
+ * approval-pending status row, and a tiny Found→Drafted→Approved→Measured
+ * proof rail — with connector/status chips floating on its edges over the
+ * cockpit mesh (applied by the shell). Communicates the loop in 5 seconds:
+ * finds money, drafts, waits for approval, measures honestly. The sign-in
+ * card stays elegant and does not grow. All presentational; no logic.
  */
 
 // Prerendered pages get s-maxage=1y at the edge and Workers deploys do not
 // purge the zone cache — render dynamically so deploys are visible immediately.
 export const dynamic = "force-dynamic";
 
-import { Badge, Card, MeasurementBadge } from "@/components/ui/primitives";
+import {
+  Badge,
+  Card,
+  MeasurementBadge,
+  ProofRail,
+  StatusDot,
+} from "@/components/ui/primitives";
 import { enterDemoWorkspace, resetDemoWorkspace } from "./(onboarding)/actions";
 import { SubmitButton } from "./(onboarding)/submit-button";
 
@@ -110,36 +124,73 @@ export default function LandingPage() {
               </li>
             ))}
           </ol>
-          {/* Mini Opportunity-Feed preview — the product narrative object:
-              what a verified opportunity looks like once the loop has run.
-              Emerald top rail + glow are the holdout-verified treatment. */}
-          <div className="glow-verified relative mt-7 max-w-md overflow-hidden rounded-card border border-emerald-200/70 bg-surface p-4">
-            <span
+          {/* Floating mini console (brief v4) — the launch-screen product
+              object: found-money preview on the money-hero surface, holdout
+              pill, approval-pending status, and a tiny proof rail, with
+              connector chips floating on the card's edges. */}
+          <div className="relative mt-8 max-w-md">
+            {/* Emerald proof bloom behind the console so it reads floating. */}
+            <div
               aria-hidden="true"
-              className="absolute inset-x-0 top-0 h-[2.5px] bg-gradient-to-r from-emerald-500/80 via-emerald-400/45 to-transparent"
+              className="pointer-events-none absolute -inset-6 -z-10 rounded-[28px] bg-[radial-gradient(60%_62%_at_50%_46%,var(--glow-money),transparent_76%)] opacity-70"
             />
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[10px] font-semibold tracking-[0.14em] text-ink-soft uppercase">
-                Opportunity feed — preview
-              </span>
-              <MeasurementBadge mode="holdout" />
+            <div className="money-hero card-shine relative overflow-hidden rounded-card border border-emerald-200/70 p-4">
+              <span
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 h-[2.5px] bg-gradient-to-r from-emerald-500/80 via-emerald-400/45 to-transparent"
+              />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[10px] font-semibold tracking-[0.14em] text-ink-soft uppercase">
+                  Opportunity feed — preview
+                </span>
+                <MeasurementBadge mode="holdout" />
+              </div>
+              <p className="mt-2 text-sm font-semibold tracking-tight text-ink-800">
+                Recover abandoned checkouts
+              </p>
+              <p className="mt-1 text-[1.75rem] leading-8 font-bold tracking-tight text-ink-900 tabular-nums">
+                $2,100–$4,200
+                <span className="ml-1.5 align-baseline text-xs font-medium tracking-normal text-ink-soft">
+                  est. / month
+                </span>
+              </p>
+              <p className="mt-1.5 text-xs leading-5 text-ink-muted">
+                Net of what your current flows already catch — measured against
+                a held-out control group after you approve.
+              </p>
+              {/* Approval-pending status — the safety promise made visible. */}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg border border-amber-200/70 bg-warning-soft/50 px-2.5 py-1.5">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-900">
+                  <StatusDot tone="warning" />
+                  Draft ready — waiting on your approval
+                </span>
+                <span className="text-[10px] font-medium text-amber-800/80">
+                  Nothing sends without it
+                </span>
+              </div>
+              {/* Tiny proof rail: Found + Drafted reached, approval next. */}
+              <div className="mt-3 border-t border-emerald-900/10 pt-2.5">
+                <ProofRail active={1} />
+              </div>
             </div>
-            <p className="mt-2 text-sm font-semibold tracking-tight text-ink-800">
-              Recover abandoned checkouts
-            </p>
-            <p className="mt-1 text-2xl font-bold tracking-tight text-ink-900 tabular-nums">
-              $2,100–$4,200
-              <span className="ml-1.5 align-baseline text-xs font-medium tracking-normal text-ink-soft">
-                est. / month
-              </span>
-            </p>
-            <p className="mt-1.5 text-xs leading-5 text-ink-muted">
-              Net of what your current flows already catch — measured against a
-              held-out control group after you approve.
-            </p>
+            {/* Connector/status chips floating on the console's edges.
+                Vertical overhang only — no horizontal overflow. Meta stays
+                visibly softer and is never part of the found-money story. */}
+            <span className="absolute -top-2.5 left-5 z-10 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-200/80 bg-surface px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800 shadow-[0_2px_10px_rgb(15_23_42/0.10)]">
+              <StatusDot tone="money" pulse />
+              Shopify — synced
+            </span>
+            <span className="absolute -top-2.5 right-5 z-10 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-200/80 bg-surface px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800 shadow-[0_2px_10px_rgb(15_23_42/0.10)]">
+              <StatusDot tone="money" />
+              Klaviyo — synced
+            </span>
+            <span className="absolute right-6 -bottom-2.5 z-10 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-violet-200/60 bg-surface px-2.5 py-0.5 text-[10px] font-medium text-violet-900/70 shadow-[0_2px_10px_rgb(15_23_42/0.08)]">
+              <StatusDot tone="directional" />
+              Meta — directional only
+            </span>
           </div>
           {/* Trust callout — accent rail, quiet gradient tint, soft glow. */}
-          <div className="relative mt-4 max-w-md overflow-hidden rounded-card border border-accent/25 bg-gradient-to-br from-accent-soft/30 via-surface to-surface p-4 pl-5 shadow-[0_1px_2px_rgb(15_23_42/0.05),0_10px_28px_-10px_var(--color-accent-glow)]">
+          <div className="relative mt-6 max-w-md overflow-hidden rounded-card border border-accent/25 bg-gradient-to-br from-accent-soft/30 via-surface to-surface p-4 pl-5 shadow-[0_1px_2px_rgb(15_23_42/0.05),0_10px_28px_-10px_var(--color-accent-glow)]">
             <span
               aria-hidden="true"
               className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-accent to-accent/25"

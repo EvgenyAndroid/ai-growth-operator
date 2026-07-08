@@ -1,0 +1,38 @@
+# Hardening Brief — quality, security, production-readiness pass (Evgeny, July 2026)
+Source: author's own code review of the repo. NO UI redesign in this pass. No changes to product logic, recipe/measurement semantics, approval gates, demo-mode meaning, PRD behavior. No heavy deps unless strongly justified. Demo experience must not break. Simulated actions stay simulated.
+
+## Findings to address
+1. No real auth/account boundary; server actions trust client-supplied accountId.
+2. Client components import server actions via broad @/lib/server barrels.
+3. zod installed but unused — no server-action input validation.
+4. components/ui/primitives.tsx imports lib/contracts (tied to generated Prisma types) — client/server bundle leakage risk.
+5. Generated Prisma clients gitignored + not guaranteed at build — add prisma generate to build lifecycle (prebuild/predev; BOTH clients: lib/generated/prisma + prisma-workerd; only if compatible with Prisma 7 + Cloudflare setup).
+6. No security headers.
+7. Demo reset/public mutating actions unguarded; no rate limiting.
+8. No focused tests (recipes, governance, measurement, export privacy, account isolation).
+9. Large files (lib/server/actions.ts, contracts, primitives, readout-card, review-client, activation page) — split ONLY where it improves safety/testability; no refactor for its own sake.
+10. No CI quality gate.
+11. Export privacy good in spirit — needs tests + guards.
+12. Migration posture implicit.
+
+## Non-negotiable invariants
+Meta directional only (never lift/incrementality/recovered-revenue/causal-ROAS/holdout language; never in found-money). Holdout-verified only for eligible owned-channel flows with enforceable exclusion. Draft ≠ activation. Nothing sends/syncs/spends without explicit approval. Governance runtime = chokepoint. Explanation contract on every recommendation. constitution_version on every action log. Demo clearly labeled. No LLM calls. No raw PII export.
+
+## Phases
+P1 BASELINE: npm install, db:generate, db:push, seed, lint, build, smoke — fix root causes; add prebuild/predev prisma generate (both clients) if compatible.
+P2 SERVER/CLIENT BOUNDARY: client components import server actions ONLY from "use server" modules directly (or dedicated app/actions|lib/actions files) — never broad @/lib/server barrels. Add `import "server-only"` to lib/db.ts, non-action server helpers, DB-touching recipe loaders, governance/measurement/ledger-write/export server modules. NOT on pure client-safe constants.
+P3 CONTRACTS SPLIT: lib/contracts/public.ts (labels, confidence, activation, recipe IDs, enum constants, UI-safe types — zero Prisma imports, client-safe) / lib/contracts/models.ts (Prisma re-exports, server-only) / index.ts re-exporting public safely. primitives.tsx + all client components → public only. Acceptance: no client component imports Prisma-generated modules or lib/db (directly or transitively); build passes. Try to obsolete app/(onboarding)/client-ui.tsx duplication; if kept, document why.
+P4 ACCOUNT BOUNDARY (auth-ready, no real auth): central resolver — getCurrentAccountContext / requireCurrentAccount / requireDemoAccount / assertAccountAccess(accountId). Actions never blindly trust client accountId: resolve from demo mode + vertical cookie + server resolver; where accountId still accepted, validate exists + demoMode=true + matches vertical context. One clear prod seam (user/org/role/membership TODO). Guard: draftAction, approveAction, rejectAction, recordDraftEdit, dismissOpportunity, exportState, saveOperatingRules, resyncConnection, operatorChat, getActionAudit, getOpportunityAudit, getPerformance, listOpportunities. Acceptance: forged accountId cannot mutate another account; demo works.
+P5 ZOD VALIDATION: lib/server/validation.ts — schemas for accountId/opportunityId/actionId/draftId/approver/rejection+dismissal reasons/operating-rules values/source enum/export type+format/chat input/claim overrides/metaIdentifierRightsConfirmed/draft edits. Rules: bounded ID lengths, trimmed text with max lengths, finite bounded numbers, validated enums, capped arrays, unknown fields stripped/rejected, safeParse with user-safe errors, no stack traces to users. Every exported server action validates at entry.
+P6 SECURITY HEADERS: next.config.ts headers() — nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy camera=() microphone=() geolocation=() payment=(), X-Frame-Options DENY (or CSP frame-ancestors), X-Robots-Tag noindex nofollow (demo), CSP compatible with Next (dev-permissive; prod meaningful or report-only if breakage — document). Robots noindex metadata in app/layout.tsx. Must not break the app.
+P7 MUTATION PROTECTION: light alpha guardrails — same/allowed-origin checks where possible, interface-based rate limiter (in-memory dev, no-op fallback, future Cloudflare KV/D1 adapter) on resetDemoWorkspace, saveOperatingRules, resyncConnection, draft/approve/reject/dismiss, exportState, operatorChat; mutation attempt logging; fail closed where appropriate; demo stays usable.
+P8 EXPORT PRIVACY: tests prove emailLower never exports; audience exports don't leak member customer IDs (unless explicitly safe); no PII in source references; max size/pagination guard; object-type allowlist; filenames not user-controlled; no path traversal; Workers response-only; ExportJob logs failures.
+P9 TESTS (node:test style, no heavy framework, deterministic, no live services): RECIPES — abandoned-checkout excludes purchasers/unsubscribed/suppressed; winback personal-cadence gate + fallbacks; meta seed no estimate + never found-money. GOVERNANCE — unapproved activation blocks; stale source blocks; non-overrideable claim blocks; overrideable passes only with explicit override; Meta requires identifier-rights confirmation; suppressed/non-consented block. MEASUREMENT — holdout only Klaviyo lifecycle; brief/manual downgrades; <500 → before/after; Meta always directional; lift always a range; band crossing zero = not proven; contamination disclosed. EXPORT — per P8. CHAT — unsupported v0 response verbatim; Meta-lift question → directional explanation; no unsupported metrics. Scripts: test:contracts/test:security/test:quality + test = lint+build+smoke+security.
+P10 CI: .github/workflows/ci.yml — npm ci, db:generate, lint, build, smoke, new tests; deterministic seed; Cloudflare build optional/separate.
+P11 QUALITY SPLITS (behavior-preserving only): lib/server/actions.ts → draft/approve/reject/edit + shared activation-ladder helper; contracts split per P3; repeated pill/status UI into safe primitives. Module direction documented.
+P12 DB/MIGRATION POSTURE: document alpha db-push vs prod migrations, D1 + local SQLite notes, accurate commands, generated-clients-never-committed-always-generated.
+P13 OBSERVABILITY: central safe error formatter, consistent user-facing errors, server log helper, ledger entries for failed activations/exports, error boundaries where useful, no stack traces to UI.
+P14 DOCS: README, CONTRACTS.md, SECURITY.md, PRODUCTION-HARDENING.md — auth limitations, demo boundaries, headers, boundary rules, guard pattern, validation rules, test commands, production TODOs.
+
+## Validation checklist (audit)
+db:generate, lint, build, smoke, node scripts/smoke.mjs all green. Static: no client import of lib/db or generated Prisma (transitive too); no dangerouslySetInnerHTML; no raw SQL unjustified; no raw PII export; no broad @/lib/server client imports; no Meta lift language; headers present; generated clients build. Report: improvements, files, tests, commands+results, remaining risks, production-readiness checklist, next step.

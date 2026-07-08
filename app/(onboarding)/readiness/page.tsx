@@ -8,7 +8,13 @@
  */
 
 import Link from "next/link";
-import { Badge, Card, StatList, StatRow } from "@/components/ui/primitives";
+import {
+  Badge,
+  Card,
+  StatList,
+  StatRow,
+  StatusDot,
+} from "@/components/ui/primitives";
 import { createDemoAccount, getConnectionStatus } from "@/lib/server";
 
 // Freshness must reflect the live DB — never prerender at build time.
@@ -37,6 +43,13 @@ export default async function DataReadinessPage() {
   const requiredNames = requiredCards
     .map((card) => card.copy.name)
     .join(" and ");
+  // Readiness dial fraction (brief v4 CSS status graphic): required sources
+  // that are synced AND fresh, out of all required sources.
+  const freshRequired = requiredCards.filter(
+    (card) => card.status !== null && !card.status.isStale,
+  ).length;
+  const readinessPct =
+    requiredCards.length > 0 ? (freshRequired / requiredCards.length) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -55,12 +68,43 @@ export default async function DataReadinessPage() {
         as="section"
         className={
           ready
-            ? "border-emerald-200 bg-success-soft/40!"
-            : "border-amber-200 bg-warning-soft/40!"
+            ? "relative overflow-hidden border-emerald-200 bg-success-soft/40! shadow-[0_18px_48px_-18px_var(--glow-money)]"
+            : "relative overflow-hidden border-amber-200 bg-warning-soft/40! shadow-[0_18px_48px_-18px_var(--glow-warning)]"
         }
       >
+        {/* Status rail — paired with the heading text, never color-alone. */}
+        <span
+          aria-hidden="true"
+          className={
+            ready
+              ? "absolute inset-x-0 top-0 h-[2.5px] bg-gradient-to-r from-emerald-500/80 via-emerald-400/40 to-transparent"
+              : "absolute inset-x-0 top-0 h-[2.5px] bg-gradient-to-r from-amber-400/80 via-amber-300/40 to-transparent"
+          }
+        />
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+          <div className="flex min-w-0 items-center gap-4">
+            {/* CSS readiness dial: conic ring of required sources that are
+                synced + fresh. Decorative — the heading carries the status. */}
+            <span
+              aria-hidden="true"
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full shadow-[0_1px_2px_rgb(15_23_42/0.08)]"
+              style={{
+                background: `conic-gradient(${
+                  ready ? "var(--color-success)" : "var(--color-warning)"
+                } ${readinessPct}%, var(--color-border) 0)`,
+              }}
+            >
+              <span
+                className={
+                  ready
+                    ? "grid h-11 w-11 place-items-center rounded-full bg-surface text-xs font-semibold text-emerald-800 tabular-nums"
+                    : "grid h-11 w-11 place-items-center rounded-full bg-surface text-xs font-semibold text-amber-800 tabular-nums"
+                }
+              >
+                {freshRequired}/{requiredCards.length}
+              </span>
+            </span>
+            <div className="min-w-0">
             <h2
               className={
                 ready
@@ -83,6 +127,7 @@ export default async function DataReadinessPage() {
                 ? `${requiredNames} are synced and within freshness thresholds. The Operator can rank opportunities now.`
                 : `${requiredNames} must be synced and fresh before the Operator ranks opportunities. Re-sync below.`}
             </p>
+            </div>
           </div>
           {ready ? (
             <Link
@@ -108,18 +153,12 @@ export default async function DataReadinessPage() {
                     <Badge tone="neutral">Not connected</Badge>
                   ) : status.isStale ? (
                     <Badge tone="caution">
-                      <span
-                        aria-hidden="true"
-                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]"
-                      />
+                      <StatusDot tone="warning" />
                       Stale — re-sync recommended
                     </Badge>
                   ) : (
                     <Badge tone="positive">
-                      <span
-                        aria-hidden="true"
-                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]"
-                      />
+                      <StatusDot tone="money" pulse />
                       Fresh
                     </Badge>
                   )}
@@ -147,7 +186,7 @@ export default async function DataReadinessPage() {
                   <p className="mt-2 text-sm text-ink-muted">{copy.note}</p>
                 )}
               </div>
-              <div className="w-full rounded-lg border border-border bg-surface-soft/50 p-3 sm:w-64">
+              <div className="ring-highlight w-full rounded-lg border border-border bg-surface-soft/50 p-3 sm:w-64">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
                   What it unlocks
                 </p>

@@ -33,16 +33,37 @@ const STORAGE_KEY = "ago.business_setup";
  * global reduced-motion kill-switch flattens all of it.
  */
 const SELECTED_CARD_CLASSES =
+  // Brief v4 premium selected card: proof-gradient wash (blue -> white ->
+  // a whisper of emerald), accent ring, lift + proof glow, "Selected" pill.
   "relative cursor-pointer rounded-card border border-accent/60 " +
-  "bg-gradient-to-br from-accent-soft/45 via-surface to-surface p-4 text-left " +
+  "bg-gradient-to-br from-accent-soft/45 via-surface to-emerald-50/45 p-4 text-left " +
   "ring-1 ring-accent/50 -translate-y-0.5 " +
-  "shadow-[0_2px_4px_rgb(15_23_42/0.06),0_14px_32px_-8px_var(--color-accent-glow)] " +
+  "shadow-[0_2px_4px_rgb(15_23_42/0.06),0_14px_32px_-8px_var(--glow-proof)] " +
   "transition-[box-shadow,border-color,background-color,translate] duration-150 ease-out";
 
 const INACTIVE_CARD_CLASSES =
   "cursor-pointer rounded-card border border-border bg-surface p-4 text-left " +
   "shadow-card transition-[box-shadow,border-color,translate] duration-150 ease-out " +
   "hover:-translate-y-0.5 hover:border-border-strong hover:shadow-card-hover";
+
+/** Small padlock for locked (not-in-v0) choices; decorative only. */
+function LockIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 12 12"
+      className="h-3 w-3 shrink-0 text-ink-soft"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="2.5" y="5.5" width="7" height="5" rx="1" />
+      <path d="M4 5.5V4a2 2 0 0 1 4 0v1.5" />
+    </svg>
+  );
+}
 
 /** Accent-filled "Selected" pill, pinned top-right of the chosen card. */
 function SelectedPill() {
@@ -232,14 +253,22 @@ export default function BusinessSetupPage() {
               </button>
             );
           })}
+          {/* Locked, not broken (brief v4): a calm solid surface with a
+              padlock — reads "coming later", never "error". */}
           <div
             role="radio"
             aria-checked="false"
             aria-disabled="true"
-            className="rounded-card border border-dashed border-border-strong bg-surface-soft/50 p-4 opacity-70"
+            className="rounded-card border border-border bg-surface-soft/60 p-4 select-none shadow-[inset_0_1px_0_rgb(255_255_255/0.6)]"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-ink-secondary">
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted">
+                <span
+                  aria-hidden="true"
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border bg-surface"
+                >
+                  <LockIcon />
+                </span>
                 Marketplace / B2B / other
               </span>
               <Badge tone="neutral">Not in v0</Badge>

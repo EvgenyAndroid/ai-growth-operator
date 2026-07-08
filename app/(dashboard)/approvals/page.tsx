@@ -19,7 +19,9 @@ import {
   ConfidenceBadge,
   EmptyState,
   MeasurementBadge,
+  ProofRail,
   SectionHeading,
+  StatusDot,
 } from "@/components/ui/primitives";
 import { getDemoAccountId } from "../feed/_shared/account";
 import { DraftNotActivationBanner } from "../feed/_shared/explanation";
@@ -49,6 +51,10 @@ function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
     : action.status === "launched"
       ? "bg-gradient-to-b from-emerald-400 via-success to-emerald-600"
       : "bg-slate-300";
+  // Proof-rail position (brief v4 cockpit consistency): honest stage only —
+  // "Measured" is never marked reached from this queue.
+  const railStep =
+    action.status === "launched" || action.status === "approved" ? 2 : 1;
   return (
     <Card
       as="li"
@@ -92,6 +98,8 @@ function QueueRow({ item, pending }: { item: QueueItem; pending: boolean }) {
             </span>
           ) : null}
         </div>
+        {/* Tiny proof rail — where this action sits in the loop (brief v4). */}
+        <ProofRail className="mt-2" active={railStep} />
       </div>
       <Link
         href={`/approvals/${action.actionId}?opp=${card.id}`}
@@ -146,12 +154,7 @@ export default async function ApprovalCenterPage() {
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
           Pending your review ({pending.length})
-          {pending.length > 0 ? (
-            <span
-              aria-hidden="true"
-              className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]"
-            />
-          ) : null}
+          {pending.length > 0 ? <StatusDot tone="warning" pulse /> : null}
         </h2>
         {pending.length > 0 ? (
           <ul className="space-y-3">

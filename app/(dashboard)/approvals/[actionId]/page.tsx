@@ -27,6 +27,7 @@ import {
   Card,
   ConfidenceBadge,
   MeasurementBadge,
+  ProofRail,
   StatList,
   StatRow,
 } from "@/components/ui/primitives";
@@ -175,6 +176,15 @@ export default async function DraftReviewPage({
             <ActivationBadge level={action.activationLevel} />
           ) : null}
         </div>
+        {/* Proof-rail position (brief v4): honest stage — "Measured" is
+            never marked reached from the review screen. */}
+        <ProofRail
+          active={
+            action.status === "launched" || action.status === "approved"
+              ? 2
+              : 1
+          }
+        />
       </header>
 
       {action.status !== "launched" ? <DraftNotActivationBanner /> : null}

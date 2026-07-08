@@ -24,6 +24,7 @@ import {
   EmptyState,
   MeasurementBadge,
   SectionHeading,
+  StatusDot,
 } from "@/components/ui/primitives";
 import { LedgerTable, PageShell } from "../performance/shared-ui";
 import { fmtDateTime, SimulatedBadge } from "../performance/readout-card";
@@ -171,7 +172,15 @@ function ActivationTimeline({ activation }: { activation: ActionActivation }) {
   const pushedState: StepState =
     outcome === "launched" ? "done" : outcome === "failed" ? "failed" : "pending";
   return (
-    <ol className="mt-3 flex flex-col gap-2 rounded-lg border border-border bg-gradient-to-b from-surface-soft/80 to-surface-soft/30 px-3 py-2.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.7)] sm:flex-row sm:items-start sm:gap-0">
+    <div className="mt-3">
+      {/* Launch-sequence micro-label (brief v4 activation area). The dot is
+          decorative; the outcome is always named in the Badge above. */}
+      <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.1em] text-ink-soft uppercase">
+        <StatusDot tone={outcome === "launched" ? "money" : "warning"} />
+        Launch sequence
+      </p>
+      {/* Blueprint grid texture: the timeline reads as cockpit telemetry. */}
+      <ol className="mt-1.5 flex flex-col gap-2 rounded-lg border border-border bg-surface-soft/50 grid-texture px-3 py-2.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.7)] sm:flex-row sm:items-start sm:gap-0">
       <TimelineStep state="done" label="Draft prepared" detail="Approved by you" />
       <TimelineStep
         state="done"
@@ -203,7 +212,8 @@ function ActivationTimeline({ activation }: { activation: ActionActivation }) {
         }
         last
       />
-    </ol>
+      </ol>
+    </div>
   );
 }
 

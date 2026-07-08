@@ -8,7 +8,8 @@
  */
 
 import Link from "next/link";
-import { Badge, Card } from "@/components/ui/primitives";
+import type { ReactNode } from "react";
+import { Badge, Card, StatusDot } from "@/components/ui/primitives";
 import { createDemoAccount, getConnectionStatus } from "@/lib/server";
 
 // Freshness must reflect the live DB — never prerender at build time.
@@ -24,30 +25,108 @@ const TIER_TONE = {
   optional: "neutral",
 } as const;
 
-/** Small status dot rendered inside connection pills; decorative only. */
-function StatusDot({ className }: { className: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`h-1.5 w-1.5 shrink-0 rounded-full ${className}`}
-    />
-  );
-}
-
 function StatusBadge({ status }: { status: ConnectionStatusView | null }) {
   if (!status) return <Badge tone="neutral">Not connected</Badge>;
   if (status.isStale)
     return (
       <Badge tone="caution">
-        <StatusDot className="bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]" />
+        <StatusDot tone="warning" />
         Connected — stale
       </Badge>
     );
   return (
     <Badge tone="positive">
-      <StatusDot className="bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15)]" />
+      <StatusDot tone="money" pulse />
       Connected
     </Badge>
+  );
+}
+
+/**
+ * Per-source glyphs (brief v4 "CSS status graphics") — dependency-free
+ * inline SVG, 16x16, stroke 1.5, round caps (matches the cockpit icon set).
+ */
+const SOURCE_GLYPH_PATHS: Record<SourceCopy["id"], ReactNode> = {
+  shopify: (
+    <>
+      <path d="M3.5 5.5h9l-1 8h-7l-1-8Z" />
+      <path d="M6 5.5V4.5a2 2 0 0 1 4 0v1" />
+    </>
+  ),
+  klaviyo: (
+    <>
+      <rect x="2" y="3.5" width="12" height="9" rx="1.5" />
+      <path d="m2.5 4.5 5.5 4 5.5-4" />
+    </>
+  ),
+  meta: (
+    <>
+      <path d="M3 6.5v3l7 3.5v-10L3 6.5Z" />
+      <path d="M12 6a3.5 3.5 0 0 1 0 4" />
+    </>
+  ),
+  ga4: (
+    <>
+      <path d="M3 13V9" />
+      <path d="M8 13V5" />
+      <path d="M13 13V3" />
+    </>
+  ),
+  stripe: (
+    <>
+      <rect x="2" y="4" width="12" height="8.5" rx="1.5" />
+      <path d="M2 7h12" />
+    </>
+  ),
+  square: (
+    <>
+      <path d="M3 6.5h10V13H3V6.5Z" />
+      <path d="M2.5 6.5 4 3.5h8l1.5 3" />
+    </>
+  ),
+  mailchimp: (
+    <>
+      <rect x="2" y="3.5" width="12" height="9" rx="1.5" />
+      <path d="m2.5 4.5 5.5 4 5.5-4" />
+    </>
+  ),
+  gbp: (
+    <>
+      <path d="M8 13.5S3.5 9.6 3.5 6.5a4.5 4.5 0 0 1 9 0c0 3.1-4.5 7-4.5 7Z" />
+      <circle cx="8" cy="6.5" r="1.5" />
+    </>
+  ),
+};
+
+/** Connector glyph tile — emerald-lit when the source is connected. */
+function SourceGlyph({
+  id,
+  connected,
+}: {
+  id: SourceCopy["id"];
+  connected: boolean;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        connected
+          ? "ring-highlight flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-blue-50/60 text-emerald-700"
+          : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-soft/70 text-ink-soft"
+      }
+    >
+      <svg
+        viewBox="0 0 16 16"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {SOURCE_GLYPH_PATHS[id]}
+      </svg>
+    </span>
   );
 }
 
@@ -61,9 +140,24 @@ function ConnectorCard({
   accountId: string;
 }) {
   return (
-    <Card as="section" interactive className="flex flex-col">
+    <Card as="section" interactive className="relative flex flex-col overflow-hidden">
+      {/* Status rail (brief v4): emerald = connected + fresh, amber = stale,
+          none when not connected. Paired with the text badge, never alone. */}
+      {status ? (
+        <span
+          aria-hidden="true"
+          className={
+            status.isStale
+              ? "absolute inset-x-0 top-0 h-[2.5px] bg-gradient-to-r from-amber-400/80 via-amber-300/40 to-transparent"
+              : "absolute inset-x-0 top-0 h-[2.5px] bg-gradient-to-r from-emerald-500/80 via-emerald-400/40 to-transparent"
+          }
+        />
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-ink">{copy.name}</h2>
+        <span className="flex min-w-0 items-center gap-2.5">
+          <SourceGlyph id={copy.id} connected={status !== null} />
+          <h2 className="text-base font-semibold text-ink">{copy.name}</h2>
+        </span>
         <div className="flex flex-wrap gap-1.5">
           <Badge tone={TIER_TONE[copy.tier]}>{copy.tierLabel}</Badge>
           <StatusBadge status={status} />
@@ -116,8 +210,22 @@ function ConnectorCard({
           <button
             type="button"
             disabled
-            className="inline-flex items-center justify-center rounded-md border border-border bg-surface-soft px-3 py-1.5 text-sm font-medium text-ink-soft"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-surface-soft px-3 py-1.5 text-sm font-medium text-ink-soft shadow-[inset_0_1px_0_rgb(255_255_255/0.6)]"
           >
+            {/* Locked, not broken — padlock instead of a dead button. */}
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 12 12"
+              className="h-3 w-3 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="2.5" y="5.5" width="7" height="5" rx="1" />
+              <path d="M4 5.5V4a2 2 0 0 1 4 0v1.5" />
+            </svg>
             Connect (unavailable in demo)
           </button>
         )}

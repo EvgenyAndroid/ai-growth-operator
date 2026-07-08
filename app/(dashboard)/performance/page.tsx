@@ -11,10 +11,16 @@ import Link from "next/link";
 import { createDemoAccount, getLedger, getPerformance, getPerformanceExamples } from "@/lib/server";
 import type { LedgerEntryView, PerformanceView } from "@/lib/server/types";
 import type { ContractReadType, MeasurementReadout } from "@/lib/contracts";
-import { Card, SectionHeading } from "@/components/ui/primitives";
+import {
+  Card,
+  MeasurementLegend,
+  MetricTile,
+  ProofRail,
+  SectionHeading,
+  StatusDot,
+} from "@/components/ui/primitives";
 import { LedgerTable, PageShell } from "./shared-ui";
 import {
-  AudienceSplitRow,
   CaveatList,
   ConfBadge,
   ContaminationNotice,
@@ -66,9 +72,14 @@ function QA({
   highlight?: boolean;
 }) {
   if (highlight) {
+    // Next-action panel (brief v4 performance area): a proof-toned callout
+    // that reads as the cockpit's "what now", not another list row.
     return (
-      <div className="mt-3 rounded-lg border border-blue-200/70 border-l-2 border-l-accent bg-info-soft/40 px-3.5 py-3 shadow-[inset_0_1px_8px_rgb(37_99_235/0.05)]">
-        <h3 className="text-sm font-semibold text-ink">{question}</h3>
+      <div className="mt-4 rounded-lg border border-blue-200/70 border-l-2 border-l-accent bg-gradient-to-br from-blue-50/70 via-white to-emerald-50/40 px-4 py-3 shadow-[0_10px_28px_-12px_var(--glow-proof)]">
+        <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+          <StatusDot tone="proof" />
+          {question}
+        </h3>
         <div className="mt-1 text-sm text-ink-secondary">{children}</div>
       </div>
     );
@@ -150,6 +161,75 @@ function nextStep(readout: MeasurementReadout, windowInProgress: boolean): strin
     return "Treat the change as indicative, not causal. To earn holdout-verified measurement, grow the eligible audience above 500 and keep activation inside the Klaviyo path so exclusion is enforceable (26A.1).";
   }
   return "Watch match rate and downstream purchases as the audience is used in campaigns. Do not treat these figures as lift — Meta measurement stays directional in v0.";
+}
+
+// ---------------------------------------------------------------------------
+// Proof-led hero pieces (brief v4 performance area) — purely presentational
+// derivations of metrics the MetricsTable below already lists in full.
+// ---------------------------------------------------------------------------
+
+/**
+ * Prominent revenue range — holdout mode with proven lift only. Renders the
+ * refund-netted incremental-revenue range big and tabular; never a point
+ * estimate, never on before/after or directional reads.
+ */
+function RangeHero({ readout }: { readout: MeasurementReadout }) {
+  if (readout.mode !== "holdout" || !readout.lift) return null;
+  const low = readout.metrics["incremental_revenue_low"];
+  const high = readout.metrics["incremental_revenue_high"];
+  if (typeof low !== "number" || typeof high !== "number") return null;
+  return (
+    <div className="mt-5 rounded-xl border border-emerald-200/70 bg-[image:var(--surface-money)] px-4 py-4 shadow-[0_1px_2px_rgb(15_23_42/0.06),0_16px_40px_-12px_var(--glow-money)]">
+      <p className="text-[11px] font-semibold tracking-[0.08em] text-emerald-800 uppercase">
+        Estimated incremental revenue
+      </p>
+      <p className="mt-1 text-3xl font-bold tracking-tight text-ink tabular-nums sm:text-4xl">
+        {fmtMoney(low)}
+        <span className="mx-1.5 text-xl font-medium text-ink-soft sm:text-2xl">–</span>
+        {fmtMoney(high)}
+      </p>
+      <p className="mt-1.5 max-w-xl text-xs leading-5 text-ink-muted">
+        Refund-netted range for this read window — reported as a range, never a
+        point estimate (PRD 16.4). Purchase-rate lift{" "}
+        {fmtLiftPoints(readout.lift.low)} to {fmtLiftPoints(readout.lift.high)}{" "}
+        versus the held-out group.
+      </p>
+    </div>
+  );
+}
+
+/** Eligible / exposed / holdout stat tiles (holdout mode only). */
+function AudienceTiles({ metrics }: { metrics: Record<string, number | string> }) {
+  const eligible = metrics["eligible_audience"];
+  const exposed = metrics["exposed_audience"];
+  const holdout = metrics["holdout_size"];
+  if (
+    typeof eligible !== "number" ||
+    typeof exposed !== "number" ||
+    typeof holdout !== "number"
+  ) {
+    return null;
+  }
+  return (
+    <div className="mt-4 grid max-w-2xl grid-cols-3 gap-2.5">
+      <MetricTile
+        label="Eligible"
+        value={eligible.toLocaleString("en-US")}
+        hint="audience in scope"
+      />
+      <MetricTile
+        label="Exposed"
+        value={exposed.toLocaleString("en-US")}
+        hint="measured arm"
+      />
+      <MetricTile
+        label="Holdout"
+        value={holdout.toLocaleString("en-US")}
+        hint="control arm"
+        tone="money"
+      />
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -237,6 +317,12 @@ export default async function PerformancePage({
             the simulated example readouts below show how each of the three
             measurement labels reports.
           </p>
+          <div className="mt-4 border-t border-dotted border-border pt-3">
+            <p className="text-[10px] font-semibold tracking-[0.1em] text-ink-soft uppercase">
+              Measurement legend
+            </p>
+            <MeasurementLegend className="mt-2.5" />
+          </div>
         </Card>
       )}
 
@@ -247,6 +333,7 @@ export default async function PerformancePage({
       ) : null}
 
       {view ? (
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_16.5rem]">
         <Card
           as="section"
           variant="flat"
@@ -300,12 +387,11 @@ export default async function PerformancePage({
             </ul>
           </div>
 
-          {/* Hero metric row — eligible / holdout / exposed (holdout mode only) */}
+          {/* Proof-led hero: prominent revenue range, then the
+              eligible / exposed / holdout stat tiles (holdout mode only) */}
+          <RangeHero readout={view.readout} />
           {view.readout.mode === "holdout" ? (
-            <AudienceSplitRow
-              metrics={view.readout.metrics}
-              className="mt-4 max-w-xl"
-            />
+            <AudienceTiles metrics={view.readout.metrics} />
           ) : null}
 
           {view.readout.mode === "directional" ? (
@@ -349,6 +435,27 @@ export default async function PerformancePage({
             </Link>
           </p>
         </Card>
+        {/* Presentational proof rail — seats the measurement legend on the
+            performance screen (brief v4 measurement system). */}
+        <div className="space-y-4">
+          <aside className="proof-card rounded-card p-4">
+            <p className="text-[10px] font-semibold tracking-[0.1em] text-ink-soft uppercase">
+              Proof rail
+            </p>
+            <ProofRail active={3} className="mt-2" />
+            <p className="mt-2 text-[11px] leading-4 text-ink-muted">
+              This action ran the full loop — found, drafted, approved by you,
+              measured — with every step logged to the Context Ledger.
+            </p>
+          </aside>
+          <aside className="rounded-card border border-border bg-surface p-4 shadow-card">
+            <p className="text-[10px] font-semibold tracking-[0.1em] text-ink-soft uppercase">
+              Measurement legend
+            </p>
+            <MeasurementLegend className="mt-2.5" />
+          </aside>
+        </div>
+        </div>
       ) : null}
 
       <section>

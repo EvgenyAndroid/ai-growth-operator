@@ -210,7 +210,12 @@ export function ChatPanel({ accountId }: { accountId: string }) {
     // Compact assistant column — the feed is the product, chat stays modest.
     <div className="max-w-3xl space-y-4">
       <section>
-        <h2 className="text-xs font-semibold tracking-wide text-ink-soft uppercase">
+        <h2 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-ink-soft uppercase">
+          {/* Console micro-mark — decorative, matches the Operator dot. */}
+          <span
+            aria-hidden="true"
+            className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_0_3px_rgb(37_99_235/0.15)]"
+          />
           Supported questions (v0)
         </h2>
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -235,7 +240,7 @@ export function ChatPanel({ accountId }: { accountId: string }) {
 
       <section className="space-y-4">
         {turns.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border-strong bg-surface-soft/60 px-6 py-10 text-center">
+          <div className="rounded-lg border border-dashed border-border-strong bg-surface-soft/60 grid-texture px-6 py-10 text-center">
             {/* CSS-only empty-state mark: the Operator dot, haloed. */}
             <span
               aria-hidden="true"

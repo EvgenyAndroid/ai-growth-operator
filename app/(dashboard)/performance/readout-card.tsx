@@ -338,7 +338,9 @@ export function CaveatList({
       {caveats.map((caveat, index) => (
         <li
           key={index}
-          className="rounded-md border border-amber-200/80 bg-warning-soft/70 px-2.5 py-1.5 text-xs leading-5 text-amber-900"
+          // Visible but not scary (brief v4): amber rail marks the caution,
+          // the body stays calm ink on a light wash.
+          className="rounded-md border border-amber-200/60 border-l-2 border-l-warning bg-warning-soft/40 px-2.5 py-1.5 text-xs leading-5 text-ink-secondary"
         >
           {caveat}
         </li>

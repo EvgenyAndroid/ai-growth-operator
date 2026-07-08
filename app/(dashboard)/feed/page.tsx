@@ -16,9 +16,15 @@ import Link from "next/link";
 import type { FeedView } from "@/lib/server";
 import { listOpportunities } from "@/lib/server";
 import { getVerticalDefinition } from "@/lib/server/vertical";
-import { Badge, EmptyState, SectionHeading } from "@/components/ui/primitives";
+import {
+  Badge,
+  EmptyState,
+  MetricTile,
+  SectionHeading,
+} from "@/components/ui/primitives";
 import { getDemoAccountId } from "./_shared/account";
 import { fmtDateTime, fmtRange, RECIPE_SHORT_NAMES } from "./_shared/format";
+import { OperatorStatusRail } from "./operator-rail";
 import { OpportunityCard } from "./opportunity-card";
 
 export const dynamic = "force-dynamic";
@@ -29,22 +35,29 @@ function FoundMoneyHeader({
   header,
   label,
   coverage,
+  holdoutReady,
 }: {
   header: FeedView["foundMoney"];
   label: string;
   coverage: FeedView["coverage"];
+  /** Active cards whose measurement plan is a real holdout. */
+  holdoutReady: number;
 }) {
   // PRD 16.2 — render the header ONLY when at least one eligible
   // (recovery/win-back, Medium/High confidence, real range) item exists.
   if (!header.show) return null;
+  const metaExcluded = header.excluded.some(
+    (x) => x.recipeId === "meta_seed_suppression",
+  );
   return (
     <section
       aria-label="Found money"
-      className="group relative overflow-hidden rounded-card border border-emerald-200/80 bg-found-money px-6 py-6 shadow-[0_1px_2px_rgb(15_23_42/0.05),0_8px_24px_rgb(15_23_42/0.07),0_18px_55px_-12px_rgb(16_185_129/0.30)]"
+      className="money-hero card-shine group relative overflow-hidden rounded-card border border-emerald-200/80 px-6 py-6"
     >
-      {/* ICONIC hero treatment (brief v3 §3): found-money gradient surface,
-          stronger emerald rail, ambient bloom, and a second bloom that fades
-          in on hover (the CSS-only "gradient shifts on hover"). */}
+      {/* ICONIC hero treatment (brief v4): .money-hero surface (emerald ->
+          white -> blue money gradient + deep emerald proof glow), static
+          sheen (the ONE card-shine on this screen), stronger emerald rail,
+          ambient bloom, and a second bloom that fades in on hover. */}
       <span
         aria-hidden="true"
         className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-emerald-400 via-success to-emerald-600"
@@ -66,7 +79,7 @@ function FoundMoneyHeader({
         />
         {label}
       </p>
-      <p className="relative mt-2.5 text-[clamp(2.25rem,9vw,2.75rem)] font-bold leading-none tracking-tight text-ink tabular-nums md:text-[3.25rem]">
+      <p className="relative mt-2.5 text-[clamp(2.25rem,9vw,2.75rem)] font-bold leading-none tracking-tight text-ink tabular-nums md:text-[3.5rem]">
         {fmtRange(header.totalLow, header.totalHigh)}
       </p>
       {header.headline ? (
@@ -81,11 +94,44 @@ function FoundMoneyHeader({
           {Math.round(coverage.identifiedShare * 100)}% of transactions.
         </p>
       ) : null}
+      {/* Proof stat tiles (brief v4 §found-money): eligible / verified where
+          possible / directional excluded — directional reads quietest. */}
+      <div className="relative mt-4 grid gap-2 sm:grid-cols-3">
+        <MetricTile
+          tone="money"
+          label="Eligible opportunities"
+          value={header.includedRecipeIds.length}
+          hint="counted in this total"
+        />
+        <MetricTile
+          tone="proof"
+          label="Verified where possible"
+          value={holdoutReady}
+          hint="holdout measurement planned"
+        />
+        <MetricTile
+          tone="directional"
+          label="Directional excluded"
+          value={header.excluded.length}
+          hint="never counted"
+        />
+      </div>
       {/* Trust microcopy + directional-excluded note (brief §4). */}
-      <p className="relative mt-2 text-xs leading-5 text-ink-soft">
+      <p className="relative mt-3 text-xs leading-5 text-ink-soft">
         Eligible opportunities only — real ranges at medium or high
         confidence. Directional estimates are never counted in this total.
       </p>
+      {metaExcluded ? (
+        // Proof label (brief v4): the directional Meta opportunity is called
+        // out by name as excluded — washed plum, deliberately quiet.
+        <p className="relative mt-2 inline-flex items-center gap-1.5 rounded-full border border-violet-200/60 bg-violet-50/70 px-2.5 py-0.5 text-xs font-medium leading-5 text-violet-900/70">
+          <span
+            aria-hidden="true"
+            className="h-1.5 w-1.5 shrink-0 rotate-45 bg-violet-400/70"
+          />
+          Not counted: directional Meta opportunity
+        </p>
+      ) : null}
       {header.excluded.length > 0 ? (
         // Refined divider (brief v3 §3): gradient hairline instead of a flat
         // border above the "Not counted in this total" disclosure.
@@ -169,7 +215,12 @@ export default async function FeedPage() {
   const copy = getVerticalDefinition(feed.vertical).feedCopy;
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-6">
+    // Brief v4: the feed is the visual hero — wide canvas (7xl from the
+    // shell), two columns at xl (main + presentational Operator-status
+    // rail); the rail stacks BELOW the feed on smaller screens.
+    <main className="mx-auto w-full max-w-4xl xl:max-w-none">
+      <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
+        <div className="min-w-0 flex-1 space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[2.125rem] font-bold leading-tight tracking-tight text-ink">
@@ -201,6 +252,9 @@ export default async function FeedPage() {
         header={feed.foundMoney}
         label={copy.foundMoneyLabel}
         coverage={feed.coverage}
+        holdoutReady={
+          active.filter((c) => c.measurementMode === "holdout").length
+        }
       />
 
       {active.length > 0 ? (
@@ -252,6 +306,15 @@ export default async function FeedPage() {
           </ul>
         </section>
       ) : null}
+        </div>
+
+        {/* Presentational Operator-status rail (render-only — derived from
+            the FeedView above; sticky below the h-12 glass topbar at xl). */}
+        <OperatorStatusRail
+          feed={feed}
+          className="w-full xl:sticky xl:top-16 xl:w-[300px] xl:shrink-0"
+        />
+      </div>
     </main>
   );
 }

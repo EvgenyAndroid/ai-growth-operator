@@ -162,10 +162,11 @@ export function LedgerTable({
       <style>{`@keyframes ledger-reveal{from{opacity:0;transform:translateY(-3px)}}.ledger-reveal{animation:ledger-reveal .18s ease-out both}`}</style>
     <ol className="relative overflow-hidden rounded-card border border-border bg-surface shadow-card">
       {/* Audit-timeline spine: a hairline rail the event dots sit on,
-          fading out at both ends. */}
+          fading out at both ends. Faint proof-blue tint (brief v4): the
+          ledger IS the proof infrastructure. */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute top-3 bottom-3 left-[19.5px] w-px bg-gradient-to-b from-transparent via-border-strong/80 to-transparent"
+        className="pointer-events-none absolute top-3 bottom-3 left-[19.5px] w-px bg-gradient-to-b from-transparent via-blue-300/60 to-transparent"
       />
       {entries.map((entry, index) => {
         const tone = eventTone(entry.eventType);

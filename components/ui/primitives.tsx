@@ -126,9 +126,10 @@ const TONE_CLASSES: Record<BadgeTone, string> = {
   danger:
     "border-red-200 bg-danger-soft text-red-800 " +
     "shadow-[0_1px_1px_rgb(15_23_42/0.04)]",
-  // Deliberately quieter than "positive": violet/slate, washed border, no dot.
+  // Deliberately quieter than "positive": washed muted plum (never bright
+  // purple), washed border, no dot (brief v4 measurement system).
   directional:
-    "border-violet-200/60 bg-directional-soft/70 text-violet-700 " +
+    "border-violet-200/50 bg-violet-50/70 text-violet-900/70 " +
     "pill-directional",
 };
 
@@ -212,9 +213,10 @@ const MEASUREMENT_DOT: Record<MeasurementMode, string | null> = {
 /**
  * PRD 4.6 — exactly three measurement labels. This badge is the ONLY approved
  * way to render one; free-text measurement labels are a trust-rule violation.
- * Visual hierarchy: holdout-verified (green, dotted) > before/after (amber,
- * dotted) > directional (muted violet, no dot) — directional must never look
- * as strong as holdout-verified.
+ * Visual hierarchy (brief v4): holdout-verified is the STRONGEST (green,
+ * dotted, semibold) > before/after (amber, dotted, cautionary) > directional
+ * (washed muted plum, no dot, regular weight) — directional must never look
+ * as strong as holdout-verified. Labels differ textually, never color-alone.
  */
 export function MeasurementBadge({
   mode,
@@ -225,10 +227,43 @@ export function MeasurementBadge({
 }) {
   const dot = MEASUREMENT_DOT[mode];
   return (
-    <Badge tone={MEASUREMENT_TONE[mode]} className={className}>
+    <Badge
+      tone={MEASUREMENT_TONE[mode]}
+      className={cx(mode === "holdout" && "font-semibold", className)}
+    >
       {dot ? <PillDot className={dot} /> : null}
       {MEASUREMENT_LABEL_COPY[mode]}
     </Badge>
+  );
+}
+
+/**
+ * MeasurementLegend — plain-language key for the three measurement labels
+ * (brief v4 measurement system). For the feed right rail / performance page.
+ */
+const MEASUREMENT_LEGEND_COPY: Record<MeasurementMode, string> = {
+  holdout: "Controlled proof — measured against a real holdout.",
+  before_after_no_control: "No control group — read with caution.",
+  directional: "Platform-reported, non-causal.",
+};
+
+export function MeasurementLegend({ className }: { className?: string }) {
+  const modes: MeasurementMode[] = [
+    "holdout",
+    "before_after_no_control",
+    "directional",
+  ];
+  return (
+    <ul className={cx("m-0 flex list-none flex-col gap-2.5 p-0", className)}>
+      {modes.map((mode) => (
+        <li key={mode} className="flex flex-col items-start gap-1">
+          <MeasurementBadge mode={mode} />
+          <span className="pl-0.5 text-[11px] leading-4 text-ink-muted">
+            {MEASUREMENT_LEGEND_COPY[mode]}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -425,5 +460,205 @@ export function Skeleton({ className }: { className?: string }) {
       aria-hidden="true"
       className={cx("skeleton-shimmer rounded-md", className)}
     />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Brief v4 primitives — "revenue cockpit with proof rails". Small and
+// dedup-oriented; presentational only, safe in Server Components.
+// ---------------------------------------------------------------------------
+
+type StatusDotTone = "money" | "proof" | "warning" | "directional" | "neutral";
+
+/**
+ * Per-tone dot chrome. Money/proof carry a soft status glow; directional is
+ * deliberately dimmer than money (trust hierarchy); warning stays calm.
+ */
+const STATUS_DOT_CLASSES: Record<StatusDotTone, string> = {
+  money:
+    "bg-success shadow-[0_0_0_3px_rgb(5_150_105/0.15),0_0_10px_var(--glow-money)]",
+  proof:
+    "bg-info shadow-[0_0_0_3px_rgb(37_99_235/0.14),0_0_10px_var(--glow-proof)]",
+  warning: "bg-warning shadow-[0_0_0_3px_rgb(217_119_6/0.14)]",
+  directional: "bg-violet-400/70 shadow-[0_0_0_3px_rgb(124_58_237/0.10)]",
+  neutral: "bg-slate-400 shadow-[0_0_0_3px_rgb(100_116_139/0.12)]",
+};
+
+/**
+ * StatusDot — tiny status indicator. Decorative (aria-hidden): ALWAYS pair
+ * it with a text label; status is never conveyed by color alone. `pulse`
+ * adds the soft live-sync pulse (killed by the reduced-motion switch).
+ */
+export function StatusDot({
+  tone = "neutral",
+  pulse = false,
+  className,
+}: {
+  tone?: StatusDotTone;
+  pulse?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cx(
+        "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+        STATUS_DOT_CLASSES[tone],
+        pulse && "connector-dot-live",
+        className
+      )}
+    />
+  );
+}
+
+type MetricTileTone = "neutral" | "money" | "proof" | "directional";
+
+const METRIC_TILE_TONES: Record<MetricTileTone, string> = {
+  neutral: "border-border bg-surface",
+  money: "border-emerald-200/70 bg-emerald-50/60",
+  proof: "border-blue-200/70 bg-blue-50/50",
+  // Washed on purpose — a directional tile must read quieter than money.
+  directional: "border-violet-200/50 bg-violet-50/40",
+};
+
+/**
+ * MetricTile — compact stat tile (label over a bold tabular value) for the
+ * found-money hero, performance readouts and status rails.
+ */
+export function MetricTile({
+  label,
+  value,
+  hint,
+  tone = "neutral",
+  className,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  hint?: React.ReactNode;
+  tone?: MetricTileTone;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cx(
+        "min-w-0 rounded-lg border px-3 py-2.5",
+        "shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_1px_2px_rgb(15_23_42/0.05)]",
+        METRIC_TILE_TONES[tone],
+        className
+      )}
+    >
+      <div className="truncate text-[11px] font-medium tracking-[0.08em] text-ink-muted uppercase">
+        {label}
+      </div>
+      <div className="mt-0.5 text-lg leading-6 font-semibold tracking-tight text-ink tabular-nums">
+        {value}
+      </div>
+      {hint ? (
+        <div className="mt-0.5 text-[11px] leading-4 text-ink-soft">
+          {hint}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * ProofRail — tiny horizontal pipeline (default Found → Drafted → Approved →
+ * Measured). Purely presentational; steps at or before `active` read as
+ * reached (also weight-differentiated, not color-alone). Omit `active` to
+ * show the whole rail as reached.
+ */
+export function ProofRail({
+  steps = ["Found", "Drafted", "Approved", "Measured"],
+  active,
+  className,
+}: {
+  steps?: string[];
+  active?: number;
+  className?: string;
+}) {
+  return (
+    <ol
+      className={cx(
+        "m-0 flex list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0",
+        className
+      )}
+    >
+      {steps.map((step, i) => {
+        const reached = active === undefined || i <= active;
+        return (
+          <li key={step} className="flex items-center gap-1.5">
+            {i > 0 ? (
+              <span
+                aria-hidden="true"
+                className={cx(
+                  "h-px w-3",
+                  reached ? "bg-emerald-300" : "bg-border-strong"
+                )}
+              />
+            ) : null}
+            <span
+              className={cx(
+                "inline-flex items-center gap-1 text-[11px] leading-4",
+                reached ? "font-medium text-ink-secondary" : "text-ink-soft"
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cx(
+                  "h-1 w-1 shrink-0 rounded-full",
+                  reached ? "bg-success" : "bg-slate-300"
+                )}
+              />
+              {step}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+type PremiumCalloutTone = "money" | "proof" | "warning" | "neutral";
+
+const PREMIUM_CALLOUT_TONES: Record<PremiumCalloutTone, string> = {
+  money:
+    "border-emerald-200/70 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/50 " +
+    "shadow-[0_10px_30px_-10px_var(--glow-money)]",
+  proof:
+    "border-blue-200/70 bg-gradient-to-br from-blue-50/80 via-white to-emerald-50/50 " +
+    "shadow-[0_10px_30px_-10px_var(--glow-proof)]",
+  warning:
+    "border-amber-200/70 bg-amber-50/60 " +
+    "shadow-[0_8px_24px_-10px_var(--glow-warning)]",
+  neutral: "border-border bg-surface-soft/70",
+};
+
+/**
+ * PremiumCallout — small toned callout (proof-mode notes, next-best-action,
+ * "not counted" disclosures). Quieter than a Card; never a wall of text.
+ */
+export function PremiumCallout({
+  title,
+  children,
+  tone = "proof",
+  className,
+}: {
+  title?: React.ReactNode;
+  children: React.ReactNode;
+  tone?: PremiumCalloutTone;
+  className?: string;
+}) {
+  return (
+    <div className={cx("rounded-lg border p-3", PREMIUM_CALLOUT_TONES[tone], className)}>
+      {title ? (
+        <p className="text-xs font-semibold text-ink-800">{title}</p>
+      ) : null}
+      <div
+        className={cx("text-xs leading-5 text-ink-muted", title ? "mt-1" : null)}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
