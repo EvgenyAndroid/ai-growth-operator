@@ -33,14 +33,15 @@ import {
   type PerformanceExamples,
   type ReadoutWindow,
 } from "../measurement";
+import { assertAccountAccess } from "./account-context";
 import {
   accountClock,
   deterministicFraction,
   loadExistingFlowReachSources,
   parseAudienceCustomerIds,
-  requireAccount,
   requireRecipeId,
 } from "./shared";
+import { getPerformanceSchema, parseInput } from "./validation";
 import type { PerformanceView } from "./types";
 
 const OUTCOME_EVENT_TYPES = ["purchase", "repeat_purchase", "refund"] as const;
@@ -78,7 +79,8 @@ export async function getPerformance(params: {
   actionId: string;
   readType?: ContractReadType;
 }): Promise<PerformanceView> {
-  const account = await requireAccount(params.accountId);
+  params = parseInput(getPerformanceSchema, params, "getPerformance"); // P5
+  const account = await assertAccountAccess(params.accountId); // P4 — account boundary
   const now = accountClock(account);
 
   const action = await db.action.findFirst({

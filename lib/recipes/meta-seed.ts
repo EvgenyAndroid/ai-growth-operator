@@ -11,12 +11,8 @@
  *  - consentAds (26B.13) gates seed eligibility; identifiers hashed at sync (26A.8).
  */
 
-import type {
-  Customer,
-  ExplanationContract,
-  RecipeInput,
-  RecipeResult,
-} from "../contracts";
+import type { ExplanationContract, RecipeInput, RecipeResult } from "../contracts";
+import type { Customer } from "../contracts/models";
 import { scoreConfidence } from "./confidence";
 import { buildMetaMeasurementPlan } from "./measurement-plan";
 import {

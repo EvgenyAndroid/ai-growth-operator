@@ -1,42 +1,19 @@
 /**
- * lib/contracts.ts — shared type surface for all AI Growth Operator modules.
+ * lib/contracts/public.ts — the CLIENT-SAFE half of the shared contract
+ * surface: enum-like constants, measurement/confidence/activation labels,
+ * recipe ids + config shapes, explanation-contract and readout types, and
+ * pure helpers (isFoundMoneyEligible).
  *
  * OWNED BY FOUNDATION. Module agents import from here; they do not edit it.
  * Import direction rule: ui -> lib/server -> modules (demo/recipes/governance/
  * ledger/measurement) -> contracts/db. Nothing imports "upward".
  *
+ * HARD RULE: this file must have ZERO imports (in particular, nothing from
+ * lib/generated/** or lib/db) so it can be bundled into Client Components.
+ * Prisma model re-exports live in ./models (server-only).
+ *
  * PRD v1.1 references are noted inline. Sections 26A/26B win over earlier text.
  */
-
-// ---------------------------------------------------------------------------
-// Prisma model re-exports (generated client — see prisma/schema.prisma)
-// ---------------------------------------------------------------------------
-
-export type {
-  Account,
-  Customer,
-  Product,
-  Event,
-  Audience,
-  Action,
-  Opportunity,
-  Constitution,
-  Holdout,
-  HoldoutMembership,
-  LedgerEntry,
-  Integration,
-  SyncRun,
-  RecipeConfig,
-  Draft,
-  Approval,
-  MeasurementWindow,
-  ExportJob,
-  Preference,
-} from "./generated/prisma/client";
-
-// Type-only: a value re-export would pull the Prisma runtime (node:module)
-// into client-component bundles via UI imports of this file.
-export type { Prisma } from "./generated/prisma/client";
 
 // ---------------------------------------------------------------------------
 // Enum-like constants (SQLite has no native enums; these unions are the law

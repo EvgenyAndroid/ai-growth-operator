@@ -7,6 +7,8 @@
 
 export { writeLedger, writeGovernanceDecision } from "./write";
 
+export { writeFailureEvent, type FailureOperation } from "./failures";
+
 export {
   listLedgerEntries,
   getLedgerEntry,

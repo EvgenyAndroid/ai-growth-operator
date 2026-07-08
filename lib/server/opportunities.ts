@@ -29,6 +29,8 @@ import {
 } from "../recipes";
 import { MEASUREMENT_LABEL_COPY } from "../contracts";
 import { getVerticalDefinition } from "../verticals";
+import { assertAccountAccess } from "./account-context";
+import { guardMutation } from "./rate-limit";
 import { parseDraftCopy } from "./draft-templates";
 import {
   accountClock,
@@ -36,10 +38,15 @@ import {
   loadRejectionDemotions,
   opportunityToCard,
   rankOpportunityCards,
-  requireAccount,
   requireRecipeId,
   toInputJson,
 } from "./shared";
+import {
+  accountIdSchema,
+  dismissOpportunitySchema,
+  getOpportunityDetailSchema,
+  parseInput,
+} from "./validation";
 import type {
   ActionSummaryView,
   DismissOpportunityResult,
@@ -55,7 +62,8 @@ import type {
  * place — never duplicated. Cooldown-dismissed cards are skipped.
  */
 export async function listOpportunities(accountId: string): Promise<FeedView> {
-  const account = await requireAccount(accountId);
+  accountId = parseInput(accountIdSchema, accountId, "listOpportunities"); // P5
+  const account = await assertAccountAccess(accountId); // P4 — account boundary
   // Demo accounts run on the demo dataset's fixed reference clock (PRD 25.1).
   const asOf = accountClock(account);
 
@@ -210,7 +218,8 @@ export async function getOpportunityDetail(params: {
   accountId: string;
   opportunityId: string;
 }): Promise<OpportunityDetailView> {
-  const account = await requireAccount(params.accountId);
+  params = parseInput(getOpportunityDetailSchema, params, "getOpportunityDetail"); // P5
+  const account = await assertAccountAccess(params.accountId); // P4 — account boundary
   const row = await db.opportunity.findFirst({
     where: { id: params.opportunityId, accountId: params.accountId },
     include: {
@@ -305,7 +314,9 @@ export async function dismissOpportunity(params: {
   cooldownDays?: number;
   userId?: string;
 }): Promise<DismissOpportunityResult> {
-  await requireAccount(params.accountId);
+  await guardMutation("dismissOpportunity"); // P7 — origin check + rate limit first
+  params = parseInput(dismissOpportunitySchema, params, "dismissOpportunity"); // P5
+  await assertAccountAccess(params.accountId); // P4 — account boundary
   if (!params.reason.trim()) {
     throw new Error("A dismissal reason is required (PRD 26 DoD #11).");
   }

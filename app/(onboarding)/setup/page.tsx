@@ -18,11 +18,9 @@ export const dynamic = "force-dynamic";
 
 import * as React from "react";
 import { selectBusinessTypeAction } from "../actions";
-import {
-  ClientBadge as Badge,
-  ClientButton as Button,
-  ClientCard as Card,
-} from "../client-ui";
+// Canonical primitives are client-safe since the lib/contracts split
+// (public/models) — the local client-ui mirrors are gone.
+import { Badge, Button, Card } from "@/components/ui/primitives";
 
 const STORAGE_KEY = "ago.business_setup";
 

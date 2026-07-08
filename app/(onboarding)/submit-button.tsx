@@ -7,7 +7,7 @@
 
 import * as React from "react";
 import { useFormStatus } from "react-dom";
-import { ClientButton, type ClientButtonVariant } from "./client-ui";
+import { Button, type ButtonVariant } from "@/components/ui/primitives";
 
 export function SubmitButton({
   children,
@@ -17,18 +17,18 @@ export function SubmitButton({
 }: {
   children: React.ReactNode;
   pendingLabel: string;
-  variant?: ClientButtonVariant;
+  variant?: ButtonVariant;
   className?: string;
 }) {
   const { pending } = useFormStatus();
   return (
-    <ClientButton
+    <Button
       type="submit"
       variant={variant}
       disabled={pending}
       className={className}
     >
       {pending ? pendingLabel : children}
-    </ClientButton>
+    </Button>
   );
 }

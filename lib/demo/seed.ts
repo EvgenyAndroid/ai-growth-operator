@@ -10,6 +10,8 @@
  * Idempotent: re-running deletes and recreates the demo account (cascade).
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import { createHash } from "node:crypto";
 import db from "../db";
 import {
@@ -18,8 +20,8 @@ import {
   RECIPE_CONFIG_DEFAULTS,
   RECIPE_IDS,
   type ExplanationContract,
-  type Prisma,
 } from "../contracts";
+import type { Prisma } from "../contracts/models";
 import {
   DEMO_ACCOUNT_NAME,
   EXISTING_RECOVERY_FLOW_CAMPAIGN_ID,

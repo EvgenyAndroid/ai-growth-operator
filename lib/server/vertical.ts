@@ -13,6 +13,8 @@
  * "@/lib/server/vertical".
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import type { Vertical } from "../contracts";
 import { getVerticalDefinition, isVertical } from "../verticals";
 

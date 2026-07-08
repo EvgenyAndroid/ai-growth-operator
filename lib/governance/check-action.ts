@@ -14,13 +14,11 @@
  * approval, or unparseable freshness data all BLOCK.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import { db } from "../db";
-import type {
-  Constitution,
-  GovernanceCheckInput,
-  GovernanceCheckResult,
-  GovernanceGate,
-} from "../contracts";
+import type { GovernanceCheckInput, GovernanceCheckResult, GovernanceGate } from "../contracts";
+import type { Constitution } from "../contracts/models";
 import { scanCopyForClaims, type ClaimFinding } from "./claims";
 import { findStaleSources, type FreshnessEvaluation } from "./freshness";
 import {

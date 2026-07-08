@@ -4,6 +4,8 @@ Agentic CDP for SMB and DTC brands. The system of decision, not another system o
 
 **Spec:** docs/PRD.md (PRD v1.1 — authoritative, incl. §26A Build Clarifications + §26B Engineering Defaults). Strategy: docs/BRD-v3.md.
 
+**Engineering docs:** [docs/CONTRACTS.md](docs/CONTRACTS.md) (module boundaries + import direction) · [docs/SECURITY.md](docs/SECURITY.md) (current security posture; auth is stubbed — read the limitations) · [docs/MIGRATIONS.md](docs/MIGRATIONS.md) (db-push alpha vs migrate prod, D1 notes) · [docs/PRODUCTION-HARDENING.md](docs/PRODUCTION-HARDENING.md) (what's done, what blocks a real launch).
+
 **Status:** Alpha (PRD §25.1) — demo mode, mocked connectors, deterministic recipes, simulated activation + holdouts. No LLM calls in alpha: recipes are deterministic and Operator Chat is a constrained command interface (PRD §26A.3).
 
 **Stack:** Next.js (App Router, TypeScript) + Prisma + Tailwind. Alpha runs SQLite for zero-setup local dev; the schema is Postgres-compatible and private beta flips the Prisma datasource to Postgres (PRD §26B.19).
@@ -55,6 +57,20 @@ node scripts/smoke.mjs # full end-to-end smoke: reseeds the demo data, builds
 
 `node scripts/smoke.mjs` prints PASS/FAIL per check and exits nonzero on failure. It reseeds the demo database, so run `npm run seed` afterwards if you want a pristine demo account.
 
+Focused suites (node:test, deterministic, no live services):
+
+```bash
+npm run test:contracts # recipes, governance, measurement, chat invariants (38 tests)
+npm run test:security  # export privacy + account isolation (12 tests)
+npm run test:quality   # lint + client-boundary check + tsc --noEmit
+npm run check:accounts # account-boundary acceptance checks (21 checks)
+npm test               # lint + build + full smoke + security tests
+```
+
+CI (`.github/workflows/ci.yml`) runs the whole pipeline — generate, push,
+seed, lint, boundary check, tsc, build, full smoke, contracts + security
+tests — on every push/PR against a fresh seeded SQLite database.
+
 ## Useful scripts
 
 | Command | What it does |
@@ -62,7 +78,12 @@ node scripts/smoke.mjs # full end-to-end smoke: reseeds the demo data, builds
 | `npm run dev` | Next.js dev server (localhost:3000) |
 | `npm run build` | Production build (also typechecks the whole repo) |
 | `npm run start` | Serve the production build |
-| `npm run db:push` | Push `prisma/schema.prisma` to SQLite |
-| `npm run db:generate` | Regenerate the Prisma client (`lib/generated/prisma`) |
+| `npm run db:push` | Push `prisma/schema.prisma` to SQLite (alpha posture — see docs/MIGRATIONS.md) |
+| `npm run db:generate` | Regenerate BOTH Prisma clients (`lib/generated/prisma` + `prisma-workerd`) |
 | `npm run seed` | Seed/replace both demo accounts (Shopify DTC + local café/bakery) |
 | `npm run lint` | ESLint |
+| `npm run check:boundary` | Static server/client boundary check (no client import of db/Prisma/models) |
+| `npm run check:accounts` | Account-boundary acceptance checks |
+| `npm run test:contracts` | Recipe / governance / measurement / chat invariant tests |
+| `npm run test:security` | Export-privacy + account-isolation tests |
+| `npm run test:quality` | Lint + boundary check + typecheck |

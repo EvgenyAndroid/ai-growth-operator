@@ -16,6 +16,8 @@
  * this directory touches a (mock) connector.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 export {
   createDemoAccount,
   getConnectionStatus,

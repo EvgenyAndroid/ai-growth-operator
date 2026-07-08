@@ -365,10 +365,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = React.useState(false);
 
-  // Close the mobile menu whenever the route changes.
-  React.useEffect(() => {
+  // Close the mobile menu whenever the route changes. Done as
+  // adjust-state-during-render (react.dev "You Might Not Need an Effect")
+  // instead of an effect, so there is no post-paint cascading render.
+  const [lastPathname, setLastPathname] = React.useState(pathname);
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   // Onboarding track renders {children} exactly ONCE — no duplicate render
   // (checked per brief v4's allowed logic-adjacent fix; none was needed).

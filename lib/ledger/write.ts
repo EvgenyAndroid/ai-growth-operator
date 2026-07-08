@@ -8,8 +8,10 @@
  * data syncs — still recorded, never dropped).
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import { db } from "../db";
-import { Prisma } from "../contracts";
+import type { Prisma } from "../contracts/models";
 import type { GovernanceCheckResult, LedgerWrite, LedgerWriteFn } from "../contracts";
 
 function toJson(value: unknown): Prisma.InputJsonValue | undefined {

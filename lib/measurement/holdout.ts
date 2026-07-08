@@ -11,11 +11,12 @@
  * and visible in the Context Ledger (PRD 14.3).
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import type { ActivationLevel, ContractActionType, HoldoutPlan } from "../contracts";
 import { db as defaultDb } from "../db";
 import {
   DEFAULT_HOLDOUT_PERCENT,
-  MIN_HOLDOUT_AUDIENCE,
   resolveMeasurementMode,
   type MeasurementModeDecision,
 } from "./mode";

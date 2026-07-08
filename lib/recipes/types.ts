@@ -7,13 +7,8 @@
  * lib/db). Same input + same snapshot => byte-identical output (PRD 10.1).
  */
 
-import type {
-  ContractActionType,
-  Customer,
-  DataFreshness,
-  Event,
-  Product,
-} from "../contracts";
+import type { ContractActionType, DataFreshness } from "../contracts";
+import type { Customer, Event, Product } from "../contracts/models";
 
 /** PRD 10.1 — every recipe run is versioned. */
 export const RECIPE_VERSION = "1.0.0";

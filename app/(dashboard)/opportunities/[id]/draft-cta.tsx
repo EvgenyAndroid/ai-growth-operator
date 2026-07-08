@@ -8,7 +8,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { draftAction } from "@/lib/server";
+import { draftAction } from "@/lib/server/actions";
 import { Button } from "@/components/ui/primitives";
 
 export function DraftCta({

@@ -16,6 +16,7 @@ import {
   saveOperatingRules,
   type ConnectionStatusView,
 } from "@/lib/server";
+import { guardMutation } from "@/lib/server/rate-limit";
 import { setActiveVertical } from "@/lib/server/vertical";
 
 /**
@@ -29,6 +30,7 @@ export async function enterDemoWorkspace(): Promise<void> {
 
 /** Landing-page secondary action — wipe and reseed the demo dataset. */
 export async function resetDemoWorkspace(): Promise<void> {
+  await guardMutation("resetDemoWorkspace"); // P7 — origin check + rate limit first
   await createDemoAccount({ reset: true });
   redirect("/setup");
 }

@@ -43,8 +43,14 @@ function check(name, ok, detail = "") {
   if (!ok) failures += 1;
 }
 
-function runSync(args, label) {
-  const result = spawnSync(process.execPath, args, {
+function runSync(args) {
+  // tsx module invocations run with the react-server resolution condition so
+  // `import "server-only"` boundary markers resolve to their no-op build
+  // (exactly as they do inside Next's server runtime). `next build`/`next
+  // start` spawns manage their own conditions and must NOT receive it.
+  const isTsx = args.includes("tsx");
+  const finalArgs = isTsx ? ["--conditions", "react-server", ...args] : args;
+  const result = spawnSync(process.execPath, finalArgs, {
     cwd: ROOT,
     stdio: ["ignore", "inherit", "inherit"],
   });

@@ -12,6 +12,8 @@
  * the recipes flag contamination risk + lower confidence (26A.5).
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import type {
   ContractActionType,
   DataFreshness,

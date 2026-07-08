@@ -8,8 +8,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { dismissOpportunity } from "@/lib/server";
-import { Button } from "@/components/ui/primitives";
+import { dismissOpportunity } from "@/lib/server/opportunities";
+import { Button, ChoiceChip } from "@/components/ui/primitives";
 import { REJECTION_REASONS } from "./_shared/format";
 
 export function DismissButton({
@@ -62,21 +62,13 @@ export function DismissButton({
       </p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {REJECTION_REASONS.map((r) => (
-          <button
+          <ChoiceChip
             key={r}
-            type="button"
             onClick={() => setReason(r)}
-            aria-pressed={reason === r}
-            className={
-              "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-150 " +
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
-              (reason === r
-                ? "border-primary bg-primary text-white"
-                : "border-border-strong bg-surface text-ink-secondary hover:bg-surface-soft hover:text-ink")
-            }
+            selected={reason === r}
           >
             {r}
-          </button>
+          </ChoiceChip>
         ))}
       </div>
       <textarea

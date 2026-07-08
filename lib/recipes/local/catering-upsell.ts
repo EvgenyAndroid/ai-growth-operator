@@ -22,12 +22,12 @@
  */
 
 import type {
-  Customer,
   EstimateRange,
   ExplanationContract,
   RecipeInput,
   RecipeResult,
 } from "../../contracts";
+import type { Customer } from "../../contracts/models";
 import { scoreConfidence } from "../confidence";
 import {
   MS_PER_DAY,

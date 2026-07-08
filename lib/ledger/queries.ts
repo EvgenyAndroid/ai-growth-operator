@@ -4,8 +4,11 @@
  * trails, and event-type counts for filter chips.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import { db } from "../db";
-import type { ContractLedgerEventType, LedgerEntry } from "../contracts";
+import type { ContractLedgerEventType } from "../contracts";
+import type { LedgerEntry } from "../contracts/models";
 
 export interface ListLedgerEntriesParams {
   accountId: string;

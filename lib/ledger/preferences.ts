@@ -9,9 +9,12 @@
  * so the audit trail and the learned preference stay in lockstep.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import { db } from "../db";
-import { Prisma } from "../contracts";
-import type { Preference, RecipeId } from "../contracts";
+import type { Prisma } from "../contracts/models";
+import type { RecipeId } from "../contracts";
+import type { Preference } from "../contracts/models";
 import { writeLedger } from "./write";
 
 // ---------------------------------------------------------------------------

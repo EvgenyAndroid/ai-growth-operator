@@ -14,15 +14,23 @@ import { DEMO_ACCOUNT_NAME, loadDemoDataset, seedDemoDatabase } from "../demo";
 import db from "../db";
 import type { IntegrationSource, Vertical } from "../contracts";
 import { writeLedger } from "../ledger";
+import { assertAccountAccess } from "./account-context";
+import { guardMutation } from "./rate-limit";
 import { ensureLocalDemoAccount } from "./local-demo";
 import { getActiveVertical } from "./vertical";
 import {
   accountClock,
   latestConstitution,
-  requireAccount,
   requireConstitution,
   toInputJson,
 } from "./shared";
+import {
+  accountIdSchema,
+  createDemoAccountSchema,
+  parseInput,
+  resyncConnectionSchema,
+  saveOperatingRulesSchema,
+} from "./validation";
 import type {
   ConnectionStatusView,
   CreateDemoAccountResult,
@@ -43,6 +51,7 @@ const MS_PER_HOUR = 3_600_000;
 export async function createDemoAccount(
   options: { reset?: boolean; vertical?: Vertical } = {},
 ): Promise<CreateDemoAccountResult> {
+  options = parseInput(createDemoAccountSchema, options ?? {}, "createDemoAccount"); // P5
   const vertical = options.vertical ?? (await getActiveVertical());
   if (vertical === "local_service") {
     return ensureLocalDemoAccount({ reset: options.reset });
@@ -117,7 +126,9 @@ export async function createDemoAccount(
 export async function saveOperatingRules(
   input: SaveOperatingRulesInput,
 ): Promise<OperatingRulesView> {
-  await requireAccount(input.accountId);
+  await guardMutation("saveOperatingRules"); // P7 — origin check + rate limit first
+  input = parseInput(saveOperatingRulesSchema, input, "saveOperatingRules"); // P5
+  await assertAccountAccess(input.accountId); // P4 — account boundary
 
   for (const [name, value] of [
     ["monthlyBudgetCap", input.monthlyBudgetCap],
@@ -179,6 +190,8 @@ export async function saveOperatingRules(
 export async function getOperatingRules(
   accountId: string,
 ): Promise<OperatingRulesView> {
+  accountId = parseInput(accountIdSchema, accountId, "getOperatingRules"); // P5
+  await assertAccountAccess(accountId); // P4 — account boundary
   const constitution = await requireConstitution(accountId);
   return toOperatingRulesView(constitution);
 }
@@ -215,7 +228,8 @@ function toOperatingRulesView(constitution: {
 export async function getConnectionStatus(
   accountId: string,
 ): Promise<ConnectionStatusView[]> {
-  const account = await requireAccount(accountId);
+  accountId = parseInput(accountIdSchema, accountId, "getConnectionStatus"); // P5
+  const account = await assertAccountAccess(accountId); // P4 — account boundary
   const now = accountClock(account);
   const integrations = await db.integration.findMany({
     where: { accountId },
@@ -254,7 +268,9 @@ export async function resyncConnection(params: {
   source: IntegrationSource;
   userId?: string;
 }): Promise<ConnectionStatusView> {
-  const account = await requireAccount(params.accountId);
+  await guardMutation("resyncConnection"); // P7 — origin check + rate limit first
+  params = parseInput(resyncConnectionSchema, params, "resyncConnection"); // P5
+  const account = await assertAccountAccess(params.accountId); // P4 — account boundary
   const integration = await db.integration.findUnique({
     where: {
       accountId_source: { accountId: params.accountId, source: params.source },

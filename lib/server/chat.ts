@@ -17,9 +17,11 @@ import { CHAT_UNSUPPORTED_RESPONSE, MEASUREMENT_LABEL_COPY } from "../contracts"
 import db from "../db";
 import { writeLedger } from "../ledger";
 import { draftAction } from "./actions";
+import { assertAccountAccess } from "./account-context";
+import { guardMutation } from "./rate-limit";
 import { routeChatIntent } from "./chat-router";
 import { listOpportunities } from "./opportunities";
-import { requireAccount } from "./shared";
+import { operatorChatSchema, parseInput } from "./validation";
 import type { ChatResponse, FeedView, OpportunityCardView } from "./types";
 
 function moneyRange(low: number, high: number): string {
@@ -74,7 +76,9 @@ export async function operatorChat(params: {
   input: string;
   userId?: string;
 }): Promise<ChatResponse> {
-  await requireAccount(params.accountId);
+  await guardMutation("operatorChat"); // P7 — origin check + rate limit first
+  params = parseInput(operatorChatSchema, params, "operatorChat"); // P5 — bounded input
+  await assertAccountAccess(params.accountId); // P4 — account boundary
   const intent = routeChatIntent(params.input);
 
   // --- unsupported: the EXACT 26A.3 response --------------------------------

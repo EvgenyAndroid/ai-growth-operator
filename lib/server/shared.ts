@@ -7,18 +7,17 @@
  * nothing here bypasses a module.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import type {
-  Constitution,
   ContractLedgerEventType,
   DataFreshness,
   ExplanationContract,
   IdentifiedCoverage,
   IntegrationSource,
-  LedgerEntry,
-  Opportunity,
-  Prisma,
   RecipeId,
 } from "../contracts";
+import type { Constitution, LedgerEntry, Opportunity, Prisma } from "../contracts/models";
 import {
   DTC_RECIPE_IDS,
   LOCAL_RECIPE_IDS,

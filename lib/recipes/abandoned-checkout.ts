@@ -12,13 +12,8 @@
  *  - Holdout only when eligible audience >= minHoldoutAudience, downgrade per 26A.1.
  */
 
-import type {
-  Customer,
-  EstimateRange,
-  ExplanationContract,
-  RecipeInput,
-  RecipeResult,
-} from "../contracts";
+import type { EstimateRange, ExplanationContract, RecipeInput, RecipeResult } from "../contracts";
+import type { Customer } from "../contracts/models";
 import { scoreConfidence } from "./confidence";
 import { buildKlaviyoMeasurementPlan } from "./measurement-plan";
 import {
@@ -27,7 +22,6 @@ import {
   activeFlowMemberEmails,
   allSourcesFresh,
   computeAov,
-  customerSortKey,
   eventsByCustomer,
   fmtDollars,
   fmtPct,
@@ -114,7 +108,6 @@ export function runAbandonedCheckoutRecovery(
   const staleBefore = asOf.getTime() - cfg.maxCheckoutAgeDays * MS_PER_DAY;
 
   const customers = sortCustomers(snapshot.customers);
-  const customerById = new Map(customers.map((c) => [c.id, c]));
   const purchasesByCustomer = eventsByCustomer(snapshot.events, [
     "purchase",
     "repeat_purchase",

@@ -17,6 +17,18 @@ export const metadata: Metadata = {
   },
   description:
     "Find money, draft the action, approve, activate, measure, learn. Demo workspace with simulated data (MVP v0 alpha).",
+  // Demo workspace — never index (mirrors the X-Robots-Tag header set in
+  // next.config.ts; the metadata covers crawlers that only read the HTML).
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export default function RootLayout({

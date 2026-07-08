@@ -286,7 +286,7 @@ export function ActivationBadge({
 // Button — primary / secondary / tertiary(ghost) / danger, with pressed states
 // ---------------------------------------------------------------------------
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const BUTTON_CLASSES: Record<ButtonVariant, string> = {
   // Deep console navy with a hairline top sheen; presses in (tactile:
@@ -332,6 +332,37 @@ export function Button({
         "disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm",
         BUTTON_CLASSES[variant],
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ChoiceChip — selectable reason/filter pill (used by the dismiss + reject
+// reason pickers). Native button props only, so it stays a shared primitive;
+// interactive usage (onClick) belongs inside client components, like Button.
+// ---------------------------------------------------------------------------
+
+export function ChoiceChip({
+  selected = false,
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  /** Renders the pressed/selected state and sets aria-pressed. */
+  selected?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      className={cx(
+        "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-150",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        selected
+          ? "border-primary bg-primary text-white"
+          : "border-border-strong bg-surface text-ink-secondary hover:bg-surface-soft hover:text-ink",
         className
       )}
       {...props}

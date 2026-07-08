@@ -10,12 +10,15 @@
  * window must not render (26A.2).
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import type {
   ContractReadType,
   MeasurementMode,
   RecipeId,
 } from "../contracts";
-import { DEFAULT_MEASUREMENT_WINDOWS, Prisma } from "../contracts";
+import { DEFAULT_MEASUREMENT_WINDOWS } from "../contracts";
+import type { Prisma } from "../contracts/models";
 import { db as defaultDb } from "../db";
 
 export interface ComputedWindow {

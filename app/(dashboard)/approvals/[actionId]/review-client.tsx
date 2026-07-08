@@ -16,14 +16,11 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import {
-  approveAction,
-  recordDraftEdit,
-  rejectAction,
-  type ApproveActionResult,
-  type DraftCopyStep,
-} from "@/lib/server";
-import { Badge, Button, Card, StatList, StatRow } from "@/components/ui/primitives";
+// Client components import server actions directly from their "use server"
+// module — never the broad @/lib/server barrel (server/client boundary rule).
+import { approveAction, recordDraftEdit, rejectAction } from "@/lib/server/actions";
+import type { ApproveActionResult, DraftCopyStep } from "@/lib/server/types";
+import { Badge, Button, Card, ChoiceChip, StatList, StatRow } from "@/components/ui/primitives";
 import { fmtDateTime, READ_TYPE_LABELS, REJECTION_REASONS } from "../../feed/_shared/format";
 
 type Mode = "idle" | "edit" | "reject";
@@ -398,21 +395,13 @@ export function ReviewActions({
           <p className="text-sm font-medium text-ink">Why reject this draft?</p>
           <div className="flex flex-wrap gap-1.5">
             {REJECTION_REASONS.map((r) => (
-              <button
+              <ChoiceChip
                 key={r}
-                type="button"
                 onClick={() => setReason(r)}
-                aria-pressed={reason === r}
-                className={
-                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-150 " +
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
-                  (reason === r
-                    ? "border-primary bg-primary text-white"
-                    : "border-border-strong bg-surface text-ink-secondary hover:bg-surface-soft hover:text-ink")
-                }
+                selected={reason === r}
               >
                 {r}
-              </button>
+              </ChoiceChip>
             ))}
           </div>
           <textarea

@@ -7,7 +7,7 @@
  */
 
 import * as React from "react";
-import { ClientButton } from "./client-ui";
+import { Button } from "@/components/ui/primitives";
 import type { ConnectionStatusView } from "@/lib/server/types";
 import { resyncSourceAction } from "./actions";
 
@@ -25,7 +25,7 @@ export function ResyncButton({
   const [pending, startTransition] = React.useTransition();
 
   return (
-    <ClientButton
+    <Button
       variant="secondary"
       size="sm"
       disabled={pending}
@@ -36,6 +36,6 @@ export function ResyncButton({
       }
     >
       {pending ? "Syncing…" : label}
-    </ClientButton>
+    </Button>
   );
 }

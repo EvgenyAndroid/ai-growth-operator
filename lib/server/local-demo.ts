@@ -11,6 +11,8 @@
  * disclosure. Called only from createDemoAccount — UI never imports this.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import {
   LOCAL_DEMO_ACCOUNT_NAME,
   loadLocalDemoDataset,

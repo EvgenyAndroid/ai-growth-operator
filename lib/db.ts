@@ -15,6 +15,8 @@
  * no call-site changes anywhere in the app.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { PrismaD1 } from "@prisma/adapter-d1";
 import { PrismaClient } from "./generated/prisma/client";
@@ -36,9 +38,8 @@ function isWorkerd(): boolean {
 function createLocalClient(): PrismaClient {
   // createRequire keeps better-sqlite3 (native addon) invisible to the
   // Workers bundler; this branch only ever executes under node.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const nodeRequire: NodeRequire =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     (require("node:module") as any).createRequire(process.cwd() + "/");
   const { PrismaBetterSqlite3 } = nodeRequire("@prisma/adapter-better-sqlite3");
   const adapter = new PrismaBetterSqlite3({ url: DATABASE_URL });
@@ -77,7 +78,7 @@ function getClient(): PrismaClient {
 }
 
 export const db: PrismaClient = new Proxy({} as PrismaClient, {
-  get(_target, prop, receiver) {
+  get(_target, prop) {
     const client = getClient();
     const value = Reflect.get(client, prop, client);
     return typeof value === "function" ? value.bind(client) : value;

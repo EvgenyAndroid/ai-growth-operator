@@ -17,6 +17,8 @@
  * persist as "demo" ("mailchimp" is not a legal Event.source in this phase).
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import { createHash } from "node:crypto";
 import db from "../../db";
 import {
@@ -26,8 +28,8 @@ import {
   MEASUREMENT_LABEL_COPY,
   RECIPE_CONFIG_DEFAULTS,
   type ExplanationContract,
-  type Prisma,
 } from "../../contracts";
+import type { Prisma } from "../../contracts/models";
 import { median, money } from "../prng";
 import {
   LOCAL_DEMO_ACCOUNT_NAME,

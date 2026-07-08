@@ -35,7 +35,7 @@ import type {
   IdentifiedCoverage,
 } from "../../contracts";
 import { buildIdentifiedCoverage } from "../../verticals";
-import { Rng, median, money } from "../prng";
+import { Rng, money } from "../prng";
 import { DEMO_REFERENCE_DATE } from "../generator";
 import { buildLocalCatalog, type LocalDemoProduct } from "./catalog";
 

@@ -3,7 +3,7 @@
  * Pure functions only; no I/O, no Date.now(), no randomness.
  */
 
-import type { Customer, Event } from "../contracts";
+import type { Customer, Event } from "../contracts/models";
 import type { ExistingFlowSnapshot, RecipeDataSnapshot } from "./types";
 
 export const MS_PER_HOUR = 3_600_000;

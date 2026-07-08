@@ -1,0 +1,102 @@
+# .github/workflows/ci.yml — quality gate (hardening P10).
+#
+# Every push/PR runs the full deterministic pipeline against a fresh SQLite
+# database + the seeded demo dataset (fixed seed, fixed reference clock — no
+# live services, no secrets needed):
+#
+#   npm ci -> prisma generate (both clients) -> db push -> seed ->
+#   lint -> client-boundary check -> tsc -> next build ->
+#   full smoke suite (scripts/smoke.mjs) ->
+#   P9 node:test suites (contracts + security) -> account-boundary acceptance.
+#
+# The Cloudflare (OpenNext/workerd) build is a SEPARATE, optional job: it
+# verifies the worker bundle still assembles, but its failure does not block
+# the quality gate (continue-on-error) — deploys are out of scope for CI.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Fresh throwaway SQLite file per run (dev.db is gitignored).
+  DATABASE_URL: file:./dev.db
+
+jobs:
+  quality-gate:
+    name: Lint, build, smoke, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma clients (node + workerd)
+        run: npm run db:generate
+
+      - name: Push schema to a fresh SQLite database
+        run: npm run db:push
+
+      - name: Seed the deterministic demo dataset (both verticals)
+        run: npm run seed
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Client/server boundary check
+        run: npm run check:boundary
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build (next build)
+        run: npm run build
+
+      - name: Smoke suite (full: HTTP + approve cycles, 57 checks)
+        run: node scripts/smoke.mjs
+
+      - name: Contract tests (recipes, governance, measurement, chat)
+        run: npm run test:contracts
+
+      - name: Security tests (export privacy, account isolation)
+        run: npm run test:security
+
+      - name: Account-boundary acceptance check
+        run: npm run check:accounts
+
+  cloudflare-build:
+    name: Cloudflare build (optional)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Optional/separate per the hardening brief: a workerd bundling failure
+    # must not block the main quality gate.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma clients (node + workerd)
+        run: npm run db:generate
+
+      - name: OpenNext Cloudflare build
+        run: npm run cf:build

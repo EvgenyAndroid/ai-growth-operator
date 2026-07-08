@@ -12,7 +12,14 @@ import {
   getOpportunityAuditTrail,
   listLedgerEntries,
 } from "../ledger";
-import { ledgerEntryToView, requireAccount } from "./shared";
+import { assertAccountAccess } from "./account-context";
+import { ledgerEntryToView } from "./shared";
+import {
+  getActionAuditSchema,
+  getLedgerSchema,
+  getOpportunityAuditSchema,
+  parseInput,
+} from "./validation";
 import type { LedgerEntryView, LedgerPageView } from "./types";
 
 /** Paginated, filterable ledger for the audit screen (PRD 18.4). */
@@ -27,7 +34,8 @@ export async function getLedger(params: {
   cursor?: string;
   limit?: number;
 }): Promise<LedgerPageView> {
-  await requireAccount(params.accountId);
+  params = parseInput(getLedgerSchema, params, "getLedger"); // P5
+  await assertAccountAccess(params.accountId); // P4 — account boundary
   const page = await listLedgerEntries({
     accountId: params.accountId,
     eventTypes: params.eventTypes,
@@ -56,7 +64,8 @@ export async function getActionAudit(params: {
   accountId: string;
   actionId: string;
 }): Promise<LedgerEntryView[]> {
-  await requireAccount(params.accountId);
+  params = parseInput(getActionAuditSchema, params, "getActionAudit"); // P5
+  await assertAccountAccess(params.accountId); // P4 — account boundary
   const rows = await getActionAuditTrail(params.accountId, params.actionId);
   return rows.map(ledgerEntryToView);
 }
@@ -66,7 +75,8 @@ export async function getOpportunityAudit(params: {
   accountId: string;
   opportunityId: string;
 }): Promise<LedgerEntryView[]> {
-  await requireAccount(params.accountId);
+  params = parseInput(getOpportunityAuditSchema, params, "getOpportunityAudit"); // P5
+  await assertAccountAccess(params.accountId); // P4 — account boundary
   const rows = await getOpportunityAuditTrail(
     params.accountId,
     params.opportunityId,

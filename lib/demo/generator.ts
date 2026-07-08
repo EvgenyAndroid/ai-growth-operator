@@ -153,7 +153,6 @@ export function generateDemoDataset(
   const iso = (daysAgo: number): string => new Date(refMs - daysAgo * 86400000).toISOString();
 
   const products = buildCatalog(new Rng(DEMO_SEED ^ 0x5eed));
-  const productById = new Map(products.map((p) => [p.sourceProductId, p]));
   const replenishablePool = products.filter((p) => p.repeatPurchaseFlag);
   const giftPool = products.filter((p) => p.category === "gift-sets");
   const anyPool = products;

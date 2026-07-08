@@ -14,7 +14,10 @@
  *    non-discount angle first anyway).
  */
 
-import type { Constitution, RecipeId, RecipeResult } from "../contracts";
+import "server-only"; // build-time guard: must never enter a client bundle
+
+import type { RecipeId, RecipeResult } from "../contracts";
+import type { Constitution } from "../contracts/models";
 import {
   buildCateringUpsellBrief,
   buildLocalLapsedRegularSteps,

@@ -6,6 +6,8 @@
  * Anything else routes to "unsupported" and gets the EXACT 26A.3 response.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import type { ChatIntent } from "../contracts";
 
 interface IntentRule {

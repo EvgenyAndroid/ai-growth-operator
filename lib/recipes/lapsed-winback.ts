@@ -13,14 +13,8 @@
  *  - NET estimates (26B.11): active win-back flow members are subtracted.
  */
 
-import type {
-  Customer,
-  EstimateRange,
-  ExplanationContract,
-  Product,
-  RecipeInput,
-  RecipeResult,
-} from "../contracts";
+import type { EstimateRange, ExplanationContract, RecipeInput, RecipeResult } from "../contracts";
+import type { Customer, Product } from "../contracts/models";
 import { scoreConfidence } from "./confidence";
 import { buildKlaviyoMeasurementPlan } from "./measurement-plan";
 import {
