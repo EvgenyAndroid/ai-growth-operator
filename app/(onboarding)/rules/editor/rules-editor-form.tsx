@@ -39,10 +39,10 @@ function NumberField({
   step?: number;
 }) {
   return (
-    <label className="block bg-surface p-5 transition-colors duration-150 focus-within:bg-accent-soft/15">
+    <label className="flex h-full flex-col bg-surface p-5 transition-colors duration-150 focus-within:bg-accent-soft/15">
       <span className="block text-sm font-semibold text-ink">{label}</span>
       <span className="mt-0.5 block text-xs leading-5 text-ink-muted">{hint}</span>
-      <span className="mt-4 flex items-baseline gap-2">
+      <span className="mt-auto flex items-baseline gap-2 pt-4">
         {prefix ? (
           <span className="text-xl font-semibold text-ink-soft">{prefix}</span>
         ) : null}

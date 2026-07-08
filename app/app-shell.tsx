@@ -23,6 +23,7 @@ function cx(...parts: Array<string | false | null | undefined>): string {
 }
 
 const NAV_ITEMS: Array<{ label: string; href: string }> = [
+  { label: "Home", href: "/" },
   { label: "Feed", href: "/feed" },
   { label: "Chat", href: "/chat" },
   { label: "Approvals", href: "/approvals" },
@@ -206,13 +207,7 @@ function TopBar({
               <>
                 <path d="M3.5 6h13" />
                 <path d="M3.5 10h13" />
-                <Link
-            href="/"
-            className="mb-2 block text-[11px] font-medium text-slate-400 transition-colors duration-150 hover:text-slate-200"
-          >
-            &larr; Sign-in page
-          </Link>
-          <path d="M3.5 14h13" />
+                <path d="M3.5 14h13" />
               </>
             )}
           </svg>
