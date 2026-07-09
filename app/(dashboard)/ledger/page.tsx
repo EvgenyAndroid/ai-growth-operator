@@ -7,7 +7,7 @@
  */
 
 import Link from "next/link";
-import { createDemoAccount, getLedger } from "@/lib/server";
+import { ensureDemoAccount, getLedger } from "@/lib/server";
 import type { ContractLedgerEventType } from "@/lib/contracts";
 import { SectionHeading } from "@/components/ui/primitives";
 import { LedgerTable, PageShell } from "../performance/shared-ui";
@@ -73,7 +73,7 @@ export default async function LedgerPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
 
   const typeParam = typeof sp.type === "string" ? sp.type : undefined;
   const eventType = isEventType(typeParam) ? typeParam : undefined;

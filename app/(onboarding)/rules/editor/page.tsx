@@ -6,7 +6,7 @@
  */
 
 import { Badge, Card, StatList, StatRow } from "@/components/ui/primitives";
-import { createDemoAccount, getOperatingRules } from "@/lib/server";
+import { ensureDemoAccount, getOperatingRules } from "@/lib/server";
 import { RulesEditorForm } from "./rules-editor-form";
 
 // Prefills from the live Operating Rules version — never prerender.
@@ -18,7 +18,7 @@ export default async function OperatingRulesEditorPage({
   searchParams: Promise<{ template?: string }>;
 }) {
   const { template } = await searchParams;
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
   const rules = await getOperatingRules(account.accountId);
   const isLocal = account.vertical === "local_service";
   const templateName = isLocal

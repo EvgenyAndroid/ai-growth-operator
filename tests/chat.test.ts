@@ -2,7 +2,7 @@
  * tests/chat.test.ts — P9 Operator Chat tests (node:test).
  *
  * Deterministic intent-router coverage (pure) plus end-to-end operatorChat
- * calls against the seeded DTC demo workspace (createDemoAccount is
+ * calls against the seeded DTC demo workspace (ensureDemoAccount is
  * idempotent; chat only APPENDS chat_interaction ledger entries — the demo
  * baseline data is untouched and the smoke suite reseeds anyway).
  *
@@ -20,14 +20,14 @@ import {
 } from "../lib/contracts";
 import { findLiftLanguage } from "../lib/measurement/constants";
 import { db } from "../lib/db";
-import { createDemoAccount } from "../lib/server";
-import { operatorChat } from "../lib/server/chat";
+import { ensureDemoAccount } from "../lib/server";
+import { operatorChat } from "../lib/server/chat/actions";
 import { routeChatIntent } from "../lib/server/chat-router";
 
 let accountId = "";
 
 before(async () => {
-  const demo = await createDemoAccount({ vertical: "shopify_dtc" });
+  const demo = await ensureDemoAccount({ vertical: "shopify_dtc" });
   accountId = demo.accountId;
 });
 

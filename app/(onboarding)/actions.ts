@@ -3,47 +3,52 @@
 /**
  * app/(onboarding)/actions.ts — thin form-action wrappers over lib/server.
  *
- * The UI layer never imports modules directly (docs/CONTRACTS.md import
+ * The UI layer never imports deeper modules directly (docs/CONTRACTS.md import
  * direction rule); these wrappers adapt FormData / navigation concerns onto
- * the lib/server onboarding actions.
+ * the lib/server onboarding actions. Guards (P7) and validation (P5) live in
+ * the lib/server actions themselves — exactly one guardMutation per action.
  */
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { ensureDemoAccount } from "@/lib/server/onboarding/read";
 import {
-  createDemoAccount,
+  resetDemoWorkspace as resetDemoWorkspaceAction,
   resyncConnection,
   saveOperatingRules,
-  type ConnectionStatusView,
-} from "@/lib/server";
-import { guardMutation } from "@/lib/server/rate-limit";
-import { setActiveVertical } from "@/lib/server/vertical";
+  selectDemoVertical,
+} from "@/lib/server/onboarding/actions";
+import type { ConnectionStatusView } from "@/lib/server/types";
 
 /**
  * Screen 1 CTA — "Enter demo workspace". No real auth in the alpha (PRD 25.1);
- * this creates (or reuses) the seeded demo account and starts onboarding.
+ * this reuses (or first-creates) the seeded demo account and starts
+ * onboarding. NEVER resets (hardening pass 2, item 3).
  */
 export async function enterDemoWorkspace(): Promise<void> {
-  await createDemoAccount();
+  await ensureDemoAccount();
   redirect("/setup");
 }
 
-/** Landing-page secondary action — wipe and reseed the demo dataset. */
+/**
+ * Landing-page secondary action — wipe and reseed the demo dataset. Delegates
+ * to THE only reset path (lib/server/onboarding/actions resetDemoWorkspace,
+ * guardMutation-guarded there).
+ */
 export async function resetDemoWorkspace(): Promise<void> {
-  await guardMutation("resetDemoWorkspace"); // P7 — origin check + rate limit first
-  await createDemoAccount({ reset: true });
+  await resetDemoWorkspaceAction();
   redirect("/setup");
 }
 
 /**
  * Screen 2 — Business Setup. Persists the vertical choice (cookie — trust
  * rule #10: vertical selection routes everything downstream) and provisions
- * the matching demo workspace, then moves on to the Operating Rules template.
- * "shopify_dtc" keeps the existing DTC alpha exactly as-is.
+ * the matching demo workspace (guarded selectDemoVertical), then moves on to
+ * the Operating Rules template. "shopify_dtc" keeps the existing DTC alpha
+ * exactly as-is.
  */
 export async function selectBusinessTypeAction(vertical: string): Promise<void> {
-  const selected = await setActiveVertical(vertical); // validates; throws on unknown
-  await createDemoAccount({ vertical: selected });
+  await selectDemoVertical(vertical); // validates; throws on unknown
   redirect("/rules");
 }
 

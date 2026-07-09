@@ -4,7 +4,7 @@
  * demo-mode, trust rules #9/#10).
  *
  * Checks, via direct module invocation against the seeded LOCAL demo account:
- *   - onboard-as-local path: createDemoAccount({ vertical: "local_service" })
+ *   - onboard-as-local path: ensureDemoAccount({ vertical: "local_service" })
  *     resolves the Cardamom & Rye workspace with the LOCAL connector set;
  *   - feed: three LOCAL cards (lapsed-regular, catering, shared Meta seed),
  *     every card + the feed header carry the POS coverage disclosure;
@@ -23,7 +23,7 @@
 import { db } from "../lib/db";
 import { isFoundMoneyEligible } from "../lib/contracts";
 import {
-  createDemoAccount,
+  ensureDemoAccount,
   getPerformance,
   listOpportunities,
 } from "../lib/server";
@@ -62,7 +62,7 @@ function forbiddenLiftLanguage(texts: string[]): string[] {
 
 async function main(): Promise<void> {
   // --- onboard-as-local path (trust rule #10: vertical routes everything) ----
-  const account = await createDemoAccount({ vertical: "local_service" });
+  const account = await ensureDemoAccount({ vertical: "local_service" });
   check(
     "onboarding: local_service demo workspace resolves",
     account.vertical === "local_service" && account.demoMode,

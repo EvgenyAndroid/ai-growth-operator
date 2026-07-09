@@ -13,7 +13,7 @@
 
 import * as React from "react";
 import { useRef, useState, useTransition } from "react";
-import { operatorChat } from "@/lib/server/chat";
+import { operatorChat } from "@/lib/server/chat/actions";
 import type { ChatResponse, OpportunityCardView } from "@/lib/server/types";
 import {
   ConfBadge,

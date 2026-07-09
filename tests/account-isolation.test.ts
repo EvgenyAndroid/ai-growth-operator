@@ -19,10 +19,11 @@ import {
   assertAccountAccess,
   runWithVerticalContext,
 } from "../lib/server/account-context";
-import { createDemoAccount } from "../lib/server";
+import { ensureDemoAccount } from "../lib/server";
 import { exportState } from "../lib/server/export";
-import { getOperatingRules, saveOperatingRules } from "../lib/server/onboarding";
-import { listOpportunities } from "../lib/server/opportunities";
+import { saveOperatingRules } from "../lib/server/onboarding/actions";
+import { getOperatingRules } from "../lib/server/onboarding/read";
+import { listOpportunities } from "../lib/server/opportunities/read";
 
 let dtcAccountId = "";
 let localAccountId = "";
@@ -45,8 +46,8 @@ function isUserSafe(message: string | null, forgedId?: string): boolean {
 }
 
 before(async () => {
-  const dtc = await createDemoAccount({ vertical: "shopify_dtc" });
-  const local = await createDemoAccount({ vertical: "local_service" });
+  const dtc = await ensureDemoAccount({ vertical: "shopify_dtc" });
+  const local = await ensureDemoAccount({ vertical: "local_service" });
   dtcAccountId = dtc.accountId;
   localAccountId = local.accountId;
   assert.notEqual(dtcAccountId, localAccountId);

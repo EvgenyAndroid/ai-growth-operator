@@ -1,0 +1,75 @@
+# .github/workflows/release.yml — release gate (hardening pass 2, item 5).
+#
+# The regular PR gate (ci.yml) keeps the Cloudflare (OpenNext/workerd) build
+# as a separate continue-on-error job so a bundler hiccup never blocks daily
+# work. THIS workflow is the release path: everything in the quality gate PLUS
+# a BLOCKING Cloudflare build — if the worker bundle does not assemble, the
+# release is red. Run it before any deploy (locally: `npm run ci:release`).
+#
+# Triggers: version tags (v*) and manual dispatch.
+
+name: Release gate
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: file:./dev.db
+
+jobs:
+  release-gate:
+    name: Full gate + BLOCKING Cloudflare build
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma clients (node + workerd)
+        run: npm run db:generate
+
+      - name: Push schema to a fresh SQLite database
+        run: npm run db:push
+
+      - name: Seed the deterministic demo dataset (both verticals)
+        run: npm run seed
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Client/server boundary check
+        run: npm run check:boundary
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build (next build)
+        run: npm run build
+
+      - name: Smoke suite (full: HTTP + approve cycles)
+        run: node scripts/smoke.mjs
+
+      - name: Contract tests (recipes, governance, measurement, chat)
+        run: npm run test:contracts
+
+      - name: Security tests (export privacy, account isolation, demo provisioning)
+        run: npm run test:security
+
+      - name: Account-boundary acceptance check
+        run: npm run check:accounts
+
+      - name: OpenNext Cloudflare build (BLOCKING on the release path)
+        run: npm run cf:build

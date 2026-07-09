@@ -2,8 +2,17 @@
  * lib/server — public surface of the server-action layer (the ONLY layer the
  * UI calls; see docs/CONTRACTS.md import direction rule).
  *
- * Onboarding:   createDemoAccount, saveOperatingRules, getOperatingRules,
- *               getConnectionStatus, resyncConnection
+ * Server components may import anything here. Client components must NEVER
+ * import this barrel — they import the narrow "use server" action modules
+ * directly (lib/server/actions, lib/server/opportunities/actions,
+ * lib/server/chat/actions, lib/server/export, lib/server/onboarding/actions);
+ * enforced by scripts/check-client-boundary.mjs.
+ *
+ * Onboarding:   ensureDemoAccount (safe reuse/create — never resets),
+ *               getOperatingRules, getConnectionStatus,
+ *               saveOperatingRules, resyncConnection
+ *               (resetDemoWorkspace / selectDemoVertical are deliberately NOT
+ *               re-exported: import "@/lib/server/onboarding/actions")
  * Feed:         listOpportunities, getOpportunityDetail, dismissOpportunity
  * Actions:      draftAction, approveAction, rejectAction, recordDraftEdit
  * Performance:  getPerformance, getPerformanceExamples
@@ -19,18 +28,16 @@
 import "server-only"; // build-time guard: must never enter a client bundle
 
 export {
-  createDemoAccount,
+  ensureDemoAccount,
   getConnectionStatus,
   getOperatingRules,
-  resyncConnection,
-  saveOperatingRules,
-} from "./onboarding";
+} from "./onboarding/read";
 
-export {
-  dismissOpportunity,
-  getOpportunityDetail,
-  listOpportunities,
-} from "./opportunities";
+export { resyncConnection, saveOperatingRules } from "./onboarding/actions";
+
+export { getOpportunityDetail, listOpportunities } from "./opportunities/read";
+
+export { dismissOpportunity } from "./opportunities/actions";
 
 export {
   approveAction,
@@ -39,13 +46,13 @@ export {
   rejectAction,
 } from "./actions";
 
-export { getPerformance, getPerformanceExamples } from "./performance";
+export { getPerformance, getPerformanceExamples } from "./performance/read";
 
-export { getActionAudit, getLedger, getOpportunityAudit } from "./ledger";
+export { getActionAudit, getLedger, getOpportunityAudit } from "./ledger/read";
 
 export { exportState } from "./export";
 
-export { operatorChat } from "./chat";
+export { operatorChat } from "./chat/actions";
 export { routeChatIntent } from "./chat-router";
 
 export type {
@@ -54,7 +61,7 @@ export type {
   ApproveActionResult,
   ChatResponse,
   ConnectionStatusView,
-  CreateDemoAccountResult,
+  DemoAccountResult,
   DismissOpportunityResult,
   DraftActionResult,
   DraftCopyStep,

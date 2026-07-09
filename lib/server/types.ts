@@ -34,7 +34,8 @@ import type { FoundMoneyHeader } from "../recipes";
 // Onboarding / account
 // ---------------------------------------------------------------------------
 
-export interface CreateDemoAccountResult {
+/** Result of ensureDemoAccount / resetDemoWorkspace / selectDemoVertical. */
+export interface DemoAccountResult {
   accountId: string;
   accountName: string;
   /** Vertical pack this workspace runs (trust rule #10 — routes everything). */

@@ -39,18 +39,29 @@ await guardMutation("<actionName>");
 
 Required wiring (action → file):
 
-| Action                | File                          | Call                                          |
-| --------------------- | ----------------------------- | --------------------------------------------- |
-| `draftAction`         | `lib/server/actions/index.ts` | `await guardMutation("draftAction");`         |
-| `approveAction`       | `lib/server/actions/index.ts` | `await guardMutation("approveAction");`       |
-| `rejectAction`        | `lib/server/actions/index.ts` | `await guardMutation("rejectAction");`        |
-| `recordDraftEdit`     | `lib/server/actions/index.ts` | `await guardMutation("recordDraftEdit");`     |
-| `dismissOpportunity`  | `lib/server/opportunities.ts` | `await guardMutation("dismissOpportunity");`  |
-| `exportState`         | `lib/server/export.ts`        | `await guardMutation("exportState");`         |
-| `operatorChat`        | `lib/server/chat.ts`          | `await guardMutation("operatorChat");`        |
-| `saveOperatingRules`  | `lib/server/onboarding.ts`    | `await guardMutation("saveOperatingRules");`  |
-| `resyncConnection`    | `lib/server/onboarding.ts`    | `await guardMutation("resyncConnection");`    |
-| `resetDemoWorkspace`  | `app/(onboarding)/actions.ts` | `await guardMutation("resetDemoWorkspace");`  |
+(File locations updated by hardening pass 2, item 2: reads moved to
+`server-only` read modules; every guarded mutation lives in a narrow
+"use server" action file.)
+
+| Action                | File                                    | Call                                          |
+| --------------------- | --------------------------------------- | --------------------------------------------- |
+| `draftAction`         | `lib/server/actions/index.ts`           | `await guardMutation("draftAction");`         |
+| `approveAction`       | `lib/server/actions/index.ts`           | `await guardMutation("approveAction");`       |
+| `rejectAction`        | `lib/server/actions/index.ts`           | `await guardMutation("rejectAction");`        |
+| `recordDraftEdit`     | `lib/server/actions/index.ts`           | `await guardMutation("recordDraftEdit");`     |
+| `dismissOpportunity`  | `lib/server/opportunities/actions.ts`   | `await guardMutation("dismissOpportunity");`  |
+| `exportState`         | `lib/server/export.ts`                  | `await guardMutation("exportState");`         |
+| `operatorChat`        | `lib/server/chat/actions.ts`            | `await guardMutation("operatorChat");`        |
+| `saveOperatingRules`  | `lib/server/onboarding/actions.ts`      | `await guardMutation("saveOperatingRules");`  |
+| `resyncConnection`    | `lib/server/onboarding/actions.ts`      | `await guardMutation("resyncConnection");`    |
+| `resetDemoWorkspace`  | `lib/server/onboarding/actions.ts`      | `await guardMutation("resetDemoWorkspace");`  |
+| `selectDemoVertical`  | `lib/server/onboarding/actions.ts`      | `await guardMutation("selectDemoVertical");`  |
+
+`resetDemoWorkspace` moved from `app/(onboarding)/actions.ts` into
+`lib/server/onboarding/actions.ts` in pass 2 (item 3) — the app-layer wrapper
+now only redirects; exactly ONE `guardMutation("resetDemoWorkspace")` runs
+per request. `selectDemoVertical` (Business Setup) was added to the guarded
+set in the same pass.
 
 Notes for the wiring agent:
 

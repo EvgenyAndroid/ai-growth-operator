@@ -8,7 +8,7 @@
  */
 
 import Link from "next/link";
-import { createDemoAccount, getLedger, getPerformance, getPerformanceExamples } from "@/lib/server";
+import { ensureDemoAccount, getLedger, getPerformance, getPerformanceExamples } from "@/lib/server";
 import type { LedgerEntryView, PerformanceView } from "@/lib/server/types";
 import type { ContractReadType, MeasurementReadout } from "@/lib/contracts";
 import {
@@ -242,7 +242,7 @@ export default async function PerformancePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
 
   const successEntries = await getLedger({
     accountId: account.accountId,

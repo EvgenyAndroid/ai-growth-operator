@@ -10,7 +10,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Badge, Card, StatusDot } from "@/components/ui/primitives";
-import { createDemoAccount, getConnectionStatus } from "@/lib/server";
+import { ensureDemoAccount, getConnectionStatus } from "@/lib/server";
 
 // Freshness must reflect the live DB — never prerender at build time.
 export const dynamic = "force-dynamic";
@@ -235,7 +235,7 @@ function ConnectorCard({
 }
 
 export default async function ConnectDataSourcesPage() {
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
   const connections = await getConnectionStatus(account.accountId);
   const cards = orderConnectionsForVertical(account.vertical, connections);
   const requiredReady = cards

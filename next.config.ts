@@ -13,8 +13,12 @@ const isDev = process.env.NODE_ENV !== "production";
  * - `script-src 'unsafe-inline'`: Next.js App Router bootstraps hydration
  *   through inline <script> tags without nonces. A strict nonce-based CSP
  *   requires per-request nonce middleware + `headers()` moving off static
- *   config; that is a production TODO (see docs/HARDENING-BRIEF.md P6), not
- *   an alpha-demo requirement. `'unsafe-eval'` is dev-only (React Refresh).
+ *   config. PRODUCTION TODO — BLOCKING BEFORE ANY REAL (NON-DEMO) DATA:
+ *   `'unsafe-inline'` must be replaced with a per-request nonce CSP before
+ *   this app handles a single real merchant (tracked as a blocking gate in
+ *   docs/PRODUCTION-HARDENING.md; posture in docs/SECURITY.md). Until then,
+ *   keep THIS enforced policy — never regress to report-only or drop the
+ *   header. `'unsafe-eval'` is dev-only (React Refresh).
  * - `style-src 'unsafe-inline'`: React inline style props + Next-injected
  *   style tags.
  *

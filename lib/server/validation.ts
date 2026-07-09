@@ -220,11 +220,20 @@ export const dismissOpportunitySchema = z.object({
   userId: actorSchema.optional(),
 });
 
-// onboarding.ts
-export const createDemoAccountSchema = z.object({
-  reset: z.boolean("must be a boolean").optional(),
+// onboarding/read.ts — ensureDemoAccount NEVER accepts reset (hardening
+// pass 2, item 3): a forged `reset` field is stripped by the object schema.
+export const ensureDemoAccountSchema = z.object({
   vertical: z.enum(VERTICALS).optional(),
 });
+
+// onboarding/actions.ts — the ONLY reset path (guardMutation-guarded).
+export const resetDemoWorkspaceSchema = z.object({
+  vertical: z.enum(VERTICALS).optional(),
+});
+
+// onboarding/actions.ts — Business Setup vertical choice (registry membership
+// is re-validated in setActiveVertical, which throws on unknown values).
+export const selectDemoVerticalSchema = z.enum(VERTICALS);
 
 export const saveOperatingRulesSchema = z.object({
   accountId: idSchema,

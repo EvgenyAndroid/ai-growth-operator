@@ -57,19 +57,28 @@ node scripts/smoke.mjs # full end-to-end smoke: reseeds the demo data, builds
 
 `node scripts/smoke.mjs` prints PASS/FAIL per check and exits nonzero on failure. It reseeds the demo database, so run `npm run seed` afterwards if you want a pristine demo account.
 
+**The full gate** — `npm test` (an alias of `npm run test:all`) runs exactly
+what CI runs, in the same order: lint → client-boundary check →
+`tsc --noEmit` → `next build` → full smoke (`scripts/smoke.mjs`) → contract
+tests → security tests → account-boundary acceptance. Green here means green
+in CI.
+
 Focused suites (node:test, deterministic, no live services):
 
 ```bash
 npm run test:contracts # recipes, governance, measurement, chat invariants (38 tests)
-npm run test:security  # export privacy + account isolation (12 tests)
+npm run test:security  # export privacy + account isolation + demo provisioning
 npm run test:quality   # lint + client-boundary check + tsc --noEmit
 npm run check:accounts # account-boundary acceptance checks (21 checks)
-npm test               # lint + build + full smoke + security tests
+npm test               # the FULL gate (= test:all) — matches CI exactly
+npm run ci:release     # test:all + BLOCKING Cloudflare (OpenNext) build
 ```
 
-CI (`.github/workflows/ci.yml`) runs the whole pipeline — generate, push,
-seed, lint, boundary check, tsc, build, full smoke, contracts + security
-tests — on every push/PR against a fresh seeded SQLite database.
+CI (`.github/workflows/ci.yml`) runs the same pipeline — generate, push,
+seed, then the full gate — on every push/PR against a fresh seeded SQLite
+database. The release path (`.github/workflows/release.yml`, or
+`npm run ci:release` locally) additionally makes the Cloudflare worker build
+blocking (see docs/PRODUCTION-HARDENING.md).
 
 ## Useful scripts
 
@@ -85,5 +94,7 @@ tests — on every push/PR against a fresh seeded SQLite database.
 | `npm run check:boundary` | Static server/client boundary check (no client import of db/Prisma/models) |
 | `npm run check:accounts` | Account-boundary acceptance checks |
 | `npm run test:contracts` | Recipe / governance / measurement / chat invariant tests |
-| `npm run test:security` | Export-privacy + account-isolation tests |
+| `npm run test:security` | Export-privacy + account-isolation + demo-provisioning tests |
 | `npm run test:quality` | Lint + boundary check + typecheck |
+| `npm test` / `npm run test:all` | The FULL quality gate — matches CI exactly |
+| `npm run ci:release` | Full gate + blocking Cloudflare (OpenNext) build |

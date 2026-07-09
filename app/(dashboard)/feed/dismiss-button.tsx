@@ -8,7 +8,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { dismissOpportunity } from "@/lib/server/opportunities";
+import { dismissOpportunity } from "@/lib/server/opportunities/actions";
 import { Button, ChoiceChip } from "@/components/ui/primitives";
 import { REJECTION_REASONS } from "./_shared/format";
 

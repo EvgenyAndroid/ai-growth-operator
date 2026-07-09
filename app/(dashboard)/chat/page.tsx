@@ -6,7 +6,7 @@
  * conversation itself is the client ChatPanel.
  */
 
-import { createDemoAccount } from "@/lib/server";
+import { ensureDemoAccount } from "@/lib/server";
 import { PageShell } from "../performance/shared-ui";
 import { ChatPanel } from "./chat-panel";
 
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Operator Chat — AI Growth Operator" };
 
 export default async function ChatPage() {
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
 
   return (
     <PageShell

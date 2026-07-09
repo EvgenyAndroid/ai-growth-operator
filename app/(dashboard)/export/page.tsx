@@ -6,7 +6,7 @@
  * client component calling the exportState server action.
  */
 
-import { createDemoAccount } from "@/lib/server";
+import { ensureDemoAccount } from "@/lib/server";
 import { PageShell } from "../performance/shared-ui";
 import { ExportPanel } from "./export-panel";
 
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Export State — AI Growth Operator" };
 
 export default async function ExportPage() {
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
 
   return (
     <PageShell

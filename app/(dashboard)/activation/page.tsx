@@ -11,7 +11,7 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  createDemoAccount,
+  ensureDemoAccount,
   getActionAudit,
   getLedger,
 } from "@/lib/server";
@@ -261,7 +261,7 @@ export default async function ActivationPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
 
   const [activationPage, holdoutPage] = await Promise.all([
     getLedger({

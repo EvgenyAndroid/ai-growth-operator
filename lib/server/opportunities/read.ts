@@ -1,37 +1,34 @@
-"use server";
-
 /**
- * lib/server/opportunities.ts — the opportunity feed (PRD 7.2/7.3, 26B.16).
+ * lib/server/opportunities/read.ts — opportunity feed READS (PRD 7.2/7.3,
+ * 26B.16). Server-only (NOT "use server"): these functions are called by
+ * server components and other server modules; they are never client-invocable
+ * action endpoints (hardening pass 2, item 2).
  *
  * listOpportunities   — run the three deterministic recipes over the demo data,
  *                       dedup/update cards in place, compute the found-money
  *                       header (PRD 16.2, net-of-flows framing 26B.11), and
  *                       surface 26A.10 "what was checked" when nothing qualifies.
  * getOpportunityDetail— card + fresh deterministic re-run detail + audit trail.
- * dismissOpportunity  — reason + cooldown (PRD 9.6) + 26B.18 preference hook.
+ *
+ * The client-callable mutation (dismissOpportunity) lives in ./actions.ts.
  */
 
-import type { IdentifiedCoverage, RecipeResult } from "../contracts";
-import db from "../db";
-import {
-  getOpportunityAuditTrail,
-  recordRejectionPreference,
-  writeLedger,
-} from "../ledger";
+import "server-only"; // build-time guard: must never enter a client bundle
+
+import type { IdentifiedCoverage, RecipeResult } from "../../contracts";
+import db from "../../db";
+import { getOpportunityAuditTrail, writeLedger } from "../../ledger";
 import {
   applyRedetection,
   computeFoundMoneyHeader,
   foundMoneyItemFromOpportunity,
   runAllRecipesForAccount,
   runRecipeForAccount,
-  DEFAULT_DISMISSAL_COOLDOWN_DAYS,
-  dismissalPatch,
-} from "../recipes";
-import { MEASUREMENT_LABEL_COPY } from "../contracts";
-import { getVerticalDefinition } from "../verticals";
-import { assertAccountAccess } from "./account-context";
-import { guardMutation } from "./rate-limit";
-import { parseDraftCopy } from "./draft-templates";
+} from "../../recipes";
+import { MEASUREMENT_LABEL_COPY } from "../../contracts";
+import { getVerticalDefinition } from "../../verticals";
+import { assertAccountAccess } from "../account-context";
+import { parseDraftCopy } from "../draft-templates";
 import {
   accountClock,
   ledgerEntryToView,
@@ -40,21 +37,19 @@ import {
   rankOpportunityCards,
   requireRecipeId,
   toInputJson,
-} from "./shared";
+} from "../shared";
 import {
   accountIdSchema,
-  dismissOpportunitySchema,
   getOpportunityDetailSchema,
   parseInput,
-} from "./validation";
+} from "../validation";
 import type {
   ActionSummaryView,
-  DismissOpportunityResult,
   DraftView,
   FeedView,
   NoOpportunityView,
   OpportunityDetailView,
-} from "./types";
+} from "../types";
 
 /**
  * The feed (PRD 7.2). Every call re-runs the deterministic recipes and applies
@@ -299,63 +294,5 @@ export async function getOpportunityDetail(params: {
     drafts,
     actions,
     auditTrail: audit.map(ledgerEntryToView),
-  };
-}
-
-/**
- * Dismiss with reason (PRD 26 DoD #11). Sets the cooldown window (default 14
- * days) so re-detection skips the card (26B.16), logs the dismissal, and feeds
- * the 26B.18 learned-preferences hook.
- */
-export async function dismissOpportunity(params: {
-  accountId: string;
-  opportunityId: string;
-  reason: string;
-  cooldownDays?: number;
-  userId?: string;
-}): Promise<DismissOpportunityResult> {
-  await guardMutation("dismissOpportunity"); // P7 — origin check + rate limit first
-  params = parseInput(dismissOpportunitySchema, params, "dismissOpportunity"); // P5
-  await assertAccountAccess(params.accountId); // P4 — account boundary
-  if (!params.reason.trim()) {
-    throw new Error("A dismissal reason is required (PRD 26 DoD #11).");
-  }
-  const row = await db.opportunity.findFirst({
-    where: { id: params.opportunityId, accountId: params.accountId },
-  });
-  if (!row) throw new Error(`Opportunity ${params.opportunityId} not found.`);
-
-  const now = new Date();
-  const patch = dismissalPatch(
-    params.reason,
-    now,
-    params.cooldownDays ?? DEFAULT_DISMISSAL_COOLDOWN_DAYS,
-  );
-  await db.opportunity.update({ where: { id: row.id }, data: patch });
-
-  await writeLedger({
-    accountId: params.accountId,
-    eventType: "dismissal",
-    userId: params.userId,
-    opportunityId: row.id,
-    skillInvoked: row.recipeId,
-    reasoningSummary: `User dismissed with reason: "${params.reason}". Cooldown until ${patch.cooldownUntil.toISOString()}.`,
-    actionTaken: "opportunity dismissed; re-detection paused for cooldown",
-  });
-
-  // 26B.18 — dismissal reasons are learning signals like rejection reasons.
-  const learned = await recordRejectionPreference({
-    accountId: params.accountId,
-    reason: params.reason,
-    userId: params.userId,
-    opportunityId: row.id,
-    recipeId: requireRecipeId(row.recipeId),
-  });
-
-  return {
-    opportunityId: row.id,
-    status: "dismissed",
-    cooldownUntil: patch.cooldownUntil.toISOString(),
-    preferenceKeys: learned.preferenceKeys,
   };
 }

@@ -11,7 +11,11 @@
 #
 # The Cloudflare (OpenNext/workerd) build is a SEPARATE, optional job: it
 # verifies the worker bundle still assembles, but its failure does not block
-# the quality gate (continue-on-error) — deploys are out of scope for CI.
+# the quality gate (continue-on-error) — deploys are out of scope for PR CI.
+# On the RELEASE path the same build is BLOCKING: see
+# .github/workflows/release.yml (or run `npm run ci:release` locally).
+# The full local equivalent of the quality gate is `npm test` / `npm run
+# test:all`.
 
 name: CI
 
@@ -71,7 +75,7 @@ jobs:
       - name: Contract tests (recipes, governance, measurement, chat)
         run: npm run test:contracts
 
-      - name: Security tests (export privacy, account isolation)
+      - name: Security tests (export privacy, account isolation, demo provisioning)
         run: npm run test:security
 
       - name: Account-boundary acceptance check

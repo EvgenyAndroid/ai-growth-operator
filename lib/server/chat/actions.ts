@@ -1,7 +1,9 @@
 "use server";
 
 /**
- * lib/server/chat.ts — Operator Chat (PRD 17, 26A.3).
+ * lib/server/chat/actions.ts — Operator Chat (PRD 17, 26A.3). The narrow
+ * "use server" action module of the chat slice (hardening pass 2, item 2):
+ * operatorChat is the ONLY export, and the only client-callable entry point.
  *
  * A constrained command interface over the three v0 recipes: it can explain,
  * draft, and point at the approval queue — it can NEVER activate (chat cannot
@@ -12,17 +14,17 @@
  * (PRD 17.3). Unsupported asks return the EXACT 26A.3 string.
  */
 
-import type { ChatIntent, ExplanationContract, RecipeId } from "../contracts";
-import { CHAT_UNSUPPORTED_RESPONSE, MEASUREMENT_LABEL_COPY } from "../contracts";
-import db from "../db";
-import { writeLedger } from "../ledger";
-import { draftAction } from "./actions";
-import { assertAccountAccess } from "./account-context";
-import { guardMutation } from "./rate-limit";
-import { routeChatIntent } from "./chat-router";
-import { listOpportunities } from "./opportunities";
-import { operatorChatSchema, parseInput } from "./validation";
-import type { ChatResponse, FeedView, OpportunityCardView } from "./types";
+import type { ChatIntent, ExplanationContract, RecipeId } from "../../contracts";
+import { CHAT_UNSUPPORTED_RESPONSE, MEASUREMENT_LABEL_COPY } from "../../contracts";
+import db from "../../db";
+import { writeLedger } from "../../ledger";
+import { draftAction } from "../actions";
+import { assertAccountAccess } from "../account-context";
+import { guardMutation } from "../rate-limit";
+import { routeChatIntent } from "../chat-router";
+import { listOpportunities } from "../opportunities/read";
+import { operatorChatSchema, parseInput } from "../validation";
+import type { ChatResponse, FeedView, OpportunityCardView } from "../types";
 
 function moneyRange(low: number, high: number): string {
   return `$${Math.round(low).toLocaleString("en-US")}-$${Math.round(high).toLocaleString("en-US")}`;

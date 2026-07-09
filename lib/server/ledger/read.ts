@@ -1,26 +1,29 @@
-"use server";
-
 /**
- * lib/server/ledger.ts — audit-screen reads over the Context Ledger (PRD 18.4).
- * Thin pass-throughs to lib/ledger query helpers, mapped to plain DTOs.
+ * lib/server/ledger/read.ts — audit-screen reads over the Context Ledger
+ * (PRD 18.4). Thin pass-throughs to lib/ledger query helpers, mapped to plain
+ * DTOs. READ-ONLY and server-only (NOT "use server"): called by server
+ * components via the lib/server barrel; never a client-invocable action
+ * endpoint (hardening pass 2, item 2).
  */
 
-import type { ContractLedgerEventType } from "../contracts";
+import "server-only"; // build-time guard: must never enter a client bundle
+
+import type { ContractLedgerEventType } from "../../contracts";
 import {
   countLedgerEntriesByType,
   getActionAuditTrail,
   getOpportunityAuditTrail,
   listLedgerEntries,
-} from "../ledger";
-import { assertAccountAccess } from "./account-context";
-import { ledgerEntryToView } from "./shared";
+} from "../../ledger";
+import { assertAccountAccess } from "../account-context";
+import { ledgerEntryToView } from "../shared";
 import {
   getActionAuditSchema,
   getLedgerSchema,
   getOpportunityAuditSchema,
   parseInput,
-} from "./validation";
-import type { LedgerEntryView, LedgerPageView } from "./types";
+} from "../validation";
+import type { LedgerEntryView, LedgerPageView } from "../types";
 
 /** Paginated, filterable ledger for the audit screen (PRD 18.4). */
 export async function getLedger(params: {

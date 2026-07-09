@@ -1,8 +1,10 @@
-"use server";
-
 /**
- * lib/server/performance.ts — measurement readouts for launched actions
+ * lib/server/performance/read.ts — measurement readouts for launched actions
  * (PRD 14/15, 26A.1/26A.2) + the PRD 20.4 simulated demo examples.
+ *
+ * READ-ONLY and server-only (NOT "use server"): called by server components
+ * via the lib/server barrel; never a client-invocable action endpoint
+ * (hardening pass 2, item 2).
  *
  * getPerformance routes by the action's persisted measurementMode into the
  * lib/measurement builders — the ONLY three labels that exist. Holdout math
@@ -10,16 +12,18 @@
  * with PRD 15.2 whitelisted metrics only.
  */
 
+import "server-only"; // build-time guard: must never enter a client bundle
+
 import type {
   ContractReadType,
   MeasurementMode,
   MeasurementReadout,
   RecipeId,
-} from "../contracts";
-import { HOLDOUT_INELIGIBLE_ACTIVATION_LEVELS } from "../contracts";
-import db from "../db";
-import { writeLedger } from "../ledger";
-import { buildIdentifiedCoverage, getVerticalDefinition } from "../verticals";
+} from "../../contracts";
+import { HOLDOUT_INELIGIBLE_ACTIVATION_LEVELS } from "../../contracts";
+import db from "../../db";
+import { writeLedger } from "../../ledger";
+import { buildIdentifiedCoverage, getVerticalDefinition } from "../../verticals";
 import {
   buildBeforeAfterReadout,
   buildDirectionalReadout,
@@ -32,17 +36,17 @@ import {
   type OutcomeEvent,
   type PerformanceExamples,
   type ReadoutWindow,
-} from "../measurement";
-import { assertAccountAccess } from "./account-context";
+} from "../../measurement";
+import { assertAccountAccess } from "../account-context";
 import {
   accountClock,
   deterministicFraction,
   loadExistingFlowReachSources,
   parseAudienceCustomerIds,
   requireRecipeId,
-} from "./shared";
-import { getPerformanceSchema, parseInput } from "./validation";
-import type { PerformanceView } from "./types";
+} from "../shared";
+import { getPerformanceSchema, parseInput } from "../validation";
+import type { PerformanceView } from "../types";
 
 const OUTCOME_EVENT_TYPES = ["purchase", "repeat_purchase", "refund"] as const;
 

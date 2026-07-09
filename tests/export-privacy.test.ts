@@ -74,6 +74,27 @@ before(async () => {
       eligibleChannels: ["klaviyo_email"],
     },
   });
+
+  // Hostile fixture for the item-4 nested-JSON scrub: an EXPORTED JSON column
+  // (exclusionRules) poisoned with member customer ids and email-shaped keys.
+  // Today's recipe writers never do this; the scrub must hold even if a
+  // future writer slips.
+  await db.audience.create({
+    data: {
+      accountId,
+      name: "Poisoned nested-JSON audience",
+      creationMethod: "recipe",
+      inclusionRules: { customerIds: [memberCustomerId] },
+      exclusionRules: {
+        suppressed: 2,
+        customerIds: [memberCustomerId],
+        contactEmail: RAW_EMAIL,
+        nested: { member_customer_ids: [memberCustomerId], emails: [RAW_EMAIL] },
+      },
+      size: 1,
+      eligibleChannels: ["klaviyo_email"],
+    },
+  });
 });
 
 after(async () => {
@@ -125,6 +146,47 @@ test("export privacy: audience export never leaks member customer ids", async ()
   );
   assert.ok(!result.content.includes("customerIds"));
   assert.ok(!result.content.includes(RAW_EMAIL));
+});
+
+test("export ID policy: internal ids export only as labeled system ids (never a bare id column)", async () => {
+  // Item 4 policy (docs/SECURITY.md): internal db ids are opaque SYSTEM ids
+  // and must be labeled as such; email_hash stays the only customer-level
+  // identifier.
+  const csv = await exportState({ accountId, objectType: "customers" });
+  const headerLine = csv.content
+    .split("\r\n")
+    .find((line) => line.length > 0 && !line.startsWith("#"));
+  assert.ok(headerLine, "customers CSV must have a header row");
+  const headers = headerLine.split(",");
+  assert.ok(headers.includes("system_id"), "internal id must export as system_id");
+  assert.ok(!headers.includes("id"), "a bare, unlabeled id column must not export");
+  assert.ok(headers.includes("email_hash"));
+
+  const json = await exportState({
+    accountId,
+    objectType: "audiences",
+    format: "json",
+  });
+  const parsed = JSON.parse(json.content) as { rows: Array<Record<string, unknown>> };
+  for (const row of parsed.rows) {
+    assert.ok("system_id" in row, "audience rows carry a labeled system_id");
+    assert.ok(!("id" in row), "audience rows must not carry a bare id column");
+  }
+});
+
+test("export ID policy: nested JSON columns are scrubbed of member ids and email-shaped keys", async () => {
+  const result = await exportState({ accountId, objectType: "audiences", format: "json" });
+  assert.equal(result.status, "completed");
+  // The poisoned fixture's counts survive...
+  assert.ok(result.content.includes("suppressed"));
+  // ...but member customer ids and email-shaped keys never leave, even when a
+  // (hypothetical) writer embeds them in an exported JSON column.
+  assert.ok(!result.content.includes(memberCustomerId));
+  assert.ok(!result.content.includes(RAW_EMAIL));
+  assert.ok(!result.content.includes("customerIds"));
+  assert.ok(!result.content.includes("member_customer_ids"));
+  assert.ok(!result.content.includes("contactEmail"));
+  assert.ok(!result.content.includes("emails"));
 });
 
 test("export privacy: filename derives from the allowlist + server clock, never user input", async () => {

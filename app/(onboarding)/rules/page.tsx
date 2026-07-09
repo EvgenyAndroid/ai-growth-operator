@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 import { Badge, Card } from "@/components/ui/primitives";
-import { createDemoAccount, getOperatingRules } from "@/lib/server";
+import { ensureDemoAccount, getOperatingRules } from "@/lib/server";
 
 // Reads the live Operating Rules version — never prerender at build time.
 export const dynamic = "force-dynamic";
@@ -65,7 +65,7 @@ function RuleNumbers({
 }
 
 export default async function OperatingRulesPickerPage() {
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
   const rules = await getOperatingRules(account.accountId);
   const isLocal = account.vertical === "local_service";
 

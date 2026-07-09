@@ -23,11 +23,13 @@ import {
   runWithVerticalContext,
 } from "../lib/server/account-context";
 import { rejectAction } from "../lib/server/actions";
-import { operatorChat } from "../lib/server/chat";
+import { operatorChat } from "../lib/server/chat/actions";
 import { exportState } from "../lib/server/export";
-import { getOperatingRules, saveOperatingRules } from "../lib/server/onboarding";
-import { createDemoAccount } from "../lib/server";
-import { dismissOpportunity, listOpportunities } from "../lib/server/opportunities";
+import { saveOperatingRules } from "../lib/server/onboarding/actions";
+import { getOperatingRules } from "../lib/server/onboarding/read";
+import { ensureDemoAccount } from "../lib/server";
+import { dismissOpportunity } from "../lib/server/opportunities/actions";
+import { listOpportunities } from "../lib/server/opportunities/read";
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = ""): void {
@@ -54,8 +56,8 @@ function isUserSafe(message: string | null, forgedId?: string): boolean {
 
 async function main(): Promise<void> {
   // --- setup: both demo workspaces (idempotent) ------------------------------
-  const dtc = await createDemoAccount({ vertical: "shopify_dtc" });
-  const local = await createDemoAccount({ vertical: "local_service" });
+  const dtc = await ensureDemoAccount({ vertical: "shopify_dtc" });
+  const local = await ensureDemoAccount({ vertical: "local_service" });
   check(
     "setup: both demo accounts resolve (DTC + LOCAL)",
     dtc.accountId !== local.accountId && dtc.demoMode && local.demoMode,

@@ -1,10 +1,10 @@
 # Production Hardening — status & remaining gates (P14)
 
-Outcome record of the July 2026 hardening pass (spec:
-docs/HARDENING-BRIEF.md) plus the checklist of what MUST still happen before
-this app handles a single real (non-demo) merchant. Current-state details
-live in docs/SECURITY.md; DB lifecycle in docs/MIGRATIONS.md; module
-boundaries in docs/CONTRACTS.md.
+Outcome record of the July 2026 hardening passes (specs:
+docs/HARDENING-BRIEF.md and docs/HARDENING-BRIEF-2.md) plus the checklist of
+what MUST still happen before this app handles a single real (non-demo)
+merchant. Current-state details live in docs/SECURITY.md; DB lifecycle in
+docs/MIGRATIONS.md; module boundaries in docs/CONTRACTS.md.
 
 ## What the hardening pass delivered (done, verified in CI)
 
@@ -24,6 +24,13 @@ boundaries in docs/CONTRACTS.md.
 | P12 | Migration posture documented (db-push alpha vs migrate prod; D1 snapshot flow) | `docs/MIGRATIONS.md` |
 | P13 | Central safe error formatter; user-safe errors only; server-side logging | `lib/server/errors.ts` |
 
+Pass 2 (docs/HARDENING-BRIEF-2.md) added: `test:all`/`npm test` matching CI
+exactly; a narrowed "use server" surface (reads are `server-only`, mutations
+in narrow action files); the ensureDemoAccount / resetDemoWorkspace /
+selectDemoVertical provisioning split; the labeled-system-id export policy +
+nested-JSON scrub; the blocking release gate (`ci:release`, `release.yml`);
+and `tests/demo-provisioning.test.ts`.
+
 ## Blocking gates before ANY real-merchant launch
 
 1. **Real authentication + authorization.** Replace the vertical-cookie match
@@ -39,8 +46,11 @@ boundaries in docs/CONTRACTS.md.
 3. **Versioned migrations.** Flip from `prisma db push` to `prisma migrate`
    (and `wrangler d1 migrations` for D1) the moment real data exists —
    see docs/MIGRATIONS.md. Private beta targets Postgres (PRD 26B.19).
-4. **Nonce-based CSP.** Remove `script-src 'unsafe-inline'` by adding
-   per-request nonce middleware (documented in `next.config.ts`). Keep the
+4. **Nonce-based CSP — REQUIRED BEFORE ANY REAL DATA.** Remove
+   `script-src 'unsafe-inline'` by adding per-request nonce middleware
+   (documented in `next.config.ts`). The relaxation is tolerable only while
+   every byte in the app is simulated demo data; the moment real (non-demo)
+   merchant data enters the system this becomes a hard blocker. Keep the
    current enforced policy until then — do not regress to report-only.
 5. **Real connectors change the threat model.** When Klaviyo/Meta/Shopify
    stop being mocks: encrypted credential storage, per-connector scopes,
@@ -69,12 +79,29 @@ boundaries in docs/CONTRACTS.md.
   (20+30/min); revisit when limits tighten.
 - Per-request request-id in logs to correlate guard denials with ledger rows.
 
+## Release path: the BLOCKING Cloudflare build (pass 2, item 5)
+
+PR CI (`.github/workflows/ci.yml`) keeps the OpenNext/workerd build as a
+separate `continue-on-error` job so a bundler hiccup never blocks daily work.
+Releases are held to a stricter bar:
+
+- **`npm run ci:release`** — the full local gate (`test:all`) PLUS a
+  BLOCKING `cf:build`. If the worker bundle does not assemble, the release
+  gate is red. Run this before any deploy (`cf:deploy`).
+- **`.github/workflows/release.yml`** — the same gate in CI, triggered by
+  version tags (`v*`) and manual dispatch; every step (including the
+  Cloudflare build) is blocking.
+
 ## How to verify the posture locally
 
 ```bash
-npm run test           # lint + build + full smoke + security tests
+npm test               # = npm run test:all — the FULL gate, exactly what CI
+                       #   runs: lint + boundary check + tsc + build + full
+                       #   smoke + contract tests + security tests +
+                       #   account-boundary acceptance
+npm run ci:release     # test:all + BLOCKING Cloudflare (OpenNext) build
 npm run test:contracts # recipes, governance, measurement, chat invariants
-npm run test:security  # export privacy + account isolation
+npm run test:security  # export privacy + account isolation + demo provisioning
 npm run test:quality   # lint + boundary check + tsc
 npm run check:accounts # account-boundary acceptance (21 checks)
 ```

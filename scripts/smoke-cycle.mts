@@ -15,7 +15,7 @@
 import { db } from "../lib/db";
 import { MEASUREMENT_LABELS } from "../lib/contracts";
 import {
-  createDemoAccount,
+  ensureDemoAccount,
   getPerformance,
   getPerformanceExamples,
   listOpportunities,
@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   );
 
   // --- feed -------------------------------------------------------------------
-  const account = await createDemoAccount();
+  const account = await ensureDemoAccount();
   const feed = await listOpportunities(account.accountId);
 
   check(

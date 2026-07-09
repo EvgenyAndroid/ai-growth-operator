@@ -11,6 +11,14 @@
  * with their HASHED identifier only (emailLower is dropped); every export
  * carries timestamp, account id, and constitution_version.
  *
+ * ID policy (hardening pass 2, item 4; documented in docs/SECURITY.md):
+ * internal database ids leave ONLY under `*system_id` column names — clearly
+ * labeled opaque system identifiers, never customer identity. The hashed
+ * email (`email_hash`) is the only customer-level identifier that exports.
+ * Audience MEMBER customer ids never export (rows drop inclusionRules, and
+ * scrubNestedJson strips member-id / email-shaped keys from every nested JSON
+ * column as defense in depth).
+ *
  * Hardening (P8): object-type + format allowlists at entry; row-count and
  * payload-size guards (fail closed); filenames derived ONLY from allowlisted
  * constants + server clock (never user input); path-traversal guards on the
@@ -69,8 +77,36 @@ function toCsv(rows: Row[]): string {
   return lines.join("\r\n") + "\r\n";
 }
 
+/**
+ * Keys that must never appear inside exported nested JSON (item 4 defense in
+ * depth): audience member customer ids and anything email-shaped that is not
+ * an explicit hash. Today's writers never put these into exported columns —
+ * this guard keeps that true if a future writer slips.
+ */
+function isForbiddenJsonKey(key: string): boolean {
+  if (/^(member_?)?customer_?ids?$/i.test(key)) return true;
+  if (/email/i.test(key) && !/hash/i.test(key)) return true;
+  return false;
+}
+
+/** Deep-copy `value` with forbidden keys removed from every nested object. */
+function scrubNestedJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(scrubNestedJson);
+  if (value !== null && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      if (isForbiddenJsonKey(key)) continue;
+      out[key] = scrubNestedJson(entry);
+    }
+    return out;
+  }
+  return value;
+}
+
 function jsonString(value: unknown): string {
-  return value === null || value === undefined ? "" : JSON.stringify(value);
+  return value === null || value === undefined
+    ? ""
+    : JSON.stringify(scrubNestedJson(value));
 }
 
 async function collectRows(
@@ -85,8 +121,9 @@ async function collectRows(
         take: ROW_QUERY_LIMIT,
       });
       // PRD 19.3 — hashed identifiers remain hashed; no raw email exported.
+      // Item 4 ID policy: the internal id exports only as a labeled system id.
       return customers.map((customer) => ({
-        id: customer.id,
+        system_id: customer.id,
         email_hash: customer.emailHash,
         consent_email: customer.consentEmail,
         consent_ads: customer.consentAds,
@@ -106,7 +143,7 @@ async function collectRows(
         take: ROW_QUERY_LIMIT,
       });
       return audiences.map((audience) => ({
-        id: audience.id,
+        system_id: audience.id,
         name: audience.name,
         creation_method: audience.creationMethod,
         size: audience.size,
@@ -155,7 +192,7 @@ async function collectRows(
         take: ROW_QUERY_LIMIT,
       });
       return opportunities.map((opportunity) => ({
-        id: opportunity.id,
+        system_id: opportunity.id,
         recipe_id: opportunity.recipeId,
         recipe_version: opportunity.recipeVersion,
         title: opportunity.title,
@@ -176,7 +213,7 @@ async function collectRows(
         take: ROW_QUERY_LIMIT,
       });
       return actions.map((action) => ({
-        id: action.id,
+        system_id: action.id,
         type: action.type,
         objective: action.objective,
         channel: action.channel,
@@ -200,9 +237,9 @@ async function collectRows(
         take: ROW_QUERY_LIMIT,
       });
       return entries.map((entry) => ({
-        ledger_id: entry.id,
+        ledger_system_id: entry.id,
         timestamp: entry.timestamp.toISOString(),
-        action_id: entry.actionId,
+        action_system_id: entry.actionId,
         measurement_mode: entry.measurementMode,
         confidence: entry.confidence,
         summary: entry.reasoningSummary,

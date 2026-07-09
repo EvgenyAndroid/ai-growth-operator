@@ -28,7 +28,7 @@ export const VERTICAL_COOKIE = "ago_vertical";
 /**
  * Read the vertical cookie. Lazily imports next/headers and swallows the
  * "outside a request scope" error so non-Next callers (scripts/smoke-cycle.mts
- * runs createDemoAccount under tsx) keep working and fall back to DTC.
+ * runs ensureDemoAccount under tsx) keep working and fall back to DTC.
  */
 async function readVerticalCookie(): Promise<string | undefined> {
   try {
