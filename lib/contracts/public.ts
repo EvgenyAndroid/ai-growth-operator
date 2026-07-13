@@ -529,6 +529,20 @@ export interface HoldoutPlan {
   exclusionWindow: string; // ISO-8601 duration
   /** True only when audience >= 500 AND activation level can enforce exclusion (26A.1). */
   enforceable: boolean;
+  /**
+   * Minimum detectable effect at plan time: the smallest absolute purchase-rate
+   * lift (in rate points, e.g. 0.021 = 2.1pp) this holdout can detect at the
+   * stated power/alpha given its arm sizes and an assumed baseline rate.
+   * Smaller true effects will typically read as "lift not proven" — surfaced
+   * so an underpowered holdout announces itself BEFORE launch.
+   */
+  mde?: {
+    absoluteRatePoints: number;
+    power: number; // e.g. 0.8
+    alpha: number; // e.g. 0.05 two-sided
+    assumedBaselineRate: number;
+    note: string; // plain-English, e.g. "Can detect ≥2.1pp absolute lift at 80% power…"
+  };
 }
 
 export interface MeasurementReadout {

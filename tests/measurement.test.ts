@@ -104,6 +104,21 @@ test("measurement: planHoldout produces an enforceable 10% plan only when eligib
   assert.equal(eligible.plan.holdoutSize, 100);
   assert.equal(eligible.plan.assignmentMethod, "randomized_customer_level");
   assert.equal(eligible.plan.enforceable, true);
+  // MDE line: an underpowered holdout announces itself at plan time.
+  assert.ok(eligible.plan.mde);
+  assert.ok(eligible.plan.mde.absoluteRatePoints > 0);
+  assert.equal(eligible.plan.mde.power, 0.8);
+  assert.ok(eligible.plan.mde.note.includes("80% power"));
+  // Larger audiences detect smaller effects.
+  const bigger = planHoldout({
+    actionType: "klaviyo_recovery_flow",
+    activationLevel: "klaviyo_campaign_draft",
+    eligibleAudienceSize: 10_000,
+  });
+  assert.ok(bigger.plan);
+  assert.ok(
+    bigger.plan.mde!.absoluteRatePoints < eligible.plan.mde.absoluteRatePoints,
+  );
 
   const ineligible = planHoldout({
     actionType: "klaviyo_recovery_flow",
@@ -131,9 +146,10 @@ test("measurement: arm assignment is deterministic per (seed, customer) and ~10%
 // ---------------------------------------------------------------------------
 
 test("measurement: lift is reported as a RANGE, never a single point", () => {
+  // 15% vs 5% on a 100-person control — decisively proven under Newcombe.
   const result = computeLiftRange({
     treated: { size: 900, purchasers: 135, revenue: 13_500, refunds: 500 },
-    heldOut: { size: 100, purchasers: 8, revenue: 800, refunds: 0 },
+    heldOut: { size: 100, purchasers: 5, revenue: 500, refunds: 0 },
     contaminationRisk: "none",
   });
   assert.notEqual(result.measuredLiftLow, null);
@@ -141,7 +157,37 @@ test("measurement: lift is reported as a RANGE, never a single point", () => {
   assert.ok((result.measuredLiftLow as number) < (result.measuredLiftHigh as number));
   assert.ok(result.absoluteRateDiffLow < result.absoluteRateDiffHigh);
   assert.equal(result.liftNotProven, false);
-  assert.equal(result.method, "two_proportion_wald_95");
+  assert.equal(result.method, "newcombe_wilson_95");
+});
+
+test("measurement: Newcombe is stricter than Wald on small controls (regression)", () => {
+  // This exact fixture was 'proven' under the old Wald interval; Newcombe's
+  // honest control-side bound (8/100) widens the band across zero. The
+  // stricter verdict is the point of the upgrade.
+  const result = computeLiftRange({
+    treated: { size: 900, purchasers: 135, revenue: 13_500, refunds: 500 },
+    heldOut: { size: 100, purchasers: 8, revenue: 800, refunds: 0 },
+    contaminationRisk: "none",
+  });
+  assert.equal(result.liftNotProven, true);
+  assert.equal(result.confidence, "low");
+});
+
+test("measurement: Newcombe interval stays sane when the holdout arm has zero purchases", () => {
+  // Wald degenerates here (control variance term = 0); Newcombe must not.
+  const result = computeLiftRange({
+    treated: { size: 500, purchasers: 50, revenue: 5_000, refunds: 0 },
+    heldOut: { size: 50, purchasers: 0, revenue: 0, refunds: 0 },
+    contaminationRisk: "none",
+  });
+  assert.equal(result.method, "newcombe_wilson_95");
+  // Relative lift undefined at zero baseline; absolute band still real.
+  assert.equal(result.measuredLiftLow, null);
+  assert.ok(Number.isFinite(result.absoluteRateDiffLow));
+  assert.ok(Number.isFinite(result.absoluteRateDiffHigh));
+  // The band must have genuine width (Wald would collapse the control side).
+  assert.ok(result.absoluteRateDiffHigh - result.absoluteRateDiffLow > 0.01);
+  assert.ok(result.caveats.some((c) => c.includes("zero purchases")));
 });
 
 test("measurement: a 95% band crossing zero means lift is NOT proven (PRD 14.8)", () => {

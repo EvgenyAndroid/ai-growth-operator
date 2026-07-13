@@ -63,6 +63,15 @@ export function buildHoldoutReadout(
   const { lift } = input;
   const caveats = [...lift.caveats, ...(input.extraCaveats ?? [])];
 
+  // Multiple-look honesty: each holdout is read up to three times (early /
+  // primary / long) with no multiplicity correction. Non-primary reads say so
+  // and defer the decision to the primary read.
+  if (input.window.readType !== "primary") {
+    caveats.push(
+      `This is the ${input.window.readType} read — one of up to three scheduled looks at this holdout, with no multiplicity correction applied. Treat the primary read as the decision read.`,
+    );
+  }
+
   const liftRange =
     lift.measuredLiftLow !== null && lift.measuredLiftHigh !== null
       ? { low: lift.measuredLiftLow, high: lift.measuredLiftHigh }

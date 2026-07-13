@@ -11,14 +11,17 @@
  *      purchase/repeat_purchase in the window), gross revenue, refunds.
  *      Revenue is REFUND-NETTED: net = gross - refunds (PRD 14.5/14.8).
  *   3. Purchase rates: pT = purchasersT / nT, pC = purchasersC / nC.
- *   4. Uncertainty band: normal approximation for the difference of two
- *      independent proportions —
- *        d  = pT - pC
- *        SE = sqrt( pT(1-pT)/nT + pC(1-pC)/nC )
- *        95% band: [d - 1.96·SE, d + 1.96·SE]
- *      This is a deliberately simple Wald interval; it is honest about small
- *      holdouts (wide bands) and cheap to compute. Beta may upgrade to
- *      Newcombe/Wilson without changing the interface.
+ *   4. Uncertainty band: Newcombe hybrid-score (MOVER) interval for the
+ *      difference of two independent proportions — per-arm Wilson score
+ *      intervals (lT,uT) and (lC,uC) at 95%, combined as
+ *        d     = pT - pC
+ *        dLow  = d - sqrt( (pT-lT)^2 + (uC-pC)^2 )
+ *        dHigh = d + sqrt( (uT-pT)^2 + (pC-lC)^2 )
+ *      (Newcombe 1998, method 10). Chosen over the earlier Wald interval
+ *      because it keeps honest coverage at the small holdout sizes this
+ *      product actually runs (n_C as low as 50) and behaves sanely at
+ *      zero-count arms, where Wald's SE contribution degenerates to 0.
+ *      Same interface, same range-only output.
  *   5. Relative lift range = band / pC (only when pC > 0; otherwise relative
  *      lift is undefined and we report absolute-only with a caveat).
  *   6. Incremental (recovered) revenue range = band × nT × netAOV, where
@@ -148,7 +151,7 @@ export interface LiftRangeResult {
   caveats: string[];
   /** True when the 95% band includes zero — lift cannot be proven (PRD 14.8). */
   liftNotProven: boolean;
-  method: "two_proportion_wald_95";
+  method: "newcombe_wilson_95";
 }
 
 const Z_95 = 1.96;
@@ -156,6 +159,25 @@ const Z_95 = 1.96;
 function round(value: number, decimals: number): number {
   const f = 10 ** decimals;
   return Math.round(value * f) / f;
+}
+
+/**
+ * Wilson score interval for a single proportion (95% at z=1.96). Well-behaved
+ * at 0 and n successes and at small n — the per-arm ingredient of the
+ * Newcombe difference interval.
+ */
+export function wilsonInterval(
+  successes: number,
+  n: number,
+  z: number = Z_95,
+): { low: number; high: number } {
+  if (n === 0) return { low: 0, high: 0 };
+  const p = successes / n;
+  const z2 = z * z;
+  const denom = 1 + z2 / n;
+  const center = (p + z2 / (2 * n)) / denom;
+  const half = (z * Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n))) / denom;
+  return { low: Math.max(0, center - half), high: Math.min(1, center + half) };
 }
 
 /** Compute the PRD 14.5 lift range. Pure and deterministic. */
@@ -179,7 +201,7 @@ export function computeLiftRange(input: LiftRangeInput): LiftRangeResult {
       confidence: "low",
       caveats,
       liftNotProven: true,
-      method: "two_proportion_wald_95",
+      method: "newcombe_wilson_95",
     };
   }
 
@@ -190,13 +212,13 @@ export function computeLiftRange(input: LiftRangeInput): LiftRangeResult {
   const pC = heldOut.purchasers / heldOut.size;
   const netRevenueTreated = treated.revenue - treated.refunds;
 
-  // Step 4: Wald 95% band on the difference of proportions.
+  // Step 4: Newcombe hybrid-score (MOVER) 95% band on the difference of
+  // proportions — per-arm Wilson intervals combined square-and-add.
   const d = pT - pC;
-  const se = Math.sqrt(
-    (pT * (1 - pT)) / treated.size + (pC * (1 - pC)) / heldOut.size,
-  );
-  const dLow = d - Z_95 * se;
-  const dHigh = d + Z_95 * se;
+  const wT = wilsonInterval(treated.purchasers, treated.size);
+  const wC = wilsonInterval(heldOut.purchasers, heldOut.size);
+  const dLow = d - Math.sqrt((pT - wT.low) ** 2 + (wC.high - pC) ** 2);
+  const dHigh = d + Math.sqrt((wT.high - pT) ** 2 + (pC - wC.low) ** 2);
 
   // Step 5: relative lift only when the control converts at all.
   let liftLow: number | null = null;
@@ -252,6 +274,6 @@ export function computeLiftRange(input: LiftRangeInput): LiftRangeResult {
     confidence,
     caveats,
     liftNotProven,
-    method: "two_proportion_wald_95",
+    method: "newcombe_wilson_95",
   };
 }

@@ -64,12 +64,45 @@ export interface HoldoutPlanInput {
   /** ISO-8601 duration the exclusion must hold for (e.g. "P14D" = long read window). */
   exclusionWindow?: string;
   contaminationTooHigh?: boolean;
+  /**
+   * Assumed baseline purchase rate for the MDE line. Beta should pass the
+   * audience's observed historical rate; alpha defaults to a documented 3%
+   * (typical email-flow purchase rate for the demo verticals).
+   */
+  assumedBaselineRate?: number;
 }
 
 export interface HoldoutPlanResult {
   decision: MeasurementModeDecision;
   /** Present iff decision.mode === "holdout". */
   plan: HoldoutPlan | null;
+}
+
+// MDE constants — 80% power, two-sided alpha 0.05 (z 1.96 + z 0.8416).
+const MDE_POWER = 0.8;
+const MDE_ALPHA = 0.05;
+const Z_ALPHA_TWO_SIDED = 1.96;
+const Z_POWER_80 = 0.8416;
+const DEFAULT_ASSUMED_BASELINE_RATE = 0.03;
+
+/**
+ * Minimum detectable effect for a two-proportion test at 80% power / two-sided
+ * alpha 0.05, using the assumed baseline for both arms' variance:
+ *   MDE = (z_a/2 + z_b) · sqrt( p(1-p) · (1/nT + 1/nC) )
+ * A planning heuristic, not an inference — it exists so an underpowered
+ * holdout says so before launch instead of after three inconclusive reads.
+ */
+export function minimumDetectableEffect(
+  nTreated: number,
+  nHeldOut: number,
+  baselineRate: number,
+): number {
+  if (nTreated <= 0 || nHeldOut <= 0) return 1;
+  const p = Math.min(Math.max(baselineRate, 0.0001), 0.9999);
+  return (
+    (Z_ALPHA_TWO_SIDED + Z_POWER_80) *
+    Math.sqrt(p * (1 - p) * (1 / nTreated + 1 / nHeldOut))
+  );
 }
 
 /** Plan a holdout (or explain why one is unavailable). Pure and deterministic. */
@@ -79,15 +112,32 @@ export function planHoldout(input: HoldoutPlanInput): HoldoutPlanResult {
     return { decision, plan: null };
   }
   const holdoutPercent = input.holdoutPercent ?? DEFAULT_HOLDOUT_PERCENT;
+  const holdoutSize = Math.round(
+    (input.eligibleAudienceSize * holdoutPercent) / 100,
+  );
+  const treatedSize = input.eligibleAudienceSize - holdoutSize;
+  const assumedBaselineRate =
+    input.assumedBaselineRate ?? DEFAULT_ASSUMED_BASELINE_RATE;
+  const mdeValue = minimumDetectableEffect(
+    treatedSize,
+    holdoutSize,
+    assumedBaselineRate,
+  );
+  const mdePp = Math.round(mdeValue * 1000) / 10; // rate points, 1 decimal
   const plan: HoldoutPlan = {
     eligibleAudienceSize: input.eligibleAudienceSize,
     holdoutPercent,
-    holdoutSize: Math.round(
-      (input.eligibleAudienceSize * holdoutPercent) / 100,
-    ),
+    holdoutSize,
     assignmentMethod: "randomized_customer_level",
     exclusionWindow: input.exclusionWindow ?? "P30D",
     enforceable: true, // decision.mode === "holdout" already implies 26A.1 passed
+    mde: {
+      absoluteRatePoints: Math.round(mdeValue * 10000) / 10000,
+      power: MDE_POWER,
+      alpha: MDE_ALPHA,
+      assumedBaselineRate,
+      note: `Can detect a true lift of roughly ${mdePp}pp or larger at ${MDE_POWER * 100}% power (assumed ${Math.round(assumedBaselineRate * 1000) / 10}% baseline purchase rate). Smaller true effects will usually read as "lift not proven".`,
+    },
   };
   return { decision, plan };
 }
