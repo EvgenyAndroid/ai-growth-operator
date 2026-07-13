@@ -59,7 +59,7 @@ jobs:
       - name: Build (next build)
         run: npm run build
 
-      - name: Smoke suite (full: HTTP + approve cycles)
+      - name: "Smoke suite (full: HTTP + approve cycles)"
         run: node scripts/smoke.mjs
 
       - name: Contract tests (recipes, governance, measurement, chat)
