@@ -21,6 +21,7 @@ import {
   type MeasurementPlan,
   type RecipeId,
 } from "../../contracts";
+import { buildMde } from "../../measurement/holdout";
 
 /** The two LOCAL email recipes (the shared Meta recipe stays directional). */
 export type LocalEmailRecipeId = Extract<
@@ -69,16 +70,18 @@ export function buildLocalEmailMeasurementPlan(
     );
   }
 
+  const plannedHoldoutSize = Math.floor(
+    (args.eligibleAudienceSize * args.holdoutPercent) / 100,
+  );
   const holdout: HoldoutPlan | undefined = sizeEligible
     ? {
         eligibleAudienceSize: args.eligibleAudienceSize,
         holdoutPercent: args.holdoutPercent,
-        holdoutSize: Math.floor(
-          (args.eligibleAudienceSize * args.holdoutPercent) / 100,
-        ),
+        holdoutSize: plannedHoldoutSize,
         assignmentMethod: "randomized_customer_level",
         exclusionWindow: LOCAL_EXCLUSION_WINDOWS[args.recipeId],
         enforceable,
+        mde: buildMde(args.eligibleAudienceSize, plannedHoldoutSize),
       }
     : undefined;
 

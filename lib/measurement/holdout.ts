@@ -105,6 +105,32 @@ export function minimumDetectableEffect(
   );
 }
 
+/**
+ * Build the plan-time MDE block for a holdout of the given sizes — the single
+ * source for HoldoutPlan.mde, shared by planHoldout and the recipe planners so
+ * every surfaced plan (feed explanation, approval gate) carries the same math.
+ */
+export function buildMde(
+  eligibleAudienceSize: number,
+  holdoutSize: number,
+  assumedBaselineRate: number = DEFAULT_ASSUMED_BASELINE_RATE,
+): NonNullable<HoldoutPlan["mde"]> {
+  const treatedSize = eligibleAudienceSize - holdoutSize;
+  const mdeValue = minimumDetectableEffect(
+    treatedSize,
+    holdoutSize,
+    assumedBaselineRate,
+  );
+  const mdePp = Math.round(mdeValue * 1000) / 10; // rate points, 1 decimal
+  return {
+    absoluteRatePoints: Math.round(mdeValue * 10000) / 10000,
+    power: MDE_POWER,
+    alpha: MDE_ALPHA,
+    assumedBaselineRate,
+    note: `Can detect a true lift of roughly ${mdePp}pp or larger at ${MDE_POWER * 100}% power (assumed ${Math.round(assumedBaselineRate * 1000) / 10}% baseline purchase rate). Smaller true effects will usually read as "lift not proven".`,
+  };
+}
+
 /** Plan a holdout (or explain why one is unavailable). Pure and deterministic. */
 export function planHoldout(input: HoldoutPlanInput): HoldoutPlanResult {
   const decision = resolveMeasurementMode(input);
@@ -115,15 +141,8 @@ export function planHoldout(input: HoldoutPlanInput): HoldoutPlanResult {
   const holdoutSize = Math.round(
     (input.eligibleAudienceSize * holdoutPercent) / 100,
   );
-  const treatedSize = input.eligibleAudienceSize - holdoutSize;
   const assumedBaselineRate =
     input.assumedBaselineRate ?? DEFAULT_ASSUMED_BASELINE_RATE;
-  const mdeValue = minimumDetectableEffect(
-    treatedSize,
-    holdoutSize,
-    assumedBaselineRate,
-  );
-  const mdePp = Math.round(mdeValue * 1000) / 10; // rate points, 1 decimal
   const plan: HoldoutPlan = {
     eligibleAudienceSize: input.eligibleAudienceSize,
     holdoutPercent,
@@ -131,13 +150,7 @@ export function planHoldout(input: HoldoutPlanInput): HoldoutPlanResult {
     assignmentMethod: "randomized_customer_level",
     exclusionWindow: input.exclusionWindow ?? "P30D",
     enforceable: true, // decision.mode === "holdout" already implies 26A.1 passed
-    mde: {
-      absoluteRatePoints: Math.round(mdeValue * 10000) / 10000,
-      power: MDE_POWER,
-      alpha: MDE_ALPHA,
-      assumedBaselineRate,
-      note: `Can detect a true lift of roughly ${mdePp}pp or larger at ${MDE_POWER * 100}% power (assumed ${Math.round(assumedBaselineRate * 1000) / 10}% baseline purchase rate). Smaller true effects will usually read as "lift not proven".`,
-    },
+    mde: buildMde(input.eligibleAudienceSize, holdoutSize, assumedBaselineRate),
   };
   return { decision, plan };
 }

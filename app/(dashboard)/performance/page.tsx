@@ -97,7 +97,7 @@ function whatWasMeasured(view: PerformanceView): string {
   const windowText = `${readout.window.readType} window (${fmtDate(readout.window.start)} → ${fmtDate(readout.window.end)}, per 26A.2 defaults for this recipe)`;
   switch (readout.mode) {
     case "holdout":
-      return `Refund-netted purchase rate of the exposed audience versus a randomized customer-level holdout, over the ${windowText}.`;
+      return `Refund-netted purchase rate of the exposed audience versus a randomized customer-level holdout, over the ${windowText}. Lift is reported as a 95% Newcombe–Wilson interval — a range, never a point estimate.`;
     case "before_after_no_control":
       return `Refund-netted purchases and revenue for this audience in the ${windowText}, compared with the equal-length period immediately before launch. There is no control group.`;
     default:

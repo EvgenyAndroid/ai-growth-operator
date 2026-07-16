@@ -19,6 +19,7 @@ import type {
   EstimateLabel,
   EstimateRange,
   ExplanationContract,
+  HoldoutPlan,
   IdentifiedCoverage,
   IntegrationSource,
   MeasurementLabel,
@@ -278,6 +279,8 @@ export interface ApproveActionResult {
       holdoutPercent: number;
       holdoutSize: number;
       exclusionWindow: string;
+      /** Plan-time minimum detectable effect — surfaced at the approval gate. */
+      mde?: HoldoutPlan["mde"];
     } | null;
     contamination: {
       risk: ContractContaminationRisk;

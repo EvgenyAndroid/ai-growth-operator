@@ -18,6 +18,7 @@ import {
   type MeasurementPlan,
   type RecipeId,
 } from "../contracts";
+import { buildMde } from "../measurement/holdout";
 
 const KLAVIYO_EXCLUSION_WINDOWS: Record<string, string> = {
   abandoned_checkout_recovery: "P14D", // long read window (26A.2)
@@ -58,16 +59,18 @@ export function buildKlaviyoMeasurementPlan(args: KlaviyoPlanArgs): MeasurementP
     );
   }
 
+  const plannedHoldoutSize = Math.floor(
+    (args.eligibleAudienceSize * args.holdoutPercent) / 100,
+  );
   const holdout: HoldoutPlan | undefined = sizeEligible
     ? {
         eligibleAudienceSize: args.eligibleAudienceSize,
         holdoutPercent: args.holdoutPercent,
-        holdoutSize: Math.floor(
-          (args.eligibleAudienceSize * args.holdoutPercent) / 100,
-        ),
+        holdoutSize: plannedHoldoutSize,
         assignmentMethod: "randomized_customer_level",
         exclusionWindow: KLAVIYO_EXCLUSION_WINDOWS[args.recipeId],
         enforceable,
+        mde: buildMde(args.eligibleAudienceSize, plannedHoldoutSize),
       }
     : undefined;
 

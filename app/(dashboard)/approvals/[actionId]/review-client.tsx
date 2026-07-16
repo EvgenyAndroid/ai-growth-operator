@@ -146,6 +146,12 @@ function ActivationPanel({ result }: { result: ApproveActionResult }) {
             <StatList className="mt-1">
               <StatRow label="Holdout" value={`${m.holdout.holdoutPercent}% (${m.holdout.holdoutSize.toLocaleString()} of ${m.holdout.eligibleAudienceSize.toLocaleString()})`} />
               <StatRow label="Exclusion window" value={m.holdout.exclusionWindow} />
+              {m.holdout.mde ? (
+                <StatRow
+                  label="Detectable effect"
+                  value={`≥${(m.holdout.mde.absoluteRatePoints * 100).toFixed(1)}pp at ${Math.round(m.holdout.mde.power * 100)}% power`}
+                />
+              ) : null}
             </StatList>
           ) : null}
           {m.contamination?.disclosure ? (

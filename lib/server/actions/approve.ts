@@ -321,6 +321,7 @@ export async function runApproveAction(params: {
               holdoutPercent: holdoutResult.plan.holdoutPercent,
               holdoutSize: holdoutResult.plan.holdoutSize,
               exclusionWindow: holdoutResult.plan.exclusionWindow,
+              mde: holdoutResult.plan.mde,
             }
           : null,
       contamination,

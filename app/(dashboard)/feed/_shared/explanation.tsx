@@ -119,6 +119,12 @@ export function MeasurementPlanBlock({ plan }: { plan: MeasurementPlan }) {
             label="Enforceable in activation path"
             value={plan.holdout.enforceable ? "Yes" : "No — claim downgrades (26A.1)"}
           />
+          {plan.holdout.mde ? (
+            <StatRow
+              label="Detectable effect"
+              value={`≥${(plan.holdout.mde.absoluteRatePoints * 100).toFixed(1)}pp at ${Math.round(plan.holdout.mde.power * 100)}% power`}
+            />
+          ) : null}
         </StatList>
       ) : null}
 
