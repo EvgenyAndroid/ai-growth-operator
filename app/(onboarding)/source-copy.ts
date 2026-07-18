@@ -63,6 +63,7 @@ export const SOURCE_COPY: Record<SourceId, SourceCopy> = {
     description:
       "Profiles, consent, suppression, flows, and campaigns — the safe-send layer.",
     unlocks: [
+      "Holdout-verified lift on flows reaching 500+ eligible customers",
       "Consent + suppression checks on every audience",
       "Existing-flow exclusions so estimates are net of what you already recover",
       "Email activation ladder (campaign draft, exportable brief)",
@@ -119,6 +120,7 @@ export const SOURCE_COPY: Record<SourceId, SourceCopy> = {
     unlocks: [
       "Visit cadence for lapsed-regular win-back",
       "Large-order detection for catering upsell",
+      "Holdout-verified lift when identified audiences reach 500",
       "Identified-transaction share behind every local estimate",
     ],
     note: "Estimates cover identified (loyalty-matched) customers only.",

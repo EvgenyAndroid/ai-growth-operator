@@ -130,6 +130,28 @@ function SourceGlyph({
   );
 }
 
+/** Per-unlock marker: emerald check once connected, neutral plus while locked. */
+function UnlockMark({ connected }: { connected: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 12 12"
+      className={
+        connected
+          ? "mt-1 h-3 w-3 shrink-0 text-emerald-600"
+          : "mt-1 h-3 w-3 shrink-0 text-ink-soft"
+      }
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {connected ? <path d="m2.5 6.5 2.5 2.5 4.5-5" /> : <path d="M6 2.5v7M2.5 6h7" />}
+    </svg>
+  );
+}
+
 function ConnectorCard({
   copy,
   status,
@@ -164,6 +186,26 @@ function ConnectorCard({
         </div>
       </div>
       <p className="mt-1 text-sm leading-6 text-ink-secondary">{copy.description}</p>
+
+      {/* Outcome-tied unlocks (HYPD-teardown adoption): the card sells what
+          connecting BUYS — recipes and the measurement bar — not features.
+          Locked state reads as the pitch; connected state reads as receipts. */}
+      <div className="mt-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+          {status ? "Unlocked" : "What this unlocks"}
+        </p>
+        <ul className="mt-1.5 space-y-1">
+          {copy.unlocks.map((u) => (
+            <li
+              key={u}
+              className="flex items-start gap-1.5 text-xs leading-5 text-ink-secondary"
+            >
+              <UnlockMark connected={status !== null} />
+              <span>{u}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {status ? (
         <div className="mt-3 space-y-1 rounded-md border border-border bg-surface-soft/50 px-3 py-2 text-xs text-ink-muted">
@@ -242,6 +284,9 @@ export default async function ConnectDataSourcesPage() {
     .filter((card) => card.copy.tier === "required")
     .every((card) => card.status !== null);
   const isLocal = account.vertical === "local_service";
+  const missingRequired = cards
+    .filter((card) => card.copy.tier === "required" && card.status === null)
+    .map((card) => card.copy.name);
 
   return (
     <div className="space-y-6">
@@ -255,6 +300,30 @@ export default async function ConnectDataSourcesPage() {
             : "Shopify + Klaviyo are enough for your first opportunity. In the alpha, connectors are mocked and pre-connected to the demo dataset — no OAuth actually runs."}
         </p>
       </div>
+
+      {missingRequired.length > 0 ? (
+        <div className="flex items-start gap-2.5 rounded-md border border-amber-200/80 bg-amber-50/60 px-3.5 py-2.5 text-sm leading-6 text-amber-900">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            className="mt-1 h-3.5 w-3.5 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="8" cy="8" r="6.5" />
+            <path d="M8 5v3.5" />
+            <path d="M8 11h.01" />
+          </svg>
+          <p>
+            Connect <span className="font-semibold">{missingRequired.join(" + ")}</span>{" "}
+            first — the Operator needs {isLocal ? "ticket history" : "order history"}{" "}
+            before it can find money. Everything else layers on top.
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {cards.map(({ copy, status }) => (
