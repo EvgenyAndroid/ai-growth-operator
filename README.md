@@ -108,6 +108,5 @@ blocking (see docs/PRODUCTION-HARDENING.md).
 | Production branch | `main` |
 | Build command | `npm run cf:build` (OpenNext: `next build`, then the worker bundle in `.open-next/`) |
 | Deploy command | `npx wrangler deploy` |
-| Build variable | `DATABASE_URL=file:./dev.db` (read by `prisma.config.ts` at generate time; the deployed app uses D1) |
 
-A manual deploy from a logged-in machine is `npm run cf:deploy`.
+No build or runtime variables are needed: on Workers the app reads the D1 `DB` binding, never `DATABASE_URL`. A manual deploy from a logged-in machine is `npm run cf:deploy`.
