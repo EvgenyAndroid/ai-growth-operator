@@ -98,3 +98,16 @@ blocking (see docs/PRODUCTION-HARDENING.md).
 | `npm run test:quality` | Lint + boundary check + typecheck |
 | `npm test` / `npm run test:all` | The FULL quality gate — matches CI exactly |
 | `npm run ci:release` | Full gate + blocking Cloudflare (OpenNext) build |
+
+## Deploy
+
+`cdp.nofluffadvisory.com` deploys through Cloudflare Workers Builds, connected to this repository: every push to `main` builds and deploys the `ai-growth-operator` worker (custom domain and D1 binding in `wrangler.jsonc`).
+
+| Workers Builds setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Build command | `npm run cf:build` (OpenNext: `next build`, then the worker bundle in `.open-next/`) |
+| Deploy command | `npx wrangler deploy` |
+| Build variable | `DATABASE_URL=file:./dev.db` (read by `prisma.config.ts` at generate time; the deployed app uses D1) |
+
+A manual deploy from a logged-in machine is `npm run cf:deploy`.
