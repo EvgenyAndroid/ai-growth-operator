@@ -15,7 +15,7 @@ function ProductMark() {
   return (
     <span
       aria-hidden="true"
-      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-[#3b82f6] to-[#1e40af] shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_rgb(2_6_23/0.45)]"
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-[#b0915c] to-[#5f4a27] shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_rgb(2_6_23/0.45)]"
     >
       <svg
         viewBox="0 0 16 16"

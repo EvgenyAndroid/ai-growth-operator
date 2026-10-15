@@ -183,7 +183,7 @@ function RangeHero({ readout }: { readout: MeasurementReadout }) {
       <p className="text-[11px] font-semibold tracking-[0.08em] text-emerald-800 uppercase">
         Estimated incremental revenue
       </p>
-      <p className="mt-1 text-3xl font-bold tracking-tight text-ink tabular-nums sm:text-4xl">
+      <p className="mt-1 font-serif text-3xl font-semibold tracking-tight text-ink tabular-nums sm:text-4xl">
         {fmtMoney(low)}
         <span className="mx-1.5 text-xl font-medium text-ink-soft sm:text-2xl">–</span>
         {fmtMoney(high)}

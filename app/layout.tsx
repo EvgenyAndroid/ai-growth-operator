@@ -5,9 +5,9 @@ import AppShell from "./app-shell";
 // No font CDN / next/font network fetch: the app must stay offline-capable.
 // Inter is picked up from the system font stack defined in globals.css.
 
-// Browser chrome matches the cockpit sidebar (--color-primary).
+// Browser chrome matches the ink sidebar (--color-primary).
 export const viewport: Viewport = {
-  themeColor: "#0b1220",
+  themeColor: "#1a1c20",
 };
 
 export const metadata: Metadata = {

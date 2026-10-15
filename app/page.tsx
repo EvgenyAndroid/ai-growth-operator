@@ -40,7 +40,7 @@ function ProductMark() {
   return (
     <span
       aria-hidden="true"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#3b82f6] to-[#1e40af] shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_rgb(2_6_23/0.45)]"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#b0915c] to-[#5f4a27] shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_rgb(2_6_23/0.45)]"
     >
       <svg
         viewBox="0 0 16 16"
@@ -148,7 +148,7 @@ export default function LandingPage() {
               <p className="mt-2 text-sm font-semibold tracking-tight text-ink-800">
                 Recover abandoned checkouts
               </p>
-              <p className="mt-1 text-[1.75rem] leading-8 font-bold tracking-tight text-ink-900 tabular-nums">
+              <p className="mt-1 font-serif text-[1.75rem] leading-8 font-semibold tracking-tight text-ink-900 tabular-nums">
                 $2,100–$4,200
                 <span className="ml-1.5 align-baseline text-xs font-medium tracking-normal text-ink-soft">
                   est. / month

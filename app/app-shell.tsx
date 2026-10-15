@@ -177,7 +177,7 @@ function ProductMark({ size = "md" }: { size?: "sm" | "md" }) {
       className={cx(
         "flex shrink-0 items-center justify-center",
         size === "sm" ? "h-6 w-6 rounded-md" : "h-8 w-8 rounded-lg",
-        "bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#1e40af]",
+        "bg-gradient-to-br from-[#b0915c] via-[#8a6d3b] to-[#5f4a27]",
         "ring-1 ring-white/20",
         "shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_2px_6px_rgb(2_6_23/0.45),0_4px_14px_-2px_var(--glow-blue)]",
       )}
