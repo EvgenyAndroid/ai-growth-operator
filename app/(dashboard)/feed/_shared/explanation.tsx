@@ -39,7 +39,7 @@ export function EstimateValue({
       <span
         className={
           large
-            ? "text-[1.75rem] font-semibold leading-tight tracking-tight text-ink tabular-nums"
+            ? "font-serif text-[1.75rem] font-semibold leading-tight tracking-tight text-ink tabular-nums"
             : "font-semibold text-ink tabular-nums"
         }
       >

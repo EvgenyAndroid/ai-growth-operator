@@ -79,7 +79,7 @@ function FoundMoneyHeader({
         />
         {label}
       </p>
-      <p className="relative mt-2.5 text-[clamp(2.25rem,9vw,2.75rem)] font-bold leading-none tracking-tight text-ink tabular-nums md:text-[3.5rem]">
+      <p className="relative mt-2.5 text-[clamp(2.25rem,9vw,2.75rem)] font-bold leading-none tracking-tight text-ink tabular-nums md:text-[3.5rem] font-serif">
         {fmtRange(header.totalLow, header.totalHigh)}
       </p>
       {header.headline ? (
