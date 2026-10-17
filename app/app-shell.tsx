@@ -496,7 +496,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </nav>
           ) : null}
-          <main className="min-w-0 flex-1 overflow-x-auto">
+          {/* overflow-x-clip, not -auto: clip guards the page against
+              horizontal spill without making <main> a scroll container, so
+              position:sticky children (the feed's Operator rail) stick to
+              the viewport. Wide content scrolls in its own wrapper. */}
+          <main className="min-w-0 flex-1 overflow-x-clip">
             <div
               className={cx(
                 "mx-auto w-full px-4 py-6 md:px-6",
