@@ -219,8 +219,8 @@ export default async function FeedPage() {
     // shell), two columns at xl (main + presentational Operator-status
     // rail); the rail stacks BELOW the feed on smaller screens.
     <main className="mx-auto w-full max-w-4xl xl:max-w-none">
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
-        <div className="min-w-0 flex-1 space-y-6">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
+        <div className="min-w-0 space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[2.125rem] font-bold leading-tight tracking-tight text-ink">
@@ -312,7 +312,7 @@ export default async function FeedPage() {
             the FeedView above; sticky below the h-12 glass topbar at xl). */}
         <OperatorStatusRail
           feed={feed}
-          className="w-full xl:sticky xl:top-16 xl:w-[300px] xl:shrink-0"
+          className="xl:sticky xl:top-16"
         />
       </div>
     </main>

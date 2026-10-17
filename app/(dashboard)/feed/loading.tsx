@@ -15,8 +15,8 @@ export default function FeedLoading() {
       aria-busy="true"
       aria-label="Loading opportunity feed"
     >
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
-        <div className="min-w-0 flex-1 space-y-6">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
+        <div className="min-w-0 space-y-6">
           <header className="flex flex-wrap items-end justify-between gap-3">
             <div className="space-y-2">
               <Skeleton className="h-8 w-64" />
@@ -71,7 +71,7 @@ export default function FeedLoading() {
 
         {/* Operator-status rail placeholder (xl only — stacks are skipped on
             mobile to keep the loading view short) */}
-        <div className="hidden xl:block xl:w-[300px] xl:shrink-0">
+        <div className="hidden xl:block">
           <div className="proof-card space-y-3 rounded-card p-4">
             <Skeleton className="h-3 w-32" />
             <Skeleton className="h-4 w-40" />
